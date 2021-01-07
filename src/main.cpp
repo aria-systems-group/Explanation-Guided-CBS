@@ -1,21 +1,20 @@
 #include <iostream>
 #include <unordered_set>
-#include <boost/functional/hash.hpp>
-#include <boost/program_options.hpp>
 #include "yaml.h"
 #include "../includes/State.h"
 #include "../includes/Location.h"
 #include "../includes/Environment.h"
+#include "../includes/A_star.h"
 
 
-int main() {
-	YAML::Node config = YAML::LoadFile("yaml/input.yaml");
+int main() { 
+	YAML::Node config = YAML::LoadFile("yaml/input.yaml");  // path not perfect
 
 	std::unordered_set<Location> obstacles;
 	std::vector<Location> goals;
 	std::vector<State> startStates;
 
-
+	// parsing yaml now
 	const auto& dim = config["map"]["dimensions"];
 	int dimx = dim[0].as<int>();
 	int dimy = dim[1].as<int>();
@@ -35,14 +34,21 @@ int main() {
     	goals.emplace_back(Location(goal[0].as<int>(), goal[1].as<int>()));
 	}
 
-
+	// create environment object
 	Environment mapf(dimx, dimy, obstacles, goals);
 
-	// State *st;
-	// st->setX(5);
-	// st->setY(5);
-	// std::cout << "State address: " << &st << std::endl;
-	// std::cout << "State point:";
-	// st->printState(std::cout);
+	// init planner
+	A_star planner(mapf);
+
+	// init solution
+	 PlanResult<State, Action, Cost> solution;
+
+	// only plan for one agent using A* (for now)
+	planner.plan(startStates[0], solution);
+
+
+
+
+	
     return 0;
 }

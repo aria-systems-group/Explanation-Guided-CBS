@@ -1,7 +1,7 @@
 struct Location {
   Location(int x, int y) : x(x), y(y) {}
-  int x;
-  int y;
+  const int x;
+  const int y;
 
   bool operator<(const Location& other) const {
     return std::tie(x, y) < std::tie(other.x, other.y);

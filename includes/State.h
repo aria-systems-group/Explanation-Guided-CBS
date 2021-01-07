@@ -1,4 +1,6 @@
 #include <iostream>
+#include <boost/functional/hash.hpp>
+#include <boost/program_options.hpp>
 
 
 struct State {
@@ -17,6 +19,20 @@ struct State {
   int time;
   int x;
   int y;
+};
+
+
+template <typename State, typename Action, typename Cost>
+struct Neighbor {
+  Neighbor(const State& state, const Action& action, Cost cost)
+      : state(state), action(action), cost(cost) {}
+
+  //! neighboring state
+  State state;
+  //! action to get to the neighboring state
+  Action action;
+  //! cost to get to the neighboring state
+  Cost cost;
 };
 
 
