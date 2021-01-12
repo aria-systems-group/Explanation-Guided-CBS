@@ -45,10 +45,5 @@ int main() {
 
 	// only plan for one agent using A* (for now)
 	planner.plan(startStates[0], solution);
-
-
-
-
-	
     return 0;
 }

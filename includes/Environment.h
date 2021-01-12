@@ -32,11 +32,12 @@ class Environment {
 
         Cost heuristicFunc(const State& st) const
         {
-            std::cout << "I am here now -- heuristicFunc" << std::endl;
-            return 0;
+            // manhattan dist. from state to goal
+            // use this heuristic when we can only move in 4 cardinal directions
+            return abs(st.x - m_goals[m_agentIdx].x) + abs(st.y - m_goals[m_agentIdx].y);
         }
 
-        void expandState(const State st, std::vector<Neighbor<State, Action, Cost>> neighbors)
+        void expandState(const State st, std::vector<Neighbor<State, Action, Cost>>& neighbors)
         {
             // Cost is the price to be at that state -- usually 1 for all
             neighbors.clear();
@@ -56,15 +57,15 @@ class Environment {
             }
             if (isStateValid(down))
             {
-                neighbors.emplace_back(Neighbor<State, Action, Cost>(up, Action::Down, 1));
+                neighbors.emplace_back(Neighbor<State, Action, Cost>(down, Action::Down, 1));
             }
             if (isStateValid(right))
             {
-                neighbors.emplace_back(Neighbor<State, Action, Cost>(up, Action::Right, 1));
+                neighbors.emplace_back(Neighbor<State, Action, Cost>(right, Action::Right, 1));
             }
             if (isStateValid(left))
             {
-                neighbors.emplace_back(Neighbor<State, Action, Cost>(up, Action::Left, 1));
+                neighbors.emplace_back(Neighbor<State, Action, Cost>(left, Action::Left, 1));
             }
         }
 
