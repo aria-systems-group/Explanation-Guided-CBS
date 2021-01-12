@@ -21,7 +21,7 @@ class A_star
 public:
 	A_star(Environment& env);
 
-	bool plan(const State& startState, PlanResult<State, Action, Cost>& solution, Cost initCost = 0);
+	bool plan(const State& startState, std::vector<State> &solution, Cost initCost = 0);
 
 	// this is the Euclidean distance function
 	Cost heuristicFunc(const State& st, const Location& goal);

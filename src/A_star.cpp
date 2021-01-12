@@ -8,13 +8,9 @@
 
 A_star::A_star(Environment& env): m_env(env) {};
 
-bool A_star::plan(const State& startState, PlanResult<State, Action, Cost>& solution, Cost initCost)
+bool A_star::plan(const State& startState, std::vector<State> &solution, Cost initCost)
 {
-	solution.states.clear();
-   	solution.states.push_back(std::make_pair<>(startState, 0));
-   	solution.actions.clear();
-   	solution.cost = initCost;
-
+	  solution.clear();
    	// EXAMPLE SYNTAX
    	// generate a node with different 
    	// Node n1(startState, fcost, gcost);
@@ -64,10 +60,12 @@ bool A_star::plan(const State& startState, PlanResult<State, Action, Cost>& solu
 
           while (solNode != nullptr)
           {
+            solution.insert(solution.begin(), solNode->state);
             std::cout << solNode->state << std::endl;
             solNode = solNode->parent;
           }
           std::cout << "exiting planner" << std::endl;
+          m_env.updateAgent();
         	return true;
         }
 
@@ -110,5 +108,6 @@ bool A_star::plan(const State& startState, PlanResult<State, Action, Cost>& solu
     m_closed_list.insert(current->state);
   }
   std::cout << "No solution exists." << std::endl;
+  m_env.updateAgent();
 	return false;
 };

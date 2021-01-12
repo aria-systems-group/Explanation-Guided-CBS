@@ -72,7 +72,7 @@ class Environment {
         bool isStateValid(const State st) const
         {
             // is in env bounds
-            if (st.x > m_dimx || st.y > m_dimy)
+            if (0 > st.x > m_dimx || 0 > st.y > m_dimy)
                 return false;
             // is in obstacles
             for (auto& obs : m_obstacles)
@@ -87,6 +87,10 @@ class Environment {
         {
             return (st.x == m_goals[m_agentIdx].x && st.y == m_goals[m_agentIdx].y);
         }
+
+        void updateAgent() {m_agentIdx ++;}
+
+        int getAgent() {return m_agentIdx;}
 
     private:
         const int m_dimx;
