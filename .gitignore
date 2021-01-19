@@ -1,4 +1,5 @@
 Planner
 /obj
 Makefile
-/vizTolls
+/vizTools
+.DS_Store
