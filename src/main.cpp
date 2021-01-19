@@ -3,15 +3,9 @@
 #include <fstream>
 #include "yaml.h"
 #include "../includes/State.h"
-#include "../includes/Location.h"
 #include "../includes/Environment.h"
-#include "../includes/A_star.h"
-
-
-std::string state2str(const State &st)
-{
-	return "hello world!!";
-};
+#include "../includes/Astar.h"
+#include "../includes/Cbs.h"
 
 
 int main() { 
@@ -45,33 +39,57 @@ int main() {
 	}
 
 	// create environment object
-	Environment mapf(dimx, dimy, obstacles, goals);
+	Environment *mapf = new Environment(dimx, dimy, obstacles, goals);
+
+	// A* implementation!!
+
+	// // init planner
+	// A_star *planner = new A_star(mapf);
+
+	// // init solution
+	// std::vector<State> solution;
+
+	// std::ofstream fout("yaml/solution.yaml");
+	// for (const State &a : startStates)
+	// {
+	// 	bool success = planner->plan(a, solution);
+
+	// 	if (success)
+	// 	{
+	// 		YAML::Node node;  // starts out as null
+	// 		int it = std::distance(startStates.begin(), std::find(startStates.begin(), startStates.end(), a));
+
+	// 		node["name"] = "agent" + std::to_string(it);  // it now is a map node
+
+	// 		fout << node << std::endl;
+	// 		for (const State &st : solution)
+	// 		{
+	// 			// emitter << st;
+	// 			YAML::Node node;
+	// 			if (st.time != 0)
+	// 			{
+	// 				node["time" + std::to_string(st.time)] = "(" + std::to_string(st.x) + ", " + std::to_string(st.y) + ")";
+	// 				fout << node << std::endl;
+	// 			}
+	// 		}
+	// 	}
+	// 	mapf->updateAgent();
+	// }
+
+	// CBS implementation!
 
 	// init planner
-	A_star planner(mapf);
+	CBS *planner = new CBS(mapf);
 
 	// init solution
-	std::vector<State> solution;
+	Solution solution;
 
-	std::ofstream fout("yaml/solution.yaml");
-	for (const State &a : startStates)
-	{
-		bool success = planner.plan(a, solution);
+	// plan
+	bool success = planner->plan(startStates, solution);
 
-		if (success)
-		{
-			YAML::Node node;  // starts out as null
-			int it = std::distance(startStates.begin(), std::find(startStates.begin(), startStates.end(), a));
 
-			node["name"] = "agent" + std::to_string(it);  // it now is a map node
 
-			fout << node << std::endl;
-			for (const State &st : solution)
-			{
-				// emitter << st;
-				fout << st << std::endl;
-			}
-		}
-	}
+
+
     return 0;
 }

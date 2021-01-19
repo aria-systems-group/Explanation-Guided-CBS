@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <boost/functional/hash.hpp>
 #include <boost/program_options.hpp>
@@ -13,7 +15,7 @@ struct State {
   bool equalExceptTime(const State& s) const { return x == s.x && y == s.y; }
 
   friend std::ostream& operator<<(std::ostream& os, const State& s) {
-    return os << s.time << ": (" << s.x << "," << s.y << ")";
+    return os << s.time << ":(" << s.x << "," << s.y << ")";
   }
 
   int time;
@@ -21,21 +23,7 @@ struct State {
   int y;
 };
 
-
-template <typename State, typename Action, typename Cost>
-struct Neighbor {
-  Neighbor(const State& state, const Action& action, Cost cost)
-      : state(state), action(action), cost(cost) {}
-
-  //! neighboring state
-  State state;
-  //! action to get to the neighboring state
-  Action action;
-  //! cost to get to the neighboring state
-  Cost cost;
-};
-
-
+// create default constructor
 namespace std {
 template <>
 struct hash<State> {
@@ -48,4 +36,3 @@ struct hash<State> {
   }
 };
 }  // namespace std
-
