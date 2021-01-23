@@ -81,7 +81,7 @@ int main() {
 	if (success)
 	{
 		std::cout << solution.size() << std::endl;
-		std::ofstream out("yaml/solution.txt");
+		std::ofstream out("txt/solution.txt");
 		for (std::vector<State> agentSol: solution)
 		{
 			int it = std::distance(solution.begin(), 
