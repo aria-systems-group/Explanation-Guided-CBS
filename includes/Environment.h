@@ -1,18 +1,19 @@
 #pragma once
 #include <unordered_set>
-#include "../includes/State.h"
 #include <boost/functional/hash.hpp>
 #include <boost/program_options.hpp>
+#include "../includes/State.h"
+#include "../includes/Conflict.h"
 
 
 // define action
-enum class Action {
-  Up,
-  Down,
-  Left,
-  Right,
-  Wait,
-};
+// enum class Action {
+//   Up,
+//   Down,
+//   Left,
+//   Right,
+//   Wait,
+// };
 
 struct Location 
 {
@@ -56,7 +57,8 @@ class Environment {
             return abs(st.x - m_goals[m_agentIdx].x) + abs(st.y - m_goals[m_agentIdx].y);
         }
 
-        void expandState(const State st, std::vector<State>& neighbors)
+        void expandState(const State st, std::vector<State>& neighbors, 
+            std::vector<Constraint*> constraints)
         {
             // clear previous data
             neighbors.clear();
@@ -70,26 +72,27 @@ class Environment {
             // init and check "left" state
             State left(st.time + 1, st.x - 1, st.y);
 
-            if (isStateValid(up))
+            if (isStateValid(up, constraints))
             {
                 neighbors.push_back(up);
             }
-            if (isStateValid(down))
+            if (isStateValid(down, constraints))
             {
                 neighbors.push_back(down);
             }
-            if (isStateValid(right))
+            if (isStateValid(right, constraints))
             {
                 neighbors.push_back(right);
             }
-            if (isStateValid(left))
+            if (isStateValid(left, constraints))
             {
                 neighbors.push_back(left);
             }
         }
 
-        bool isStateValid(const State st) const
+        bool isStateValid(const State st, const std::vector<Constraint*> constraints) const
         {
+
             // is in env bounds
             if ( 0 > st.x || st.x > m_dimx || 0 > st.y || st.y > m_dimy)
                 return false;
@@ -97,6 +100,16 @@ class Environment {
             for (auto& obs : m_obstacles)
             {
                 if (st.x == obs.x && st.y == obs.y)
+                    return false;
+            }
+            // need to also account for constraints
+            // iterate through constraints and see if state matches any, 
+            // if so, return false
+            for (Constraint *c: constraints)
+            {
+                // note that State == is overloaded and we already provide 
+                // agent relevant constraints
+                if (c->getVertexConstraint()->m_state == st)
                     return false;
             }
             return true;
@@ -118,6 +131,8 @@ class Environment {
         // std::vector<Location> getGoals() {return m_goals;}
 
         int getAgent() {return m_agentIdx;}
+
+        const std::vector<Location> getGoals() {return m_goals;};
 
     private:
         const int m_dimx;

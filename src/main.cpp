@@ -9,7 +9,7 @@
 
 
 int main() { 
-	YAML::Node config = YAML::LoadFile("yaml/input.yaml");  // path not perfect
+	YAML::Node config = YAML::LoadFile("yaml/mapf_swap4.yaml");  // path not perfect
 
 	std::unordered_set<Location> obstacles;
 	std::vector<Location> goals;
@@ -41,7 +41,7 @@ int main() {
 	// create environment object
 	Environment *mapf = new Environment(dimx, dimy, obstacles, goals);
 
-	// A* implementation!!
+	// // A* implementation!!
 
 	// // init planner
 	// A_star *planner = new A_star(mapf);
@@ -49,29 +49,20 @@ int main() {
 	// // init solution
 	// std::vector<State> solution;
 
-	// std::ofstream fout("yaml/solution.yaml");
+	// std::ofstream out("yaml/solution.txt");
 	// for (const State &a : startStates)
 	// {
 	// 	bool success = planner->plan(a, solution);
 
 	// 	if (success)
 	// 	{
-	// 		YAML::Node node;  // starts out as null
-	// 		int it = std::distance(startStates.begin(), std::find(startStates.begin(), startStates.end(), a));
-
-	// 		node["name"] = "agent" + std::to_string(it);  // it now is a map node
-
-	// 		fout << node << std::endl;
-	// 		for (const State &st : solution)
-	// 		{
-	// 			// emitter << st;
-	// 			YAML::Node node;
-	// 			if (st.time != 0)
-	// 			{
-	// 				node["time" + std::to_string(st.time)] = "(" + std::to_string(st.x) + ", " + std::to_string(st.y) + ")";
-	// 				fout << node << std::endl;
-	// 			}
-	// 		}
+	// 		int it = std::distance(startStates.begin(), 
+	// 			std::find(startStates.begin(), startStates.end(), a));
+ //    		out << agentNames[it] << std::endl;
+ //    		for (State& st: solution) 
+ //    		{
+ //    		 	out << st << std::endl;
+ //    		}
 	// 	}
 	// 	mapf->updateAgent();
 	// }
@@ -87,9 +78,21 @@ int main() {
 	// plan
 	bool success = planner->plan(startStates, solution);
 
-
-
-
+	if (success)
+	{
+		std::cout << solution.size() << std::endl;
+		std::ofstream out("yaml/solution.txt");
+		for (std::vector<State> agentSol: solution)
+		{
+			int it = std::distance(solution.begin(), 
+				std::find(solution.begin(), solution.end(), agentSol));
+			out << agentNames[it] << std::endl;
+			for (State st: agentSol)
+			{
+				out << st << std::endl;
+			}
+		}
+	}
 
     return 0;
 }

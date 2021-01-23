@@ -6,11 +6,27 @@
 
 A_star::A_star(Environment *env): m_env(env) {};
 
-bool A_star::plan(const State& startState, std::vector<State> &solution)
+bool A_star::plan(const State& startState, std::vector<State> &solution, 
+	std::vector<Constraint*> relevantConstraints)
 {
+
 	std::cout << "A* planning for agent: " << m_env->getAgent() << std::endl;
+	if (relevantConstraints.size() == 0)
+	{
+		std::cout << "No Constraints." << std::endl;
+	}
+	else
+	{
+		std::cout << "Current Constraint List: " << std::endl;
+		for (Constraint *c: relevantConstraints)
+		{
+			std::cout << "Agent: " << c->getVertexConstraint()->m_agent << " " <<
+			"State: " << c->getVertexConstraint()->m_state << std::endl;
+		}
+	}
+
 	// clear all previous information
-	solution.clear();	
+	solution.clear();
 
 	// init open min-heap
 	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap;
@@ -49,7 +65,10 @@ bool A_star::plan(const State& startState, std::vector<State> &solution)
 		open_heap.pop();
 
 		// get neighbors
-		m_env->expandState(current->state, neighbors);
+		// with this list of constraints, we provide it to expandNode()
+		// which consquentially uses it for isStateValide()
+		// see Environment.h for details
+		m_env->expandState(current->state, neighbors, relevantConstraints);
 
 		// for all neighbors...
 		for (State& st: neighbors)

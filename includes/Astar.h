@@ -1,8 +1,9 @@
-#pragma once
 
+#pragma once
 #include <vector>
 #include <queue>
 #include <unordered_set>
+#include "../includes/Conflict.h"
 
 // A* Planner
 class A_star
@@ -10,7 +11,8 @@ class A_star
 public:
 	A_star(Environment *env);
 
-	bool plan(const State& startState, std::vector<State> &solution);
+	bool plan(const State& startState, std::vector<State> &solution, 
+        std::vector<Constraint*> relevantConstraints);
 
 	struct Node
 	{
