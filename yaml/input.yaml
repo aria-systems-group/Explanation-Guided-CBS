@@ -11,4 +11,4 @@ agents:
     goal: [4, 4]
   - name: agent1
     start: [4, 4]
-    goal: [4, 0]
+    goal: [0, 0]
