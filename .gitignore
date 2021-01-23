@@ -3,3 +3,5 @@ Planner
 Makefile
 /vizTools
 .DS_Store
+/yaml
+/txt
