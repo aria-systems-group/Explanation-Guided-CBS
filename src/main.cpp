@@ -46,13 +46,14 @@ int main() {
 	// // init planner
 	// A_star *planner = new A_star(mapf);
 
-	// // init solution
+	// // init solution and empty constraints
 	// std::vector<State> solution;
+	// std::vector<Constraint*> constraints;
 
-	// std::ofstream out("yaml/solution.txt");
+	// std::ofstream out("txt/solution.txt");
 	// for (const State &a : startStates)
 	// {
-	// 	bool success = planner->plan(a, solution);
+	// 	bool success = planner->plan(a, solution, constraints);
 
 	// 	if (success)
 	// 	{
