@@ -10,20 +10,20 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 	std::vector<Constraint*> relevantConstraints)
 {
 
-	std::cout << "A* planning for agent: " << m_env->getAgent() << std::endl;
-	if (relevantConstraints.size() == 0)
-	{
-		std::cout << "No Constraints." << std::endl;
-	}
-	else
-	{
-		std::cout << "Current Constraint List: " << std::endl;
-		for (Constraint *c: relevantConstraints)
-		{
-			std::cout << "Agent: " << c->getVertexConstraint()->m_agent << " " <<
-			"State: " << c->getVertexConstraint()->m_state << std::endl;
-		}
-	}
+	// std::cout << "A* planning for agent: " << m_env->getAgent() << std::endl;
+	// if (relevantConstraints.size() == 0)
+	// {
+	// 	std::cout << "No Constraints." << std::endl;
+	// }
+	// else
+	// {
+	// 	std::cout << "Current Constraint List: " << std::endl;
+	// 	for (Constraint *c: relevantConstraints)
+	// 	{
+	// 		std::cout << "Agent: " << c->getVertexConstraint()->m_agent << " " <<
+	// 		"State: " << c->getVertexConstraint()->m_state << std::endl;
+	// 	}
+	// }
 
 	// clear all previous information
 	solution.clear();
@@ -49,13 +49,13 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 
 		if (m_env->isStateGoal(current->state))
 		{
-			std::cout << "found goal!" << std::endl;
+			// std::cout << "found goal!" << std::endl;
 			Node *solNode = current;
 
           	while (solNode != nullptr)
           	{
           	  solution.insert(solution.begin(), solNode->state);
-          	  std::cout << solNode->state << std::endl;
+          	  // std::cout << solNode->state << std::endl;
           	  solNode = solNode->parent;
           	}
 			return true;
@@ -95,6 +95,6 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 				delete n;
 		}
 	}
-	std::cout << "No Solution Found." << std::endl;
+	std::cout << "No Solution Found using A*." << std::endl;
 	return false;
 }

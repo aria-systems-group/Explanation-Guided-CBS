@@ -8,8 +8,14 @@
 #include "../includes/Cbs.h"
 
 
-int main() { 
-	YAML::Node config = YAML::LoadFile("yaml/mapf_swap4.yaml");  // path not perfect
+int main(int argc, char** argv) { 
+	
+	std::string p = argv[1];
+
+	std::string inputYaml = argv[2];
+
+
+	YAML::Node config = YAML::LoadFile(inputYaml);  // path not perfect
 
 	std::unordered_set<Location> obstacles;
 	std::vector<Location> goals;
@@ -41,60 +47,72 @@ int main() {
 	// create environment object
 	Environment *mapf = new Environment(dimx, dimy, obstacles, goals);
 
-	// // A* implementation!!
-
-	// // init planner
-	// A_star *planner = new A_star(mapf);
-
-	// // init solution and empty constraints
-	// std::vector<State> solution;
-	// std::vector<Constraint*> constraints;
-
-	// std::ofstream out("txt/solution.txt");
-	// for (const State &a : startStates)
-	// {
-	// 	bool success = planner->plan(a, solution, constraints);
-
-	// 	if (success)
-	// 	{
-	// 		int it = std::distance(startStates.begin(), 
-	// 			std::find(startStates.begin(), startStates.end(), a));
- //    		out << agentNames[it] << std::endl;
- //    		for (State& st: solution) 
- //    		{
- //    		 	out << st << std::endl;
- //    		}
-	// 	}
-	// 	mapf->updateAgent();
-	// }
-
-	// CBS implementation!
-
-	// init planner
-	CBS *planner = new CBS(mapf);
-
-	// init solution
-	Solution solution;
-
-	// random comment
-
-	// plan
-	bool success = planner->plan(startStates, solution);
-
-	if (success)
+	if (p == "Astar")
 	{
-		std::cout << solution.size() << std::endl;
+
+
+
+		// A* implementation!!
+
+		// init planner
+		A_star *planner = new A_star(mapf);
+
+		// init solution and empty constraints
+		std::vector<State> solution;
+		std::vector<Constraint*> constraints;
+
 		std::ofstream out("txt/solution.txt");
-		for (std::vector<State> agentSol: solution)
+		int numSucc = 0;
+		for (const State &a : startStates)
 		{
-			int it = std::distance(solution.begin(), 
-				std::find(solution.begin(), solution.end(), agentSol));
-			out << agentNames[it] << std::endl;
-			for (State st: agentSol)
+			bool success = planner->plan(a, solution, constraints);
+
+			if (success)
 			{
-				out << st << std::endl;
+				int it = std::distance(startStates.begin(), 
+					std::find(startStates.begin(), startStates.end(), a));
+    			out << agentNames[it] << std::endl;
+    			for (State& st: solution) 
+    			{
+    			 	out << st << std::endl;
+    			}
+			}
+			mapf->updateAgent();
+			numSucc ++;
+		}
+		if (numSucc == startStates.size())
+			std::cout << "Successful planning using A*" << std::endl;
+	}
+
+	else if (p == "cbs" || p == "Cbs" || p == "CBS")
+	{
+		// CBS implementation!
+
+		// init planner
+		CBS *planner = new CBS(mapf);
+
+		// init solution
+		Solution solution;
+
+		// plan
+		bool success = planner->plan(startStates, solution);
+
+		if (success)
+		{
+			std::cout << "Successful planning using CBS" << std::endl;
+			std::ofstream out("txt/solution.txt");
+			for (std::vector<State> agentSol: solution)
+			{
+				int it = std::distance(solution.begin(), 
+					std::find(solution.begin(), solution.end(), agentSol));
+				out << agentNames[it] << std::endl;
+				for (State st: agentSol)
+				{
+					out << st << std::endl;
+				}
 			}
 		}
+
 	}
 
     return 0;

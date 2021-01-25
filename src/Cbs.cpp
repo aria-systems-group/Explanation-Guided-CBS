@@ -17,7 +17,7 @@ Solution CBS::lowLevelSearch(const std::vector<State>& startStates,
 	// low level planner should only be provided with the constraints
 	// it needs to worry about.
 
-	std::cout << "In CBS finding MA solution" << std::endl;
+	// std::cout << "In CBS finding MA solution" << std::endl;
 	Solution sol;
 	std::vector<State> singleSol;
 
@@ -154,18 +154,7 @@ bool CBS::plan(const std::vector<State>& startStates, Solution& solution)
 		if (c == nullptr)
 		{
 			// if no conflicts occur, then we found a solution
-			std::cout << "Solution Found" << std::endl;
-			// int a = 0;
 			solution = current->m_solution;
-			// for (std::vector<State> agentSol: current->m_solution)
-			// {
-			// 	for (State st: agentSol)
-			// 	{
-			// 		solution[a].insert(solution[a].begin(), st);
-			// 		std::cout << st << std::endl;
-			// 	}
-			// 	a ++;
-			// }
 			return true;
 		}
 		else
@@ -188,7 +177,6 @@ bool CBS::plan(const std::vector<State>& startStates, Solution& solution)
 				conflictNode *currNode = n;
 				while (currNode->parent != nullptr)
 				{
-					std::cout << "here" << std::endl;
 					constriants.push_back(&(currNode->m_constraint));
 					currNode = currNode->parent;
 				}
