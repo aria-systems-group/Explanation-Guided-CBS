@@ -6,15 +6,6 @@
 #include "../includes/Conflict.h"
 
 
-// define action
-// enum class Action {
-//   Up,
-//   Down,
-//   Left,
-//   Right,
-//   Wait,
-// };
-
 struct Location 
 {
   Location(int x, int y) : x(x), y(y) {}
@@ -23,6 +14,10 @@ struct Location
 
   bool operator==(const Location& other) const {
     return std::tie(x, y) == std::tie(other.x, other.y);
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const Location& l) {
+    return os << "(" << l.x << "," << l.y << ")";
   }
 };
 
@@ -72,34 +67,33 @@ class Environment {
             // init and check "left" state
             State left(st.time + 1, st.x - 1, st.y);
 
-            if (isStateValid(up, constraints))
+            if (isStateValid(st, up, constraints))
             {
                 neighbors.push_back(up);
             }
-            if (isStateValid(down, constraints))
+            if (isStateValid(st, down, constraints))
             {
                 neighbors.push_back(down);
             }
-            if (isStateValid(right, constraints))
+            if (isStateValid(st, right, constraints))
             {
                 neighbors.push_back(right);
             }
-            if (isStateValid(left, constraints))
+            if (isStateValid(st, left, constraints))
             {
                 neighbors.push_back(left);
             }
         }
 
-        bool isStateValid(const State st, const std::vector<Constraint*> constraints) const
+        bool isStateValid(const State curr, const State nxt, const std::vector<Constraint*> constraints) const
         {
-
             // is in env bounds
-            if ( 0 > st.x || st.x > m_dimx || 0 > st.y || st.y > m_dimy)
+            if ( 0 > nxt.x || nxt.x > m_dimx || 0 > nxt.y || nxt.y > m_dimy)
                 return false;
             // is in obstacles
             for (auto& obs : m_obstacles)
             {
-                if (st.x == obs.x && st.y == obs.y)
+                if (nxt.x == obs.x && nxt.y == obs.y)
                     return false;
             }
             // need to also account for constraints
@@ -109,8 +103,39 @@ class Environment {
             {
                 // note that State == is overloaded and we already provide 
                 // agent relevant constraints
-                if (c->getVertexConstraint()->m_state == st)
-                    return false;
+                VertexConstraint *v = c->getVertexConstraint();
+                EdgeConstraint *e = c->getEdgeConstraint();
+                if (v != nullptr)
+                {
+                    if ( (v->x == nxt.x) && (v->y == nxt.y) && (v->time == nxt.time))
+                        return false;
+                }
+
+                if (e != nullptr)
+                {
+
+                    // Edge Constraints are defined as follows! 
+                    // c->type = Conflict::Edge;
+                    // c->time1 = a1Curr.time;
+                    // c->time2 = a1Nxt.time;
+                    // c->agent1 = a1;
+                    // c->agent2 = a2;
+                    // c->x1 = a1Curr.x ; c->y1 = a1Curr.y;
+                    // c->x2 = a1Nxt.x ; c->y2 = a1Nxt.y;
+
+                    if ((e->x1 == curr.x) && (e->y1 == curr.y) && (e->time1 == curr.time))
+                    {
+                        if ((e->x2 == nxt.x) && (e->y2 == nxt.y) && (e->time2 == nxt.time))
+                        {
+                            // std::cout << e->time << ": " << e->x1 << " " << e->y1 << std::endl;
+                            // std::cout << e->time + 1 << ": " << e->x2 << " " << e->y2 << std::endl;
+                            // std::cout << curr << std::endl;
+                            // std::cout << nxt << std::endl;
+                            // std::cin >> test;
+                            return false;
+                        }
+                    }
+                }
             }
             return true;
         }
