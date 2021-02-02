@@ -68,7 +68,9 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 		// with this list of constraints, we provide it to expandNode()
 		// which consquentially uses it for isStateValide()
 		// see Environment.h for details
+		// std::cout << "entering expand" << std::endl;
 		m_env->expandState(current->state, neighbors, relevantConstraints);
+		// std::cout << "exited expand" << std::endl;
 
 		// for all neighbors...
 		for (State& st: neighbors)
@@ -95,6 +97,6 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 				delete n;
 		}
 	}
-	std::cout << "No Solution Found using A*." << std::endl;
+	std::cout << "No Solution Found using A* using current constraints." << std::endl;
 	return false;
 }
