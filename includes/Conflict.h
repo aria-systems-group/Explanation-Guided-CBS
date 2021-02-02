@@ -2,52 +2,78 @@
 
 #include "../includes/State.h"
 
+//                                               
+
 struct Conflict
 {
-	Conflict(int agentI, int agentJ, State st): m_agentI(agentI), 
-		m_agentJ(agentJ), m_state(st) {}
-	// a conflict is between two agents -- need to track them
-	const int m_agentI;
-	const int m_agentJ;
-	// a conflict also tracks a vertex and time -- both contained in state
-	const State m_state;
+  enum Type {
+    Vertex,
+    Edge,
+  };
+
+  size_t agent1;
+  size_t agent2;
+  Type type;
+
+  int time1;
+  int x1;
+  int y1;
+  int time2;
+  int x2;
+  int y2;
+
+  friend std::ostream& operator<<(std::ostream& os, const Conflict& c) 
+  {
+    switch (c.type) 
+    {
+      case Vertex:
+        return os << c.time1 << ": Vertex(" << c.x1 << "," << c.y1 << ")";
+      case Edge:
+        return os << "Edge(" << c.time1 << ": (" << c.x1 << "," << c.y1 << "), " << c.time2 << ": (" << c.x2
+                  << "," << c.y2 << ")";
+    }
+    return os;
+  }
 };
 
 
 struct VertexConstraint
 {
-	~VertexConstraint();
-	VertexConstraint(int agent, State st): 
-		m_agent(agent), m_state(st) {}
+	VertexConstraint(int agent, int t, int x, int y): 
+		agent{agent}, time{t}, x{x}, y{y} {}
 	// constraints are for single agent (i.e. agent 1 cannot go to a state s at time t)
-	const int m_agent{0};
-	const State m_state;
+	const int agent;
+	const int time;
+	const int x;
+	const int y;
 };
 
 
 struct EdgeConstraint
 {
-	EdgeConstraint(int time, int x1, int y1, int x2, int y2)
-      : m_time(time), m_x1(x1), m_y1(y1), m_x2(x2), m_y2(y2) {}
-    const int m_time;
-	const int m_x1;
-	const int m_y1;
-	const int m_x2;
-	const int m_y2;
+	EdgeConstraint(int agent, int time1, int time2, int x1, int y1, int x2, int y2)
+      : agent{agent}, time1(time1), time2(time2), x1(x1), y1(y1), x2(x2), y2(y2) {}
+    const int agent;
+    const int time1;
+	const int x1;
+	const int y1;
+    const int time2;
+	const int x2;
+	const int y2;
 };
 
 
 struct Constraint
 {
 public:
-	void add(VertexConstraint *v) {m_vertexC = v;};
+	void add(VertexConstraint *v) {vertexC = v;};
 
-	void add(EdgeConstraint *e) {m_edgeC = e;};
+	void add(EdgeConstraint *e) {edgeC = e;};
 
-	VertexConstraint* getVertexConstraint() {return m_vertexC;};
+	VertexConstraint* getVertexConstraint() {return vertexC;};
 
-	EdgeConstraint* getEdgeConstraint() {return m_edgeC;};
+	EdgeConstraint* getEdgeConstraint() {return edgeC;};
 private:
-	VertexConstraint *m_vertexC{nullptr};
-	EdgeConstraint *m_edgeC{nullptr};
+	VertexConstraint *vertexC{nullptr};
+	EdgeConstraint *edgeC{nullptr};
 };
