@@ -19,7 +19,7 @@ CBS::CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
 };
 
 
-bool CBS::is_disjoint(const std::vector<State> v1, const std::vector<State> v2)
+bool CBS::conflictNode::is_disjoint(const std::vector<State> v1, const std::vector<State> v2) const
 {
     if(v1.empty() || v2.empty()) return true;
 
@@ -47,10 +47,11 @@ bool CBS::is_disjoint(const std::vector<State> v1, const std::vector<State> v2)
     return true;
 }
 
-int CBS::segmentSolution(conflictNode* n)
+
+int CBS::conflictNode::segmentSolution()
 {
 	// this function segments a solution within a node
-	std::cout << "Segmenting Solution" << "\n";
+	// std::cout << "Segmenting Solution" << "\n";
 	// for (std::vector<State> sol: n->m_solution)
 	// {
 	// 	for (State st: sol)
@@ -61,15 +62,15 @@ int CBS::segmentSolution(conflictNode* n)
 
 	// 1. find longest solution
 	int longTime = 0;
-	for (std::vector<State> sol: n->m_solution)
+	for (std::vector<State> Asol: m_solution)
 	{
-		if (sol.size() > longTime)
-			longTime = sol.size();
+		if (Asol.size() > longTime)
+			longTime = Asol.size();
 	}
 	// std::cout << longTime << "\n";
 
 	// 2. init visited list and a segment indexing variable
-	std::vector<std::vector<State>> agentVisited(getAgents());
+	std::vector<std::vector<State>> agentVisited(m_solution.size());
 	int lastSegmentTime = 0;
 	int currCost = 1;
 
@@ -77,18 +78,18 @@ int CBS::segmentSolution(conflictNode* n)
 	for (int currTime = 0; currTime <= longTime; currTime++)
 	{
 		// 3a. add visited state for currTime
-		for (int a = 0; a < getAgents(); a++)
+		for (int a = 0; a < m_solution.size(); a++)
 		{
-			std::vector<State> currSol = n->m_solution[a];
+			std::vector<State> currSol = m_solution[a];
 			if (currTime < currSol.size())
 				agentVisited[a].push_back(currSol[currTime]);
 		}
 
 		// 3b. check if disjoint
 
-		for (int a1 = 0; a1 < getAgents(); a1++)
+		for (int a1 = 0; a1 < m_solution.size(); a1++)
 		{
-			for (int a2 = 0; a2 < getAgents(); a2++)
+			for (int a2 = 0; a2 < m_solution.size(); a2++)
 			{
 				// if these are not the same agent
 				if (a1 != a2)
@@ -101,13 +102,13 @@ int CBS::segmentSolution(conflictNode* n)
 						// while (lastSegmentTime < (currTime - 1))
 						// {
 						// std::cout << "I am here" << std::endl;
-						for (int a = 0; a < getAgents(); a++)
+						for (int a = 0; a < m_solution.size(); a++)
 						{
 							for (int t = lastSegmentTime; t < (currTime); t++)
 							{
 								// exit(1);
-								if (t < n->m_solution[a].size())
-									n->m_solution[a][t].cost = currCost;
+								if (t < m_solution[a].size())
+									m_solution[a][t].cost = currCost;
 							}
 						}
 						lastSegmentTime = currTime;
@@ -118,10 +119,10 @@ int CBS::segmentSolution(conflictNode* n)
 
 						// 3e. clear visited lists and re-init with currTime state
 						// std::cout << "last loop" << std::endl;
-						for (int a = 0; a < getAgents(); a++)
+						for (int a = 0; a < m_solution.size(); a++)
 						{
 							agentVisited[a].clear();
-							std::vector<State> currSol = n->m_solution[a];
+							std::vector<State> currSol = m_solution[a];
 							if (currTime < currSol.size())
 								agentVisited[a].push_back(currSol[currTime]);
 						}
@@ -132,13 +133,13 @@ int CBS::segmentSolution(conflictNode* n)
 		}
 	}
 	// std::cout << "out of loop" << std::endl;
-	for (int a = 0; a < getAgents(); a++)
+	for (int a = 0; a < m_solution.size(); a++)
 	{
 		for (int t = lastSegmentTime; t < longTime; t++)
 		{
-			if (t < n->m_solution[a].size())
+			if (t < m_solution[a].size())
 			{
-				n->m_solution[a][t].cost = currCost;
+				m_solution[a][t].cost = currCost;
 			}
 		}
 	}
@@ -359,7 +360,6 @@ bool CBS::plan(const std::vector<State>& startStates, Solution& solution)
 		rootNode = new conflictNode(rootSol);
 
 	std::cout << rootNode->m_cost << std::endl;
-	exit(1);
 
 	open_heap.emplace(rootNode);
 
@@ -383,7 +383,8 @@ bool CBS::plan(const std::vector<State>& startStates, Solution& solution)
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 			auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
   			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << duration2.count() << " seconds" << std::endl;
-  			int solCost = segmentSolution(current);
+  			// int solCost = segmentSolution(current->m_solution);
+  			int solCost = current->segmentSolution();
   			if (solCost <= m_bound)
   			{
   				std::cout << "Solution is Satisfiable!" << std::endl;
