@@ -36,13 +36,13 @@ public:
 
 		int calcCost()
 		{
-			// return segmentSolution();
-			int cost  = 0;
-			for (std::vector<State> sol: m_solution)
-			{
-				cost = cost + sol.size();
-			}
-			return cost;
+			return segmentSolution();
+			// int cost  = 0;
+			// for (std::vector<State> sol: m_solution)
+			// {
+			// 	cost = cost + sol.size();
+			// }
+			// return cost;
 		};
 
 		Solution m_solution;

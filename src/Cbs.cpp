@@ -359,7 +359,7 @@ bool CBS::plan(const std::vector<State>& startStates, Solution& solution)
 	else
 		rootNode = new conflictNode(rootSol);
 
-	std::cout << rootNode->m_cost << std::endl;
+	std::cout << "Root Node Cost: " << rootNode->m_cost << std::endl;
 
 	open_heap.emplace(rootNode);
 
