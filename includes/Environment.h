@@ -12,12 +12,12 @@ struct Location
   const int x;
   const int y;
 
-  bool operator==(const Location& other) const {
-    return std::tie(x, y) == std::tie(other.x, other.y);
+  bool operator==(const Location *other) const {
+    return std::tie(x, y) == std::tie(other->x, other->y);
   }
 
-  friend std::ostream& operator<<(std::ostream& os, const Location& l) {
-    return os << "(" << l.x << "," << l.y << ")";
+  friend std::ostream& operator<<(std::ostream& os, const Location *l) {
+    return os << "(" << l->x << "," << l->y << ")";
   }
 };
 
@@ -25,10 +25,10 @@ struct Location
 namespace std {
 template <>
 struct hash<Location> {
-  size_t operator()(const Location& s) const {
+  size_t operator()(const Location *s) const {
     size_t seed = 0;
-    boost::hash_combine(seed, s.x);
-    boost::hash_combine(seed, s.y);
+    boost::hash_combine(seed, s->x);
+    boost::hash_combine(seed, s->y);
     return seed;
   }
 };
@@ -36,8 +36,8 @@ struct hash<Location> {
 
 class Environment {
     public:
-        Environment(size_t dimx, size_t dimy, std::unordered_set<Location> obstacles,
-                std::vector<Location> goals):
+        Environment(const int dimx, const int dimy, std::unordered_set<Location*> obstacles,
+                std::vector<Location*> goals):
             m_dimx(dimx),
             m_dimy(dimy),
             m_obstacles(std::move(obstacles)),
@@ -45,27 +45,27 @@ class Environment {
             m_agentIdx(0)
             {}
 
-        double heuristicFunc(const State& st) const
+        double heuristicFunc(const State *st) const
         {
             // manhattan dist. from state to goal
             // use this heuristic when we can only move in 4 cardinal directions
-            return abs(st.x - m_goals[m_agentIdx].x) + abs(st.y - m_goals[m_agentIdx].y);
+            return abs(st->x - (m_goals[m_agentIdx])->x) + abs(st->y - (m_goals[m_agentIdx])->y);
         }
 
-        void expandState(const State st, std::vector<State>& neighbors, 
+        void expandState(const State *st, std::vector<State*>& neighbors, 
             std::vector<Constraint*> constraints)
         {
             // clear previous data
             neighbors.clear();
 
             // init and check "up" state
-            State up(st.time + 1, st.x, st.y + 1);
+            State *up = new State(st->time + 1, st->x, st->y + 1);
             // init and check "down" state
-            State down(st.time + 1, st.x, st.y - 1);
+            State *down = new State(st->time + 1, st->x, st->y - 1);
             // init and check "right" state
-            State right(st.time + 1, st.x + 1, st.y);
+            State *right = new State(st->time + 1, st->x + 1, st->y);
             // init and check "left" state
-            State left(st.time + 1, st.x - 1, st.y);
+            State *left = new State(st->time + 1, st->x - 1, st->y);
 
             if (isStateValid(st, up, constraints))
             {
@@ -85,15 +85,15 @@ class Environment {
             }
         }
 
-        bool isStateValid(const State curr, const State nxt, const std::vector<Constraint*> constraints) const
+        bool isStateValid(const State *curr, const State *nxt, const std::vector<Constraint*> constraints) const
         {
             // is in env bounds
-            if ( 0 > nxt.x || nxt.x > m_dimx || 0 > nxt.y || nxt.y > m_dimy)
+            if ( 0 > nxt->x || nxt->x > m_dimx || 0 > nxt->y || nxt->y > m_dimy)
                 return false;
             // is in obstacles
-            for (auto& obs : m_obstacles)
+            for (Location *obs : m_obstacles)
             {
-                if (nxt.x == obs.x && nxt.y == obs.y)
+                if (nxt->x == obs->x && nxt->y == obs->y)
                     return false;
             }
             // need to also account for constraints
@@ -107,7 +107,7 @@ class Environment {
                 EdgeConstraint *e = c->getEdgeConstraint();
                 if (v != nullptr)
                 {
-                    if ( (v->x == nxt.x) && (v->y == nxt.y) && (v->time == nxt.time))
+                    if ( (v->x == nxt->x) && (v->y == nxt->y) && (v->time == nxt->time))
                         return false;
                 }
 
@@ -123,9 +123,9 @@ class Environment {
                     // c->x1 = a1Curr.x ; c->y1 = a1Curr.y;
                     // c->x2 = a1Nxt.x ; c->y2 = a1Nxt.y;
 
-                    if ((e->x1 == curr.x) && (e->y1 == curr.y) && (e->time1 == curr.time))
+                    if ((e->x1 == curr->x) && (e->y1 == curr->y) && (e->time1 == curr->time))
                     {
-                        if ((e->x2 == nxt.x) && (e->y2 == nxt.y) && (e->time2 == nxt.time))
+                        if ((e->x2 == nxt->x) && (e->y2 == nxt->y) && (e->time2 == nxt->time))
                         {
                             // std::cout << e->time << ": " << e->x1 << " " << e->y1 << std::endl;
                             // std::cout << e->time + 1 << ": " << e->x2 << " " << e->y2 << std::endl;
@@ -140,9 +140,9 @@ class Environment {
             return true;
         }
 
-        bool isStateGoal(const State st) const
+        bool isStateGoal(const State *st) const
         {
-            return (st.x == m_goals[m_agentIdx].x && st.y == m_goals[m_agentIdx].y);
+            return (st->x == m_goals[m_agentIdx]->x && st->y == m_goals[m_agentIdx]->y);
         }
 
         void updateAgent()
@@ -157,12 +157,12 @@ class Environment {
 
         int getAgent() {return m_agentIdx;}
 
-        const std::vector<Location> getGoals() {return m_goals;};
+        const std::vector<Location*> getGoals() {return m_goals;};
 
     private:
         const int m_dimx;
         const int m_dimy;
-        const std::unordered_set<Location> m_obstacles;
-        const std::vector<Location> m_goals;
+        const std::unordered_set<Location*> m_obstacles;
+        const std::vector<Location*> m_goals;
         int m_agentIdx;  // this cycles through the agents so that A* does not need to worry about it
 };
