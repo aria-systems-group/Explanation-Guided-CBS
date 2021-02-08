@@ -2,12 +2,151 @@
 #include <chrono>
 
 
-CBS::CBS(Environment *env): m_env(env)
+// struct mycomparer {
+//     bool operator()(string const& lhs, pair<string const, SomeCustomId> const& rhs) {
+//         return lhs < rhs.first;
+//     }
+//     bool operator()(pair<string const, SomeCustomId> const& lhs, string const& rhs) {
+//         return lhs.first < rhs;
+//     }
+// };
+
+CBS::CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
 {
 	m_planner = new A_star(m_env);
 	m_numAgents = m_env->getGoals().size();
 	Constraint m_constraint{Constraint()};
 };
+
+
+bool CBS::is_disjoint(const std::vector<State> v1, const std::vector<State> v2)
+{
+    if(v1.empty() || v2.empty()) return true;
+
+    typename std::vector<State>::const_iterator 
+        it1 = v1.begin(), 
+        it1End = v1.end();
+
+    // if(*it1 > *v2.rbegin() || *it2 > *v1.rbegin()) return true;
+
+    while(it1 != it1End)  //  && it2 != it2End
+    {
+    	typename std::vector<State>::const_iterator 
+        it2 = v2.begin(), 
+        it2End = v2.end();
+    	while (it2 != it2End)
+    	{
+    		if(it1->isSameLocation(*it2))
+    			return false;
+    		else
+    			it2++;
+    	}
+        it1++;
+    }
+
+    return true;
+}
+
+int CBS::segmentSolution(conflictNode* n)
+{
+	// this function segments a solution within a node
+	std::cout << "Segmenting Solution" << "\n";
+	// for (std::vector<State> sol: n->m_solution)
+	// {
+	// 	for (State st: sol)
+	// 	{
+	// 		std::cout << st << std::endl;
+	// 	}
+	// }
+
+	// 1. find longest solution
+	int longTime = 0;
+	for (std::vector<State> sol: n->m_solution)
+	{
+		if (sol.size() > longTime)
+			longTime = sol.size();
+	}
+	// std::cout << longTime << "\n";
+
+	// 2. init visited list and a segment indexing variable
+	std::vector<std::vector<State>> agentVisited(getAgents());
+	int lastSegmentTime = 0;
+	int currCost = 1;
+
+	// 3. segment the solution
+	for (int currTime = 0; currTime <= longTime; currTime++)
+	{
+		// 3a. add visited state for currTime
+		for (int a = 0; a < getAgents(); a++)
+		{
+			std::vector<State> currSol = n->m_solution[a];
+			if (currTime < currSol.size())
+				agentVisited[a].push_back(currSol[currTime]);
+		}
+
+		// 3b. check if disjoint
+
+		for (int a1 = 0; a1 < getAgents(); a1++)
+		{
+			for (int a2 = 0; a2 < getAgents(); a2++)
+			{
+				// if these are not the same agent
+				if (a1 != a2)
+				{
+					// 3c check disjoint
+					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+					if (!disjoint)
+					{
+						// 3d. add cost for all states prior to currTime
+						// while (lastSegmentTime < (currTime - 1))
+						// {
+						// std::cout << "I am here" << std::endl;
+						for (int a = 0; a < getAgents(); a++)
+						{
+							for (int t = lastSegmentTime; t < (currTime); t++)
+							{
+								// exit(1);
+								if (t < n->m_solution[a].size())
+									n->m_solution[a][t].cost = currCost;
+							}
+						}
+						lastSegmentTime = currTime;
+						// std::cout << "now here" << std::endl;
+
+						// update cost for future
+						currCost ++;
+
+						// 3e. clear visited lists and re-init with currTime state
+						// std::cout << "last loop" << std::endl;
+						for (int a = 0; a < getAgents(); a++)
+						{
+							agentVisited[a].clear();
+							std::vector<State> currSol = n->m_solution[a];
+							if (currTime < currSol.size())
+								agentVisited[a].push_back(currSol[currTime]);
+						}
+						// std::cout << "success segment" << std::endl;
+					}
+				}
+			}
+		}
+	}
+	// std::cout << "out of loop" << std::endl;
+	for (int a = 0; a < getAgents(); a++)
+	{
+		for (int t = lastSegmentTime; t < longTime; t++)
+		{
+			if (t < n->m_solution[a].size())
+			{
+				n->m_solution[a][t].cost = currCost;
+			}
+		}
+	}
+	return currCost;
+	// std::cout << "done with function" << std::endl;
+
+}
+
 
 Solution CBS::lowLevelSearch(const std::vector<State>& startStates, 
 		std::vector<Constraint*> constraints)
@@ -237,14 +376,23 @@ bool CBS::plan(const std::vector<State>& startStates, Solution& solution)
 		if (c == nullptr)
 		{
 			// if no conflicts occur, then we found a solution
-			solution = current->m_solution;
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-			 auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+			auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
   			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << duration2.count() << " seconds" << std::endl;
-  			
-
-			return true;
+  			int solCost = segmentSolution(current);
+  			if (solCost <= m_bound)
+  			{
+  				std::cout << "Solution is Satisfiable!" << std::endl;
+  				solution = current->m_solution;
+				return true;
+  			}
+  			else
+  			{
+  				std::cout << "Solution is Not satisfiable." << std::endl;
+  				open_heap.pop();
+  				conflictNode *current = open_heap.top();
+  			}
 		}
 		else
 		{

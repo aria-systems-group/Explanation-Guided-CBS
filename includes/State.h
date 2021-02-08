@@ -12,15 +12,32 @@ struct State {
     return time == s.time && x == s.x && y == s.y;
   }
 
+  bool isSameLocation(const State& s) const 
+  {
+    if (x == s.x && y == s.y) {return true;}
+    else {return false;}
+  }
+
   bool equalExceptTime(const State& s) const { return x == s.x && y == s.y; }
 
   friend std::ostream& operator<<(std::ostream& os, const State& s) {
-    return os << s.time << ":(" << s.x << "," << s.y << ")";
+    return os << s.time << ":(" << s.x << "," << s.y << "," << s.cost << ")";
+  }
+
+  bool operator <(const State& s) const
+  {
+    return x < s.x && y < s.y;
+  }
+
+  bool operator >(const State& s) const
+  {
+    return x > s.x && y > s.y;
   }
 
   int time;
   int x;
   int y;
+  int cost = 0;
 };
 
 // create default constructor
@@ -32,6 +49,7 @@ struct hash<State> {
     boost::hash_combine(seed, s.time);
     boost::hash_combine(seed, s.x);
     boost::hash_combine(seed, s.y);
+    boost::hash_combine(seed, s.cost);
     return seed;
   }
 };
