@@ -28,8 +28,15 @@ public:
 
 		};
 
+		bool is_disjoint(const std::vector<State> v1, const std::vector<State> v2) const;
+
+		int segmentSolution(Solution &sol);
+
+		int segmentSolution();
+
 		int calcCost()
 		{
+			// return segmentSolution();
 			int cost  = 0;
 			for (std::vector<State> sol: m_solution)
 			{
@@ -53,10 +60,6 @@ public:
         	return n1->m_cost > n2->m_cost;
     	}
 	};
-
-	bool is_disjoint(const std::vector<State> v1, const std::vector<State> v2);
-
-	int segmentSolution(conflictNode *n);
 
 	Conflict* validateSolution(conflictNode *n);
 
