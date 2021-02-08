@@ -24,8 +24,8 @@ int main(int argc, char** argv) {
 
 	// parsing yaml now
 	const auto& dim = config["map"]["dimensions"];
-	int dimx = dim[0].as<int>();
-	int dimy = dim[1].as<int>();
+	int *dimx = dim[0].as<int*>();
+	int *dimy = dim[1].as<int*>();
 
 	// generate set of obstacles as a location
   	for (const auto& node : config["map"]["obstacles"])
