@@ -155,7 +155,7 @@ int CBS::conflictNode::segmentSolution()
 
 
 Solution CBS::lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constraints)
+		std::vector<Constraint*> constraints, Solution& parent)
 {
 	// we have a list of constraints for all agents from current node
 	// to root node. 
@@ -192,11 +192,18 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		// std::cout << "Agent: " << a << ", Start: " << startStates[a] << ", Goal: " << m_planner->getEnv()->getGoals()[a] << std::endl;
 		if (cont)
 		{
-			bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
-			if (success)
-				sol.push_back(singleSol);
+			if (agentRelevantCs.size() == 0 || parent.size())
+			{
+				bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+				if (success)
+					sol.push_back(singleSol);
+				else
+					cont = false;
+			}
 			else
-				cont = false;
+			{
+				sol.push_back(parent[a]);
+			}
 		}
 		
 		// std::cout << "exited planner" << std::endl;
@@ -364,7 +371,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	// find solution with no constraints
 	std::vector<Constraint*> constriants;
 	// std::cout << "searching for init sol" << std::endl;
-	Solution rootSol = lowLevelSearch(startStates, constriants);
+	Solution par;
+	Solution rootSol = lowLevelSearch(startStates, constriants, par);
 	// std::cout << "Initial Solution: " << std::endl;
 	// for (int a = 0; a < rootSol.size(); a++)
 	// {
@@ -468,7 +476,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						currNode = currNode->parent;
 					}
 
-					n->m_solution = lowLevelSearch(startStates, constriants);
+					n->m_solution = lowLevelSearch(startStates, constriants, 
+						n->parent->m_solution);
 					// update cost of solution if it is a valid one
 					if (n->m_solution.size() == m_numAgents)
 					{
@@ -534,7 +543,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						currNode = currNode->parent;
 					}
 
-					n->m_solution = lowLevelSearch(startStates, constriants);
+					n->m_solution = lowLevelSearch(startStates, constriants, 
+						n->parent->m_solution);
 					// update cost of solution if it is a valid one
 					if (n->m_solution.size() == m_numAgents)
 					{

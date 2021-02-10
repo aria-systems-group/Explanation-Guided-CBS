@@ -14,9 +14,6 @@ public:
 
 	bool plan(const std::vector<State*>& startStates, Solution& solution);
 
-	Solution lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constriants);
-
 	struct conflictNode
 	{
 	public:
@@ -51,6 +48,13 @@ public:
 		conflictNode *parent{nullptr};
 	};
 
+	Solution lowLevelSearch(const std::vector<State*>& startStates, 
+		std::vector<Constraint*> constriants, Solution& parent);
+
+	Conflict* validateSolution(conflictNode *n);
+
+	int getAgents() {return m_numAgents;};
+
 	// for open heap
 	class myconflictComparator
 	{
@@ -60,10 +64,6 @@ public:
         	return n1->m_cost > n2->m_cost;
     	}
 	};
-
-	Conflict* validateSolution(conflictNode *n);
-
-	int getAgents() {return m_numAgents;};
 
 protected:
 	Environment *m_env;
