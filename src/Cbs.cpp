@@ -192,18 +192,18 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		// std::cout << "Agent: " << a << ", Start: " << startStates[a] << ", Goal: " << m_planner->getEnv()->getGoals()[a] << std::endl;
 		if (cont)
 		{
-			if (agentRelevantCs.size() == 0 || parent.size())
-			{
-				bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
-				if (success)
-					sol.push_back(singleSol);
-				else
-					cont = false;
-			}
+			// if (agentRelevantCs.size() == 0 || parent.size())
+			// {
+			bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+			if (success)
+				sol.push_back(singleSol);
 			else
-			{
-				sol.push_back(parent[a]);
-			}
+				cont = false;
+			// }
+			// else
+			// {
+			// 	sol.push_back(parent[a]);
+			// }
 		}
 		
 		// std::cout << "exited planner" << std::endl;
@@ -223,6 +223,8 @@ Conflict* CBS::validateSolution(conflictNode *n)
 	// if conflict is found, then we add it to the node
 	Conflict *c = nullptr;
 
+	std::string test;
+
 	// check for vertex constriants
 	// note that these loops can be quicker by not double checking 
 	// i.e. a1 vs a2 and v2 vs a1
@@ -238,12 +240,13 @@ Conflict* CBS::validateSolution(conflictNode *n)
 				int t1 = n->m_solution[a1].size();
 				int t2 = n->m_solution[a2].size();
 				// std::cout << "got times" << std::endl;
+				// std::cout << "t1: " << t1 << " t2: " << t2 << std::endl;
 
 				// if statement to check the shortest path
-				if (t1 < t2)
+				if (t1 <= t2)
 				{
 					// iterate through t1 looking for vertex constraints
-					for (int t = 0; t < (t1 - 1); t++)
+					for (int t = 0; t < t1; t++)
 					{
 						// fist, vertex conflicts
 						// get both states at same time step
@@ -254,7 +257,6 @@ Conflict* CBS::validateSolution(conflictNode *n)
 
 						// std::cout << "now here" << std::endl;
 
-						
 
 						if ((a1Curr->x == a2Curr->x) && (a1Curr->y == a2Curr->y) && (a1Curr->time == a2Curr->time))
 						{
@@ -267,40 +269,69 @@ Conflict* CBS::validateSolution(conflictNode *n)
 							c->time1 = a1Curr->time;
 							c->agent1 = a1; c->agent2 = a2;
 							c->x1 = a1Curr->x; c->y1 = a1Curr->y;
+
+							// if (a1 == 1 && a2 == 7)
+							// {
+							// 	std::cout << "conflict here" << std::endl;
+							// 	if (a1Curr->time == 3 && a2Curr->time == 3)
+							// 	{
+							// 		std::cout << "In Conflict" << std::endl;
+							// 		std::cout << a1Curr <<std::endl;
+							// 		std::cout << a2Curr <<std::endl;
+							// 		std::cin >> test;
+							// 	}
+							// }
 							// std::cout << "returning true" << std::endl;
 							return c;
 						}
-						// check for edge constraint with next time step
-						State *a1Nxt = n->m_solution[a1][t + 1];
-						State *a2Nxt = n->m_solution[a2][t + 1];
 
-						// check to see if two agents flip
-						if ((a1Curr->x == a2Nxt->x) && (a1Curr->y == a2Nxt->y) && (a2Curr->x == a1Nxt->x) && (a2Curr->y == a1Nxt->y) )
+						// if (a1 == 1 && a2 == 7)
+						// {
+						// 	std::cout << "here" << std::endl;
+						// 	if (a1Curr->time == 3 && a2Curr->time == 3)
+						// 	{
+						// 		std::cout << "No Conflict" << std::endl;
+						// 		std::cout << a1Curr <<std::endl;
+						// 		std::cout << a2Curr <<std::endl;
+						// 		std::cin >> test;
+						// 	}
+						// }
+
+						if ((t + 1) < t1)
 						{
-							// std::cout << "found e conflict" << std::endl;
-							// std::cout << "Found Edge Conflict: " << std::endl;
-							// std::cout << st1 << std::endl;
-							// std::cout << st3 << std::endl;
-							c = new Conflict();
-							c->type = Conflict::Edge;
-							c->time1 = a1Curr->time;
-							c->time2 = a1Nxt->time;
-							c->agent1 = a1;
-							c->agent2 = a2;
-							c->x1 = a1Curr->x ; c->y1 = a1Curr->y;
-							c->x2 = a1Nxt->x ; c->y2 = a1Nxt->y;
-							// std::cout << "returning true" << std::endl;
-							// std::cout << c->agent1 << " " << c->agent2 << std::endl;
-							return c;
+							// check for edge constraint with next time step
+							State *a1Nxt = n->m_solution[a1][t + 1];
+							State *a2Nxt = n->m_solution[a2][t + 1];
+
+							// check to see if two agents flip
+							if ((a1Curr->x == a2Nxt->x) && (a1Curr->y == a2Nxt->y) && (a2Curr->x == a1Nxt->x) && (a2Curr->y == a1Nxt->y) )
+							{
+								// std::cout << "found e conflict" << std::endl;
+								// std::cout << "Found Edge Conflict: " << std::endl;
+								// std::cout << st1 << std::endl;
+								// std::cout << st3 << std::endl;
+								c = new Conflict();
+								c->type = Conflict::Edge;
+								c->time1 = a1Curr->time;
+								c->time2 = a1Nxt->time;
+								c->agent1 = a1;
+								c->agent2 = a2;
+								c->x1 = a1Curr->x ; c->y1 = a1Curr->y;
+								c->x2 = a1Nxt->x ; c->y2 = a1Nxt->y;
+								// std::cout << "returning true" << std::endl;
+								// std::cout << c->agent1 << " " << c->agent2 << std::endl;
+								return c;
+							}
 						}
 					}
 				}
 				else
 				{
 					// iterate through t2 looking for constraints
-					for (int t = 0; t < (t2 - 1); t++)
+					for (int t = 0; t < t2; t++)
 					{
 						// fist, vertex conflicts
+						// std::cout << "in loop time: " << t << std::endl;
 						// get both states at same time step
 						// std::cout << "down here" << std::endl;
 						State *a1Curr = n->m_solution[a1][t];
@@ -318,36 +349,65 @@ Conflict* CBS::validateSolution(conflictNode *n)
 							c->time1 = a1Curr->time;
 							c->agent1 = a1; c->agent2 = a2;
 							c->x1 = a1Curr->x ; c->y1 = a1Curr->y;
+							// if (a1 == 1 && a2 == 7)
+							// {
+							// 	std::cout << "conflict here" << std::endl;
+							// 	if (a1Curr->time == 3 && a2Curr->time == 3)
+							// 	{
+							// 		std::cout << "In Conflict" << std::endl;
+							// 		std::cout << a1Curr <<std::endl;
+							// 		std::cout << a2Curr <<std::endl;
+							// 		std::cin >> test;
+							// 	}
+							// }
 							// std::cout << "returning" << std::endl;
 							return c;
 						}
+
+						// if (a1 == 1 && a2 == 7)
+						// {
+						// 	std::cout << "here" << std::endl;
+						// 	if (a1Curr->time == 3 && a2Curr->time == 3)
+						// 	{
+						// 		std::cout << "No Conflict" << std::endl;
+						// 		std::cout << a1Curr <<std::endl;
+						// 		std::cout << a2Curr <<std::endl;
+						// 		std::cin >> test;
+						// 	}
+						// }
 						// check for edge constraint with next time step
 						// std::cout << "here" << std::endl;
-						State *a1Nxt = n->m_solution[a1][t + 1];
-						State *a2Nxt = n->m_solution[a2][t + 1];
-						// std::cout << a1Nxt << " " << a2Nxt << std::endl;
-
-						// check to see if two agents flip
-						if ((a1Curr->x == a2Nxt->x) && (a1Curr->y == a2Nxt->y) && (a2Curr->x == a1Nxt->x) && (a2Curr->y == a1Nxt->y) )
+						if ((t + 1) < t2)
 						{
-							// std::cout << "Found Edge Conflict: " << std::endl;
-							// std::cout << st1 << std::endl;
-							// std::cout << st3 << std::endl;
-							c = new Conflict();
-							c->type = Conflict::Edge;
-							c->time1 = a1Curr->time;
-							c->time2 = a1Nxt->time;
-							c->agent1 = a1;
-							c->agent2 = a2;
-							c->x1 = a1Curr->x ; c->y1 = a1Curr->y;
-							c->x2 = a1Nxt->x ; c->y2 = a1Nxt->y;
-							// std::cout << c->agent1 << " " << c->agent2 << std::endl;
-							// std::cout << "Current" << std::endl;
-							// std::cout << "Agent: " << c->agent1 << " " << a1Curr << " " << " Agent: " << c->agent2 << " " << a2Curr << std::endl;
-							// std::cout << "Next" << std::endl;
-							// std::cout << "Agent: " << c->agent1 << " " << a1Nxt << " " << " Agent: " << c->agent2 << " " << a2Nxt << std::endl;
-							// std::cout << "returning" << std::endl;
-							return c;
+							State *a1Nxt = n->m_solution[a1][t + 1];
+							State *a2Nxt = n->m_solution[a2][t + 1];
+							// std::cout << *a1Nxt << std::endl;
+							// std::cout << *a2Nxt << std::endl;
+						
+
+							// check to see if two agents flip
+							if ((a1Curr->x == a2Nxt->x) && (a1Curr->y == a2Nxt->y) && (a2Curr->x == a1Nxt->x) && (a2Curr->y == a1Nxt->y) )
+							{
+								// std::cout << "Found Edge Conflict: " << std::endl;
+								// std::cout << st1 << std::endl;
+								// std::cout << st3 << std::endl;
+								c = new Conflict();
+								c->type = Conflict::Edge;
+								c->time1 = a1Curr->time;
+								c->time2 = a1Nxt->time;
+								c->agent1 = a1;
+								c->agent2 = a2;
+								c->x1 = a1Curr->x ; c->y1 = a1Curr->y;
+								c->x2 = a1Nxt->x ; c->y2 = a1Nxt->y;
+								// std::cout << c->agent1 << " " << c->agent2 << std::endl;
+								// std::cout << "Current" << std::endl;
+								// std::cout << "Agent: " << c->agent1 << " " << a1Curr << " " << " Agent: " << c->agent2 << " " << a2Curr << std::endl;
+								// std::cout << "Next" << std::endl;
+								// std::cout << "Agent: " << c->agent1 << " " << a1Nxt << " " << " Agent: " << c->agent2 << " " << a2Nxt << std::endl;
+								// std::cout << "returning" << std::endl;
+								return c;
+							}
+							// std::cout << "changing " << std::endl;
 						}
 					}
 				}
