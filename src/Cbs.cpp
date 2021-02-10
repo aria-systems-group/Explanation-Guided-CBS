@@ -172,7 +172,6 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 	{	
 		// need to provide A* with constraints relevant to 
 		// the agent. 
-
 		// for each agent, cycle through c
 		std::vector<Constraint*> agentRelevantCs;
 		for (Constraint *c: constraints)
@@ -192,18 +191,63 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		// std::cout << "Agent: " << a << ", Start: " << startStates[a] << ", Goal: " << m_planner->getEnv()->getGoals()[a] << std::endl;
 		if (cont)
 		{
-			// if (agentRelevantCs.size() == 0 || parent.size())
-			// {
-			bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
-			if (success)
-				sol.push_back(singleSol);
+			
+			if (parent.size() == 0)
+			{
+				bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+				if (success)
+					sol.push_back(singleSol);
+				else
+					cont = false;
+			}
+			// if the most current constraint in the list of constraints is not 
+			// for agent a, then the solution will not change
+			// do this for both vertex of edge constraints
 			else
-				cont = false;
-			// }
-			// else
-			// {
-			// 	sol.push_back(parent[a]);
-			// }
+			{
+				VertexConstraint *currVC = constraints[0]->getVertexConstraint();
+				EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
+				// std::cout << currVC << std::endl;
+				// std::cout << currEC << std::endl;
+				if (currVC != nullptr)
+				{
+					// if the newest vertex constraint not with agent a
+					if (currVC->agent != a)
+					{
+						// new sol = parent sol
+						sol.push_back(parent[a]);
+					}
+					// newest vertex constraint is relevant to agent a
+					// need to replan
+					else
+					{
+						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+						if (success)
+							sol.push_back(singleSol);
+						else
+							cont = false;
+					}
+				}
+				else if (currEC != nullptr)
+				{
+					// if the newest edge constraint not with agent a
+					if (currEC->agent != a)
+					{
+						// new sol = parent sol
+						sol.push_back(parent[a]);
+					}
+					// newest edge constraint is relevant to agent a
+					// need to replan
+					else
+					{
+						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+						if (success)
+							sol.push_back(singleSol);
+						else
+							cont = false;
+					}
+				}
+			}
 		}
 		
 		// std::cout << "exited planner" << std::endl;
@@ -419,6 +463,7 @@ Conflict* CBS::validateSolution(conflictNode *n)
 
 bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 {
+	std::cout << "Init Planning" << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
 
 	solution.clear();
@@ -432,13 +477,17 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	std::vector<Constraint*> constriants;
 	// std::cout << "searching for init sol" << std::endl;
 	Solution par;
+	std::cout << "Init low lowLevelSearch" << std::endl;
 	Solution rootSol = lowLevelSearch(startStates, constriants, par);
+	std::cout << "done" << std::endl;
+	// exit(1);
+
 	// std::cout << "Initial Solution: " << std::endl;
 	// for (int a = 0; a < rootSol.size(); a++)
 	// {
 	// 	std::cout << "Agent: " << a << std::endl;
-	// 	for (State st: rootSol[a])
-	// 		std::cout << st << std::endl;
+	// 	for (State *st: rootSol[a])
+	// 		std::cout << *st << std::endl;
 	// }
 
 
