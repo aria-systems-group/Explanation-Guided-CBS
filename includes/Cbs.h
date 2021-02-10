@@ -4,7 +4,7 @@
 #include "../includes/Astar.h"
 #include "../includes/Conflict.h"
 
-typedef std::vector<std::vector<State>> Solution;
+typedef std::vector<std::vector<State*>> Solution;
 
 
 class CBS
@@ -12,9 +12,9 @@ class CBS
 public:
 	CBS(Environment *env, const int bound);
 
-	bool plan(const std::vector<State>& startStates, Solution& solution);
+	bool plan(const std::vector<State*>& startStates, Solution& solution);
 
-	Solution lowLevelSearch(const std::vector<State>& startStates, 
+	Solution lowLevelSearch(const std::vector<State*>& startStates, 
 		std::vector<Constraint*> constriants);
 
 	struct conflictNode
@@ -28,7 +28,7 @@ public:
 
 		};
 
-		bool is_disjoint(const std::vector<State> v1, const std::vector<State> v2) const;
+		bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
 
 		int segmentSolution(Solution &sol);
 

@@ -8,13 +8,17 @@
 struct State {
   State(int time, int x, int y) : time(time), x(x), y(y) {}
 
-  bool operator==(const State& s) const {
+  // bool operator==(const State *s) const {
+  //   return time == s->time && x == s->x && y == s->y;
+  // }
+
+   bool operator==(const State& s) const {
     return time == s.time && x == s.x && y == s.y;
   }
 
-  bool isSameLocation(const State& s) const 
+  bool isSameLocation(const State *s) const 
   {
-    if (x == s.x && y == s.y) {return true;}
+    if (x == s->x && y == s->y) {return true;}
     else {return false;}
   }
 
@@ -54,3 +58,6 @@ struct hash<State> {
   }
 };
 }  // namespace std
+
+
+

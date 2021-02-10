@@ -11,12 +11,12 @@ class A_star
 public:
 	A_star(Environment *env);
 
-	bool plan(const State& startState, std::vector<State> &solution, 
+	bool plan(State *startState, std::vector<State*> &solution, 
         std::vector<Constraint*> relevantConstraints);
 
 	struct Node
 	{
-    	Node(const State& state, double hScore, 
+    	Node(State *state, double hScore, 
     		double gScore = std::numeric_limits<double>::infinity())
         	: state(state), gScore(gScore), hScore(hScore), parent{nullptr} {}
 
@@ -27,7 +27,7 @@ public:
     	}
     	// gScore = is the cost of the path from the start node
     	// hScore = heuristic cot function (Equclidean dist from node to goal)
-    	State state;
+    	State *state;
     	Node *parent;
     	double gScore;
     	double hScore;

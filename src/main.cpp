@@ -17,9 +17,9 @@ int main(int argc, char** argv) {
 
 	YAML::Node config = YAML::LoadFile(inputYaml);  // path not perfect
 
-	std::unordered_set<Location> obstacles;
-	std::vector<Location> goals;
-	std::vector<State> startStates;
+	std::unordered_set<Location*> obstacles;
+	std::vector<Location*> goals;
+	std::vector<State*> startStates;
 	std::vector<std::string> agentNames;
 
 	// parsing yaml now
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 	// generate set of obstacles as a location
   	for (const auto& node : config["map"]["obstacles"])
   	{
-		obstacles.insert(Location(node[0].as<int>(), node[1].as<int>()));
+		obstacles.insert(new Location(node[0].as<int>(), node[1].as<int>()));
   	}
 
   	// for each agent, add a start state and goal location
@@ -39,8 +39,8 @@ int main(int argc, char** argv) {
 		const auto& name = node["name"];
 		const auto& start = node["start"];
 		const auto& goal = node["goal"];
-    	startStates.emplace_back(State(0, start[0].as<int>(), start[1].as<int>()));
-    	goals.emplace_back(Location(goal[0].as<int>(), goal[1].as<int>()));
+    	startStates.emplace_back(new State(0, start[0].as<int>(), start[1].as<int>()));
+    	goals.emplace_back(new Location(goal[0].as<int>(), goal[1].as<int>()));
     	agentNames.emplace_back(name.as<std::string>());
 	}
 
@@ -58,12 +58,12 @@ int main(int argc, char** argv) {
 		A_star *planner = new A_star(mapf);
 
 		// init solution and empty constraints
-		std::vector<State> solution;
+		std::vector<State*> solution;
 		std::vector<Constraint*> constraints;
 
 		std::ofstream out("txt/solution.txt");
 		int numSucc = 0;
-		for (const State &a : startStates)
+		for (State *a : startStates)
 		{
 			bool success = planner->plan(a, solution, constraints);
 
@@ -72,9 +72,9 @@ int main(int argc, char** argv) {
 				int it = std::distance(startStates.begin(), 
 					std::find(startStates.begin(), startStates.end(), a));
     			out << agentNames[it] << std::endl;
-    			for (State& st: solution) 
+    			for (State *st: solution) 
     			{
-    			 	out << st << std::endl;
+    			 	out << *st << std::endl;
     			}
 			}
 			mapf->updateAgent();
@@ -104,14 +104,14 @@ int main(int argc, char** argv) {
 		{
 			std::cout << "Successful planning using CBS" << std::endl;
 			std::ofstream out("txt/solution.txt");
-			for (std::vector<State> agentSol: solution)
+			for (std::vector<State*> agentSol: solution)
 			{
 				int it = std::distance(solution.begin(), 
 					std::find(solution.begin(), solution.end(), agentSol));
 				out << agentNames[it] << std::endl;
-				for (State st: agentSol)
+				for (State *st: agentSol)
 				{
-					out << st << std::endl;
+					out << *st << std::endl;
 				}
 			}
 		}

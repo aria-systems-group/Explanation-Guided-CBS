@@ -6,7 +6,7 @@
 
 A_star::A_star(Environment *env): m_env(env) {};
 
-bool A_star::plan(const State& startState, std::vector<State> &solution, 
+bool A_star::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints)
 {
 
@@ -31,17 +31,18 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 	// init open min-heap
 	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap;
 	// used for seeing if a node is in the heap
-	std::unordered_set<State, std::hash<State>> m_open_list;
+	std::unordered_set<State, std::hash<State>> open_list;
 
 	// init start node
 	Node *startNode = new Node(startState, m_env->heuristicFunc(startState), 0);
 	
+	// std::cout << *startState << std::endl;
 
 	open_heap.emplace(startNode);
-	m_open_list.insert(startState);
+	open_list.insert(*startState);
 
 	// init neighbors
-	std::vector<State> neighbors;
+	std::vector<State*> neighbors;
 
 	while (!open_heap.empty())
 	{
@@ -55,7 +56,6 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
           	while (solNode != nullptr)
           	{
           	  solution.insert(solution.begin(), solNode->state);
-          	  // std::cout << solNode->state << std::endl;
           	  solNode = solNode->parent;
           	}
 			return true;
@@ -72,8 +72,9 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 		m_env->expandState(current->state, neighbors, relevantConstraints);
 		// std::cout << "exited expand" << std::endl;
 
+
 		// for all neighbors...
-		for (State& st: neighbors)
+		for (State *st: neighbors)
 		{
 			// create node
 			Node *n = new Node(st, m_env->heuristicFunc(startState));
@@ -84,11 +85,11 @@ bool A_star::plan(const State& startState, std::vector<State> &solution,
 				n->parent = current;
 				n->gScore = tentative_gScore;
 				// if neighbor not in open list
-				if (m_open_list.find(st) == m_open_list.end())
+				if (open_list.find(*st) == open_list.end())
 				{
 					// add to heap and list
 					open_heap.emplace(n);
-					m_open_list.insert(st);
+					open_list.insert(*st);
 				}
 
 			}
