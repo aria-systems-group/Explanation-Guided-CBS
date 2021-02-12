@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
 		A_star *planner = new A_star(mapf);
 
 		// init solution and empty constraints
+		Solution notUsed;
 		std::vector<State*> solution;
 		std::vector<Constraint*> constraints;
 
@@ -65,7 +66,7 @@ int main(int argc, char** argv) {
 		int numSucc = 0;
 		for (State *a : startStates)
 		{
-			bool success = planner->plan(a, solution, constraints);
+			bool success = planner->plan(a, solution, constraints, notUsed);
 
 			if (success)
 			{
