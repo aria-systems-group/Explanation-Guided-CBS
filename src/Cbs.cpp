@@ -52,106 +52,106 @@ bool CBS::conflictNode::is_disjoint(const std::vector<State*> v1,
 }
 
 
-int CBS::conflictNode::segmentSolution()
-{
-	// this function segments a solution within a node
-	// for (std::vector<State> sol: n->m_solution)
-	// {
-	// 	for (State st: sol)
-	// 	{
-	// 		std::cout << st << std::endl;
-	// 	}
-	// }
+// int CBS::conflictNode::segmentSolution()
+// {
+// 	// this function segments a solution within a node
+// 	// for (std::vector<State> sol: n->m_solution)
+// 	// {
+// 	// 	for (State st: sol)
+// 	// 	{
+// 	// 		std::cout << st << std::endl;
+// 	// 	}
+// 	// }
 
-	// 1. find longest solution
-	int longTime = 0;
-	for (std::vector<State*> Asol: m_solution)
-	{
-		if (Asol.size() > longTime)
-			longTime = Asol.size();
-	}
-	// std::cout << longTime << "\n";
+// 	// 1. find longest solution
+// 	int longTime = 0;
+// 	for (std::vector<State*> Asol: m_solution)
+// 	{
+// 		if (Asol.size() > longTime)
+// 			longTime = Asol.size();
+// 	}
+// 	// std::cout << longTime << "\n";
 
-	// 2. init visited list and a segment indexing variable
-	std::vector<std::vector<State*>> agentVisited(m_solution.size());
-	int lastSegmentTime = 0;
-	int currCost = 1;
+// 	// 2. init visited list and a segment indexing variable
+// 	std::vector<std::vector<State*>> agentVisited(m_solution.size());
+// 	int lastSegmentTime = 0;
+// 	int currCost = 1;
 
-	// 3. segment the solution
-	for (int currTime = 0; currTime <= longTime; currTime++)
-	{
-		// 3a. add visited state for currTime
-		for (int a = 0; a < m_solution.size(); a++)
-		{
-			std::vector<State*> currSol = m_solution[a];
-			if (currTime < currSol.size())
-				agentVisited[a].push_back(currSol[currTime]);
-		}
+// 	// 3. segment the solution
+// 	for (int currTime = 0; currTime <= longTime; currTime++)
+// 	{
+// 		// 3a. add visited state for currTime
+// 		for (int a = 0; a < m_solution.size(); a++)
+// 		{
+// 			std::vector<State*> currSol = m_solution[a];
+// 			if (currTime < currSol.size())
+// 				agentVisited[a].push_back(currSol[currTime]);
+// 		}
 
-		// 3b. check if disjoint
+// 		// 3b. check if disjoint
 
-		for (int a1 = 0; a1 < m_solution.size(); a1++)
-		{
-			for (int a2 = 0; a2 < m_solution.size(); a2++)
-			{
-				// if these are not the same agent
-				if (a1 != a2)
-				{
-					// 3c check disjoint
-					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
-					if (!disjoint)
-					{
-						// 3d. add cost for all states prior to currTime
-						// while (lastSegmentTime < (currTime - 1))
-						// {
-						// std::cout << "I am here" << std::endl;
-						for (int a = 0; a < m_solution.size(); a++)
-						{
-							for (int t = lastSegmentTime; t <= (currTime - 1); t++)
-							{
-								// exit(1);
-								if (t < m_solution[a].size())
-									m_solution[a][t]->cost = currCost;
-							}
-						}
-						lastSegmentTime = currTime;
-						// std::cout << "now here" << std::endl;
+// 		for (int a1 = 0; a1 < m_solution.size(); a1++)
+// 		{
+// 			for (int a2 = 0; a2 < m_solution.size(); a2++)
+// 			{
+// 				// if these are not the same agent
+// 				if (a1 != a2)
+// 				{
+// 					// 3c check disjoint
+// 					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+// 					if (!disjoint)
+// 					{
+// 						// 3d. add cost for all states prior to currTime
+// 						// while (lastSegmentTime < (currTime - 1))
+// 						// {
+// 						// std::cout << "I am here" << std::endl;
+// 						for (int a = 0; a < m_solution.size(); a++)
+// 						{
+// 							for (int t = lastSegmentTime; t <= (currTime - 1); t++)
+// 							{
+// 								// exit(1);
+// 								if (t < m_solution[a].size())
+// 									m_solution[a][t]->cost = currCost;
+// 							}
+// 						}
+// 						lastSegmentTime = currTime;
+// 						// std::cout << "now here" << std::endl;
 
-						// update cost for future
-						currCost ++;
+// 						// update cost for future
+// 						currCost ++;
 
 
-						// 3e. clear visited lists and re-init with currTime state
-						// std::cout << "last loop" << std::endl;
-						for (int a = 0; a < m_solution.size(); a++)
-						{
-							agentVisited[a].clear();
-							std::vector<State*> currSol = m_solution[a];
-							if (currTime < currSol.size())
-								// m_solution[a][currTime]->cost = currCost;
-								agentVisited[a].push_back(currSol[currTime]);
-						}
-						// std::cout << "success segment" << std::endl;
-					}
-				}
-			}
-		}
-	}
-	// std::cout << "out of loop" << std::endl;
-	for (int a = 0; a < m_solution.size(); a++)
-	{
-		for (int t = lastSegmentTime; t < longTime; t++)
-		{
-			if (t < m_solution[a].size())
-			{
-				m_solution[a][t]->cost = currCost;
-			}
-		}
-	}
-	return currCost;
-	// std::cout << "done with function" << std::endl;
+// 						// 3e. clear visited lists and re-init with currTime state
+// 						// std::cout << "last loop" << std::endl;
+// 						for (int a = 0; a < m_solution.size(); a++)
+// 						{
+// 							agentVisited[a].clear();
+// 							std::vector<State*> currSol = m_solution[a];
+// 							if (currTime < currSol.size())
+// 								// m_solution[a][currTime]->cost = currCost;
+// 								agentVisited[a].push_back(currSol[currTime]);
+// 						}
+// 						// std::cout << "success segment" << std::endl;
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	// std::cout << "out of loop" << std::endl;
+// 	for (int a = 0; a < m_solution.size(); a++)
+// 	{
+// 		for (int t = lastSegmentTime; t < longTime; t++)
+// 		{
+// 			if (t < m_solution[a].size())
+// 			{
+// 				m_solution[a][t]->cost = currCost;
+// 			}
+// 		}
+// 	}
+// 	return currCost;
+// 	// std::cout << "done with function" << std::endl;
 
-}
+// }
 
 
 Solution CBS::lowLevelSearch(const std::vector<State*>& startStates, 
@@ -163,100 +163,233 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 	// low level planner should only be provided with the constraints
 	// it needs to worry about.
 
+	while (m_planner->getEnv()->getAgent() != 0)
+	{
+		m_planner->getEnv()->updateAgent();
+	}
+
 	// std::cout << "In CBS finding MA solution" << std::endl;
-	Solution sol;
+	Solution sol(getAgents());
 	std::vector<State*> singleSol;
+	std::vector<Constraint*> agentRelevantCs;
 	bool cont = true;
 
-	for (int a = 0; a < startStates.size(); a++) // (const State &st : startStates)
-	{	
-		// need to provide A* with constraints relevant to 
-		// the agent. 
-		// for each agent, cycle through c
-		std::vector<Constraint*> agentRelevantCs;
-		for (Constraint *c: constraints)
+	if (parent.size() == 0)
+	{
+		// at root node, plan for all agents
+		for (int a = 0; a < startStates.size(); a++)
 		{
-			if (c->getVertexConstraint() != nullptr)
+			if (cont)
 			{
-				if (c->getVertexConstraint()->agent == a)
-					agentRelevantCs.push_back(c);
-			}
-			if (c->getEdgeConstraint() != nullptr)
-			{
-				if (c->getEdgeConstraint()->agent == a)
-					agentRelevantCs.push_back(c);
-			}
-		}
-		// std::cout << "entering planner" << std::endl;
-		// std::cout << "Agent: " << a << ", Start: " << startStates[a] << ", Goal: " << m_planner->getEnv()->getGoals()[a] << std::endl;
-		if (cont)
-		{
-			
-			if (parent.size() == 0)
-			{
-				bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+				bool success = m_planner->plan(startStates[a], singleSol, 
+					agentRelevantCs, parent);
 				if (success)
-					sol.push_back(singleSol);
+					sol[a] = singleSol;
 				else
 					cont = false;
 			}
-			// if the most current constraint in the list of constraints is not 
-			// for agent a, then the solution will not change
-			// do this for both vertex of edge constraints
-			else
+			m_planner->getEnv()->updateAgent();
+		}
+	}
+	else
+	{
+		// not at root node, only replan for a single agent
+		VertexConstraint *currVC = constraints[0]->getVertexConstraint();
+		EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
+		// if we added a vertex constaint, replan for that agent
+		if (currVC != nullptr)
+		{
+			// get the most recent solutions
+			for (int a = 0; a < startStates.size(); a++)
 			{
-				VertexConstraint *currVC = constraints[0]->getVertexConstraint();
-				EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
-				// std::cout << currVC << std::endl;
-				// std::cout << currEC << std::endl;
-				if (currVC != nullptr)
+				// new sol = parent sol
+				if (currVC->agent != a)
+					sol[a] = parent[a];
+				else
+					sol[a] = singleSol;
+			}
+
+			// get all relevant constriants
+			for (Constraint *c: constraints)
+			{
+				if (c->getVertexConstraint() != nullptr)
 				{
-					// if the newest vertex constraint not with agent a
-					if (currVC->agent != a)
-					{
-						// new sol = parent sol
-						sol.push_back(parent[a]);
-					}
-					// newest vertex constraint is relevant to agent a
-					// need to replan
-					else
-					{
-						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
-						if (success)
-							sol.push_back(singleSol);
-						else
-							cont = false;
-					}
+					if (c->getVertexConstraint()->agent == currVC->agent)
+						agentRelevantCs.push_back(c);
 				}
-				else if (currEC != nullptr)
+				if (c->getEdgeConstraint() != nullptr)
 				{
-					// if the newest edge constraint not with agent a
-					if (currEC->agent != a)
-					{
-						// new sol = parent sol
-						sol.push_back(parent[a]);
-					}
-					// newest edge constraint is relevant to agent a
-					// need to replan
-					else
-					{
-						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
-						if (success)
-							sol.push_back(singleSol);
-						else
-							cont = false;
-					}
+					if (c->getEdgeConstraint()->agent == currVC->agent)
+						agentRelevantCs.push_back(c);
 				}
 			}
+
+			// update agent to the correct one
+			while (m_planner->getEnv()->getAgent() != currVC->agent)
+			{
+				m_planner->getEnv()->updateAgent();
+			}
+
+			bool success = m_planner->plan(startStates[currVC->agent], singleSol, 
+				agentRelevantCs, sol);
+			if (success)
+			{
+				sol[currVC->agent] = singleSol;
+			}
+			else
+				cont = false;
+			m_planner->getEnv()->updateAgent();
 		}
+		else if (currEC != nullptr)
+		{
+			// get the most recent solutions
+			for (int a = 0; a < startStates.size(); a++)
+			{
+				// new sol = parent sol
+				if (currEC->agent != a)
+					sol[a] = parent[a];
+				else
+					sol[a] = singleSol;
+			}
+
+			// get all relevant constriants
+			std::vector<Constraint*> agentRelevantCs;
+			for (Constraint *c: constraints)
+			{
+				if (c->getVertexConstraint() != nullptr)
+				{
+					if (c->getVertexConstraint()->agent == currEC->agent)
+						agentRelevantCs.push_back(c);
+				}
+				if (c->getEdgeConstraint() != nullptr)
+				{
+					if (c->getEdgeConstraint()->agent == currEC->agent)
+						agentRelevantCs.push_back(c);
+				}
+			}
+
+			// update agent to the correct one
+			while (m_planner->getEnv()->getAgent() != currEC->agent)
+			{
+				m_planner->getEnv()->updateAgent();
+			}
+
+			bool success = m_planner->plan(startStates[currEC->agent], singleSol, 
+				agentRelevantCs, sol);
+			if (success)
+			{
+				sol[currEC->agent].clear();
+				sol[currEC->agent] = singleSol;
+			}
+			else
+				cont = false;
+
+			m_planner->getEnv()->updateAgent();
+		}
+	}
+
+	
+
+
+
+	// for (int a = 0; a < startStates.size(); a++) // (const State &st : startStates)
+	// {	
+	// 	// need to provide A* with constraints relevant to 
+	// 	// the agent. 
+	// 	// for each agent, cycle through c
+	// 	std::vector<Constraint*> agentRelevantCs;
+	// 	for (Constraint *c: constraints)
+	// 	{
+	// 		if (c->getVertexConstraint() != nullptr)
+	// 		{
+	// 			if (c->getVertexConstraint()->agent == a)
+	// 				agentRelevantCs.push_back(c);
+	// 		}
+	// 		if (c->getEdgeConstraint() != nullptr)
+	// 		{
+	// 			if (c->getEdgeConstraint()->agent == a)
+	// 				agentRelevantCs.push_back(c);
+	// 		}
+	// 	}
+	// 	// std::cout << "entering planner" << std::endl;
+	// 	// std::cout << "Agent: " << a << ", Start: " << startStates[a] << ", Goal: " << m_planner->getEnv()->getGoals()[a] << std::endl;
+	// 	if (cont)
+	// 	{
+			
+	// 		if (parent.size() == 0)
+	// 		{
+	// 			bool success = m_planner->plan(startStates[a], singleSol, 
+	// 				agentRelevantCs, parent);
+	// 			if (success)
+	// 				sol.push_back(singleSol);
+	// 			else
+	// 				cont = false;
+	// 		}
+	// 		// if the most current constraint in the list of constraints is not 
+	// 		// for agent a, then the solution will not change
+	// 		// do this for both vertex of edge constraints
+	// 		else
+	// 		{
+	// 			VertexConstraint *currVC = constraints[0]->getVertexConstraint();
+	// 			EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
+	// 			// std::cout << currVC << std::endl;
+	// 			// std::cout << currEC << std::endl;
+	// 			if (currVC != nullptr)
+	// 			{
+	// 				// if the newest vertex constraint not with agent a
+	// 				if (currVC->agent != a)
+	// 				{
+	// 					// new sol = parent sol
+	// 					sol.push_back(parent[a]);
+	// 				}
+	// 				// newest vertex constraint is relevant to agent a
+	// 				// need to replan
+	// 				else
+	// 				{
+	// 					bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs, parent);
+	// 					if (success)
+	// 						sol.push_back(singleSol);
+	// 					else
+	// 						cont = false;
+	// 				}
+	// 			}
+	// 			else if (currEC != nullptr)
+	// 			{
+	// 				// if the newest edge constraint not with agent a
+	// 				if (currEC->agent != a)
+	// 				{
+	// 					// new sol = parent sol
+	// 					sol.push_back(parent[a]);
+	// 				}
+	// 				// newest edge constraint is relevant to agent a
+	// 				// need to replan
+	// 				else
+	// 				{
+	// 					bool success = m_planner->plan(startStates[a], singleSol, 
+	// 						agentRelevantCs, parent);
+	// 					if (success)
+	// 						sol.push_back(singleSol);
+	// 					else
+	// 						cont = false;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
 		
-		// std::cout << "exited planner" << std::endl;
-		// if sol found, add it --- else, return no solution
+	// 	// std::cout << "exited planner" << std::endl;
+	// 	// if sol found, add it --- else, return no solution
 		
+	// 	m_planner->getEnv()->updateAgent();
+	// }
+	// // wrap environment idx back to first agent
+	// m_planner->getEnv()->updateAgent();
+	// update agent to the correct one
+	while (m_planner->getEnv()->getAgent() != 0)
+	{
 		m_planner->getEnv()->updateAgent();
 	}
-	// wrap environment idx back to first agent
-	m_planner->getEnv()->updateAgent();
+
+
 	return sol;
 }
 
@@ -477,9 +610,9 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	std::vector<Constraint*> constriants;
 	// std::cout << "searching for init sol" << std::endl;
 	Solution par;
-	std::cout << "Init low lowLevelSearch" << std::endl;
+	// std::cout << "Init low lowLevelSearch" << std::endl;
 	Solution rootSol = lowLevelSearch(startStates, constriants, par);
-	std::cout << "done" << std::endl;
+	// std::cout << "done" << std::endl;
 	// exit(1);
 
 	// std::cout << "Initial Solution: " << std::endl;
@@ -498,7 +631,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	else
 		rootNode = new conflictNode(rootSol);
 
-	std::cout << "Root Node Cost: " << rootNode->m_cost << std::endl;
+	// std::cout << "Root Node Cost: " << rootNode->m_cost << std::endl;
 
 	open_heap.emplace(rootNode);
 
@@ -523,10 +656,21 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 			// if no conflicts occur, then we found a solution
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-			auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-  			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << duration2.count() << " seconds" << std::endl;
+  			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
+  				(duration.count() / 1000000.0) << " seconds" << std::endl;
   			// int solCost = segmentSolution(current->m_solution);
-  			int solCost = current->segmentSolution();
+  			// std::cout << "in CBS solution" << std::endl;
+  			// for (int a = 0; a < getAgents(); a++)
+  			// {
+  			// 	for (State* st: current->m_solution[a])
+  			// 	{
+  			// 		std::cout << *st << std::endl;
+  			// 	}
+  			// }
+
+  			// exit(1);
+
+  			int solCost = current->getSegCost();
   			if (solCost <= m_bound)
   			{
   				std::cout << "Solution is Satisfiable!" << std::endl;
