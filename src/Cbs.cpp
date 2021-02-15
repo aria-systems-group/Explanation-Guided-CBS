@@ -14,6 +14,7 @@
 CBS::CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
 {
 	m_planner = new A_star(m_env);
+	m_planner->updateBound(m_bound);
 	m_numAgents = m_env->getGoals().size();
 	Constraint m_constraint{Constraint()};
 };
@@ -52,106 +53,106 @@ bool CBS::conflictNode::is_disjoint(const std::vector<State*> v1,
 }
 
 
-// int CBS::conflictNode::segmentSolution()
-// {
-// 	// this function segments a solution within a node
-// 	// for (std::vector<State> sol: n->m_solution)
-// 	// {
-// 	// 	for (State st: sol)
-// 	// 	{
-// 	// 		std::cout << st << std::endl;
-// 	// 	}
-// 	// }
+int CBS::conflictNode::segmentSolution()
+{
+	// this function segments a solution within a node
+	// for (std::vector<State> sol: n->m_solution)
+	// {
+	// 	for (State st: sol)
+	// 	{
+	// 		std::cout << st << std::endl;
+	// 	}
+	// }
 
-// 	// 1. find longest solution
-// 	int longTime = 0;
-// 	for (std::vector<State*> Asol: m_solution)
-// 	{
-// 		if (Asol.size() > longTime)
-// 			longTime = Asol.size();
-// 	}
-// 	// std::cout << longTime << "\n";
+	// 1. find longest solution
+	int longTime = 0;
+	for (std::vector<State*> Asol: m_solution)
+	{
+		if (Asol.size() > longTime)
+			longTime = Asol.size();
+	}
+	// std::cout << longTime << "\n";
 
-// 	// 2. init visited list and a segment indexing variable
-// 	std::vector<std::vector<State*>> agentVisited(m_solution.size());
-// 	int lastSegmentTime = 0;
-// 	int currCost = 1;
+	// 2. init visited list and a segment indexing variable
+	std::vector<std::vector<State*>> agentVisited(m_solution.size());
+	int lastSegmentTime = 0;
+	int currCost = 1;
 
-// 	// 3. segment the solution
-// 	for (int currTime = 0; currTime <= longTime; currTime++)
-// 	{
-// 		// 3a. add visited state for currTime
-// 		for (int a = 0; a < m_solution.size(); a++)
-// 		{
-// 			std::vector<State*> currSol = m_solution[a];
-// 			if (currTime < currSol.size())
-// 				agentVisited[a].push_back(currSol[currTime]);
-// 		}
+	// 3. segment the solution
+	for (int currTime = 0; currTime <= longTime; currTime++)
+	{
+		// 3a. add visited state for currTime
+		for (int a = 0; a < m_solution.size(); a++)
+		{
+			std::vector<State*> currSol = m_solution[a];
+			if (currTime < currSol.size())
+				agentVisited[a].push_back(currSol[currTime]);
+		}
 
-// 		// 3b. check if disjoint
+		// 3b. check if disjoint
 
-// 		for (int a1 = 0; a1 < m_solution.size(); a1++)
-// 		{
-// 			for (int a2 = 0; a2 < m_solution.size(); a2++)
-// 			{
-// 				// if these are not the same agent
-// 				if (a1 != a2)
-// 				{
-// 					// 3c check disjoint
-// 					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
-// 					if (!disjoint)
-// 					{
-// 						// 3d. add cost for all states prior to currTime
-// 						// while (lastSegmentTime < (currTime - 1))
-// 						// {
-// 						// std::cout << "I am here" << std::endl;
-// 						for (int a = 0; a < m_solution.size(); a++)
-// 						{
-// 							for (int t = lastSegmentTime; t <= (currTime - 1); t++)
-// 							{
-// 								// exit(1);
-// 								if (t < m_solution[a].size())
-// 									m_solution[a][t]->cost = currCost;
-// 							}
-// 						}
-// 						lastSegmentTime = currTime;
-// 						// std::cout << "now here" << std::endl;
+		for (int a1 = 0; a1 < m_solution.size(); a1++)
+		{
+			for (int a2 = 0; a2 < m_solution.size(); a2++)
+			{
+				// if these are not the same agent
+				if (a1 != a2)
+				{
+					// 3c check disjoint
+					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+					if (!disjoint)
+					{
+						// 3d. add cost for all states prior to currTime
+						// while (lastSegmentTime < (currTime - 1))
+						// {
+						// std::cout << "I am here" << std::endl;
+						for (int a = 0; a < m_solution.size(); a++)
+						{
+							for (int t = lastSegmentTime; t <= (currTime - 1); t++)
+							{
+								// exit(1);
+								if (t < m_solution[a].size())
+									m_solution[a][t]->cost = currCost;
+							}
+						}
+						lastSegmentTime = currTime;
+						// std::cout << "now here" << std::endl;
 
-// 						// update cost for future
-// 						currCost ++;
+						// update cost for future
+						currCost ++;
 
 
-// 						// 3e. clear visited lists and re-init with currTime state
-// 						// std::cout << "last loop" << std::endl;
-// 						for (int a = 0; a < m_solution.size(); a++)
-// 						{
-// 							agentVisited[a].clear();
-// 							std::vector<State*> currSol = m_solution[a];
-// 							if (currTime < currSol.size())
-// 								// m_solution[a][currTime]->cost = currCost;
-// 								agentVisited[a].push_back(currSol[currTime]);
-// 						}
-// 						// std::cout << "success segment" << std::endl;
-// 					}
-// 				}
-// 			}
-// 		}
-// 	}
-// 	// std::cout << "out of loop" << std::endl;
-// 	for (int a = 0; a < m_solution.size(); a++)
-// 	{
-// 		for (int t = lastSegmentTime; t < longTime; t++)
-// 		{
-// 			if (t < m_solution[a].size())
-// 			{
-// 				m_solution[a][t]->cost = currCost;
-// 			}
-// 		}
-// 	}
-// 	return currCost;
-// 	// std::cout << "done with function" << std::endl;
+						// 3e. clear visited lists and re-init with currTime state
+						// std::cout << "last loop" << std::endl;
+						for (int a = 0; a < m_solution.size(); a++)
+						{
+							agentVisited[a].clear();
+							std::vector<State*> currSol = m_solution[a];
+							if (currTime < currSol.size())
+								// m_solution[a][currTime]->cost = currCost;
+								agentVisited[a].push_back(currSol[currTime]);
+						}
+						// std::cout << "success segment" << std::endl;
+					}
+				}
+			}
+		}
+	}
+	// std::cout << "out of loop" << std::endl;
+	for (int a = 0; a < m_solution.size(); a++)
+	{
+		for (int t = lastSegmentTime; t < longTime; t++)
+		{
+			if (t < m_solution[a].size())
+			{
+				m_solution[a][t]->cost = currCost;
+			}
+		}
+	}
+	return currCost;
+	// std::cout << "done with function" << std::endl;
 
-// }
+}
 
 
 Solution CBS::lowLevelSearch(const std::vector<State*>& startStates, 
@@ -204,9 +205,15 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			{
 				// new sol = parent sol
 				if (currVC->agent != a)
-					sol[a] = parent[a];
-				else
-					sol[a] = singleSol;
+				{
+					for (State* st: parent[a])
+					{
+						State *st_new = new State(st);
+						sol[a].push_back(st_new);
+					}
+				}
+				// else
+				// 	sol[a] = singleSol;
 			}
 
 			// get all relevant constriants
@@ -246,10 +253,16 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			for (int a = 0; a < startStates.size(); a++)
 			{
 				// new sol = parent sol
-				if (currEC->agent != a)
-					sol[a] = parent[a];
-				else
-					sol[a] = singleSol;
+				if (currVC->agent != a)
+				{
+					for (State* st: parent[a])
+					{
+						State *st_new = new State(st);
+						sol[a].push_back(st_new);
+					}
+				}
+				// else
+				// 	sol[a] = singleSol;
 			}
 
 			// get all relevant constriants
@@ -278,7 +291,7 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 				agentRelevantCs, sol);
 			if (success)
 			{
-				sol[currEC->agent].clear();
+				// sol[currEC->agent].clear();
 				sol[currEC->agent] = singleSol;
 			}
 			else
@@ -622,7 +635,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	// 	for (State *st: rootSol[a])
 	// 		std::cout << *st << std::endl;
 	// }
-
+	std::string test;
 
 	conflictNode *rootNode;
 	
@@ -669,8 +682,17 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
   			// }
 
   			// exit(1);
-
+  			// std::cout << current << std::endl;
+			// std::cin >>test;
   			int solCost = current->getSegCost();
+  	// 		for (int a = 0; a < getAgents(); a++)
+			// {
+			// 	std::cout << "Agent: " << a << std::endl;
+			// 	for (State* st: current->m_solution[a])
+			// 	{
+			// 		std::cout << *st << std::endl;
+			// 	}
+			// }
   			if (solCost <= m_bound)
   			{
   				std::cout << "Solution is Satisfiable!" << std::endl;
@@ -704,7 +726,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					// c->x1 = st1.x ; c->y1 = st1.y;
 
 					// as per paper, new node is initialized with parent solution
-					conflictNode *n = new conflictNode(current->m_solution);
+					std::vector<std::vector<State*>> empty;
+					conflictNode *n = new conflictNode(empty);
 					// new node branches from current
 					n->parent = current;
 					// create constraint
@@ -732,8 +755,22 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					n->m_solution = lowLevelSearch(startStates, constriants, 
 						n->parent->m_solution);
 					// update cost of solution if it is a valid one
+					// std::cout << n << std::endl;
 					if (n->m_solution.size() == m_numAgents)
 					{
+
+						// for (int a = 0; a < getAgents(); a++)
+						// {
+						// 	std::cout << "Agent: " << a << std::endl;
+						// 	for (State* st: n->m_solution[a])
+						// 	{
+						// 		std::cout << *st << std::endl;
+						// 	}
+						// }
+
+						// std::cin >>test;
+
+
 						n->m_cost = n->calcCost();
 						open_heap.emplace(n);
 					}
@@ -769,9 +806,9 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					// c->agent2 = a2;
 					// c->x1 = a1Curr.x ; c->y1 = a1Curr.y;
 					// c->x2 = a1Nxt.x ; c->y2 = a1Nxt.y;
-
+					std::vector<std::vector<State*>> empty;
 					// as per paper, new node is initialized with parent solution
-					conflictNode *n = new conflictNode(current->m_solution);
+					conflictNode *n = new conflictNode(empty);
 					// new node branches from current
 					n->parent = current;
 					// create constraint -- changes based on which agent we are talking about
@@ -795,12 +832,22 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						constriants.push_back(&(currNode->m_constraint));
 						currNode = currNode->parent;
 					}
-
+					// std::cout << n << std::endl;
 					n->m_solution = lowLevelSearch(startStates, constriants, 
 						n->parent->m_solution);
 					// update cost of solution if it is a valid one
 					if (n->m_solution.size() == m_numAgents)
 					{
+
+						// for (int a = 0; a < getAgents(); a++)
+						// {
+						// 	std::cout << "Agent: " << a << std::endl;
+						// 	for (State* st: n->m_solution[a])
+						// 	{
+						// 		std::cout << *st << std::endl;
+						// 	}
+						// }
+						// std::cin >>test;
 						n->m_cost = n->calcCost();
 						open_heap.emplace(n);
 					}

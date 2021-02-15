@@ -27,12 +27,12 @@ public:
 
 		bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
 
-		// int segmentSolution();
+		int segmentSolution();
 
 		int calcCost()
 		{
 			// return segmentSolution();
-			int cost  = 0;
+			int cost = 0;
 			for (std::vector<State*> sol: m_solution)
 			{
 				cost = cost + sol.size();
