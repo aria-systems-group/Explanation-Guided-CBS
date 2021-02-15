@@ -376,7 +376,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 				{
 					if (parentSol.size() != 0)
 					{
-						if (n->hScore >= getBound())
+						if (n->hScore <= getBound())
 						{
 							open_heap.emplace(n);
 							open_list.insert(*st);
