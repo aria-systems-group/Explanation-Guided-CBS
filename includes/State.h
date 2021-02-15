@@ -11,6 +11,29 @@ struct State {
   // bool operator==(const State *s) const {
   //   return time == s->time && x == s->x && y == s->y;
   // }
+  State(const State* other) 
+  { // copy constructor
+      time = int(other->time);
+      x = int(other->x);
+      y = int(other->y);
+      cost = int(other->cost);
+  }
+  // State* operator=(const State* other) 
+  // { // copy assignment constructor
+  //   // protect against self assignment
+  //   if (this != &other) 
+  //   {
+  //       if (p != 0) 
+  //       {
+  //         *p = *other.p;
+  //       } 
+  //       else 
+  //       { // p is null - no memory allocated yet
+  //           p = new int(*other.p);
+  //       }
+  //   }
+  //   return *this;
+  //      }
 
    bool operator==(const State& s) const {
     return time == s.time && x == s.x && y == s.y;

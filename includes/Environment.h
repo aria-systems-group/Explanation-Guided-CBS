@@ -153,11 +153,12 @@ class Environment {
                 m_agentIdx = 0;
         }
 
-        // std::vector<Location> getGoals() {return m_goals;}
-
         int getAgent() {return m_agentIdx;}
 
         const std::vector<Location*> getGoals() {return m_goals;};
+
+        const int getXdim() {return m_dimx;};
+        const int getYdim() {return m_dimy;};
 
     private:
         const int m_dimx;
