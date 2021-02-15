@@ -17,7 +17,7 @@ public:
 
 	struct Node
 	{
-    	Node(State *state, double hScore, 
+    	Node(State *state, double hScore = std::numeric_limits<double>::infinity(), 
     		double gScore = std::numeric_limits<double>::infinity())
         	: state(state), gScore(gScore), hScore(hScore), parent{nullptr} {}
 
@@ -26,6 +26,8 @@ public:
     	  os << "state: " << node.state << " fScore: " << (node.gScore + node.hScore);
     	  return os;
     	}
+
+        
 
     	// gScore = is the cost of the path from the start node
     	// hScore = heuristic cost function (Equclidean dist from node to goal)
@@ -54,7 +56,14 @@ public:
     	}
 	};
 
+    void updateBound(const int maxSegments)
+    {
+        m_bound = maxSegments;
+    };
+
 	Environment* getEnv() {return m_env;};
+    int getBound() {return m_bound;};
 private:
 	Environment *m_env;
+    int m_bound{std::numeric_limits<int>::infinity()};
 };

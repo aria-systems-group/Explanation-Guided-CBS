@@ -70,6 +70,31 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 			longTime = currSol.size();
 	}
 
+	// Clear all costs 
+	for (int a = 0; a < otherSols.size(); a++)
+	{
+		// std::cout << "Agent: " << a << std::endl;
+		for (int t = 0; t <= longTime; t++)
+		{
+			if (a == m_env->getAgent())
+			{
+				if (t < currPathSeg.size())
+				{
+					currPathSeg[t]->cost = 0;
+					// std::cout << *currPathSeg[t] << std::endl;
+				}
+			}
+			else
+			{
+				if (t < otherSols[a].size())
+				{
+					otherSols[a][t]->cost = 0;
+					// std::cout << *otherSols[a][t] << std::endl;
+				}
+			}
+		}
+	}
+
 	// 3. init a visited list for all agents and an indexing variable
 	std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
 	int lastSegmentTime = 0;
@@ -103,47 +128,94 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 				if (a1 != a2)
 				{
 					// 4c. check disjoint
+					// std::cout << "Checking Agents: " << a1 << " , " << a2 << std::endl;
 					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
 					if (!disjoint)
 					{
+						// std::cout << "Segmenting at : " << currTime << std::endl;
 						// 4d. add cost for all states prior to currTime
+						
+
+						// for (State *st: currPathSeg)
+						// {
+						// 	std::cout << "Address: " << st << std::endl;
+						// 	std::cout << " Values: " << *st << std::endl;
+						// }
+
+
 						for (int a = 0; a < otherSols.size(); a++)
 						{
+							// std::cout << "Changing Costs for Agent: " << a << std::endl; 
 							for (int t = lastSegmentTime; t < currTime; t++)
 							{
+								// std::cout << "Time: " << t << std::endl;
 								if (a == m_env->getAgent())
 								{
 									if (t < currPathSeg.size())
+									{
+										// std::cout << "Changing planning agent " << std::endl;
 										currPathSeg[t]->cost = currCost;
+										// std::cout << "Address: " << currPathSeg[t] << std::endl;
+										// std::cout << " Values: " << *currPathSeg[t] << std::endl;
+									}
 								}
 								else
 								{
 									std::vector<State*> currSol = otherSols[a];
-									if (currTime < currSol.size())
+									if (t < currSol.size())
+									{
+										// std::cout << "Changing other agent " << std::endl;
 										otherSols[a][t]->cost = currCost;
+									}
 								}
 							}
 						}
 						lastSegmentTime = currTime;
 
+						// std::cout << "Not Disjoint" << std::endl;
+						// std::cout << "old cost: " << currCost << std::endl;
 						// update cost for future
 						currCost ++;
+						// std::cout << "new cost: " << currCost << std::endl;
+
+						// for (int a = 0; a < otherSols.size(); a++)
+						// {
+						// 	std::cout << "Agent: " << a << std::endl;
+						// 	for (int t = 0; t <= longTime; t++)
+						// 	{
+						// 		if (a == m_env->getAgent())
+						// 		{
+						// 			if (t < currPathSeg.size())
+						// 			{
+						// 				std::cout << *currPathSeg[t] << std::endl;
+						// 			}
+						// 		}
+						// 		else
+						// 		{
+						// 			if (t < otherSols[a].size())
+						// 			{
+						// 				std::cout << *otherSols[a][t] << std::endl;
+						// 			}
+						// 		}
+						// 	}
+						// }
+
 
 						// 4e. clear visited lists and re-init with currTime state
 						for (int a = 0; a < otherSols.size(); a++)
 						{
 							agentVisited[a].clear();
-							if (a == m_env->getAgent())
-							{
-								if (currTime < currPathSeg.size())
-									agentVisited[a].push_back(currPathSeg[currTime]);
-							}
-							else
-							{
-								std::vector<State*> currSol = otherSols[a];
-								if (currTime < currSol.size())
-									agentVisited[a].push_back(otherSols[a][currTime]);
-							}
+							// if (a == m_env->getAgent())
+							// {
+							// 	if (currTime < currPathSeg.size())
+							// 		agentVisited[a].push_back(currPathSeg[currTime]);
+							// }
+							// else
+							// {
+							// 	std::vector<State*> currSol = otherSols[a];
+							// 	if (currTime < currSol.size())
+							// 		agentVisited[a].push_back(otherSols[a][currTime]);
+							// }
 						}
 					}
 				}
@@ -178,6 +250,32 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 			}
 		}
 	}
+
+	// for (int a = 0; a < otherSols.size(); a++)
+	// {
+	// 	std::cout << "Agent: " << a << std::endl;
+	// 	for (int t = 0; t <= longTime; t++)
+	// 	{
+	// 		if (a == m_env->getAgent())
+	// 		{
+	// 			if (t < currPathSeg.size())
+	// 			{
+	// 				// currPathSeg[t]->cost = currCost;
+	// 				std::cout << *currPathSeg[t] << std::endl;
+	// 			}
+	// 		}
+	// 		else
+	// 		{
+	// 			if (t < otherSols[a].size())
+	// 			{
+	// 				// otherSols[a][t]->cost = currCost;
+	// 				std::cout << *otherSols[a][t] << std::endl;
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	// std::cin >> test;
 	
 	return currCost;
 }
@@ -228,7 +326,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		{
 			// std::cout << "found goal!" << std::endl;
 			// if (parentSol.size() != 0)
-			SegHeuristic(current, parentSol);
+			// SegHeuristic(current, parentSol);
 			Node *solNode = current;
 
           	while (solNode != nullptr)
@@ -255,24 +353,43 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		for (State *st: neighbors)
 		{
 			// create node
-			Node *n = new Node(st, m_env->heuristicFunc(startState));
+			Node *n = new Node(st);
+			n->parent = current;
+			
 			// the edge weight from current to neighbor assumed to always = 1
 			int tentative_gScore = current->gScore + 1;
 			if (tentative_gScore < n->gScore)
 			{
-				n->parent = current;
+				
 				n->gScore = tentative_gScore;
+				// update h-score
 				// if a parent solution exists, lets calculate the segment cost
-				// if (parentSol.size() != 0)
-				SegHeuristic(n, parentSol);
+				// make it dominate by mult. by gridspace
+				// otherwise, use dist to goal heuristic
+				if (parentSol.size() != 0)
+					n->hScore = m_env->getXdim() * m_env->getYdim() * (SegHeuristic(n, parentSol));
+				else
+					n->hScore = m_env->heuristicFunc(startState);
+
 				// if neighbor not in open list
 				if (open_list.find(*st) == open_list.end())
 				{
-					// add to heap and list
-					open_heap.emplace(n);
-					open_list.insert(*st);
+					if (parentSol.size() != 0)
+					{
+						if (n->hScore >= getBound())
+						{
+							open_heap.emplace(n);
+							open_list.insert(*st);
+						}
+					}
+					else if (parentSol.size() == 0)
+					{
+						open_heap.emplace(n);
+						open_list.insert(*st);
+					}
 				}
-
+				else
+					delete n;
 			}
 			// no need for this node to take up memory
 			else
