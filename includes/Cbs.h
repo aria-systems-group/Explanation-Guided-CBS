@@ -40,7 +40,7 @@ public:
 			return cost;
 		};
 
-		int getSegCost()
+		int getSegCost() const
 		{
 			int cost = 0;
 			for (std::vector<State*> sol: m_solution)
@@ -71,7 +71,16 @@ public:
 	public:
     	int operator() (const conflictNode *n1, const conflictNode *n2)
     	{
-        	return n1->m_cost > n2->m_cost;
+        	if (n1->getSegCost() == n2->getSegCost())
+            {
+                // which is shorter SOC
+                return n1->m_cost > n2->m_cost;
+            }
+            else
+            {
+                // which segments are smaller
+                return n1->getSegCost() > n2->getSegCost();
+            }
     	}
 	};
 

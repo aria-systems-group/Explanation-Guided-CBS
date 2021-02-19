@@ -212,8 +212,6 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 						sol[a].push_back(st_new);
 					}
 				}
-				// else
-				// 	sol[a] = singleSol;
 			}
 
 			// get all relevant constriants
@@ -253,7 +251,7 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			for (int a = 0; a < startStates.size(); a++)
 			{
 				// new sol = parent sol
-				if (currVC->agent != a)
+				if (currEC->agent != a)
 				{
 					for (State* st: parent[a])
 					{
@@ -261,8 +259,6 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 						sol[a].push_back(st_new);
 					}
 				}
-				// else
-				// 	sol[a] = singleSol;
 			}
 
 			// get all relevant constriants
@@ -609,7 +605,8 @@ Conflict* CBS::validateSolution(conflictNode *n)
 
 bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 {
-	std::cout << "Init Planning" << std::endl;
+	std::cout << "Now Planning with CBS" << std::endl;
+	int timeAstar = 0;
 	auto start = std::chrono::high_resolution_clock::now();
 
 	solution.clear();
@@ -624,7 +621,12 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	// std::cout << "searching for init sol" << std::endl;
 	Solution par;
 	// std::cout << "Init low lowLevelSearch" << std::endl;
+	auto t1 = std::chrono::high_resolution_clock::now();
 	Solution rootSol = lowLevelSearch(startStates, constriants, par);
+	auto t2 = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+	timeAstar = timeAstar + duration.count();
+
 	// std::cout << "done" << std::endl;
 	// exit(1);
 
@@ -642,11 +644,10 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	if (rootSol.size() != m_numAgents)
 		return false;
 	else
+	{
 		rootNode = new conflictNode(rootSol);
-
-	// std::cout << "Root Node Cost: " << rootNode->m_cost << std::endl;
-
-	open_heap.emplace(rootNode);
+		open_heap.emplace(rootNode);
+	}
 
 	while (!open_heap.empty())
 	{
@@ -671,6 +672,10 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
   			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
   				(duration.count() / 1000000.0) << " seconds" << std::endl;
+  			
+  			std::cout << "Time Spent in A*: " << timeAstar << " microseconds" << 
+  				" or approx. " << (timeAstar / 1000000.0) << " seconds" << std::endl;
+
   			// int solCost = segmentSolution(current->m_solution);
   			// std::cout << "in CBS solution" << std::endl;
   			// for (int a = 0; a < getAgents(); a++)
@@ -752,11 +757,25 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						currNode = currNode->parent;
 					}
 
+					auto t1 = std::chrono::high_resolution_clock::now();
 					n->m_solution = lowLevelSearch(startStates, constriants, 
 						n->parent->m_solution);
+					auto t2 = std::chrono::high_resolution_clock::now();
+					auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+					timeAstar = timeAstar + duration.count();
+
+					bool valid = true;
+					for (std::vector<State*> sol: n->m_solution)
+					{
+						if (sol.size() == 0)
+						{
+							valid = false;
+							break;
+						}
+					}
 					// update cost of solution if it is a valid one
 					// std::cout << n << std::endl;
-					if (n->m_solution.size() == m_numAgents)
+					if (valid)
 					{
 
 						// for (int a = 0; a < getAgents(); a++)
@@ -832,11 +851,25 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						constriants.push_back(&(currNode->m_constraint));
 						currNode = currNode->parent;
 					}
-					// std::cout << n << std::endl;
+
+					auto t1 = std::chrono::high_resolution_clock::now();
 					n->m_solution = lowLevelSearch(startStates, constriants, 
 						n->parent->m_solution);
+					auto t2 = std::chrono::high_resolution_clock::now();
+					auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+					timeAstar = timeAstar + duration.count();
+
+					bool valid = true;
+					for (std::vector<State*> sol: n->m_solution)
+					{
+						if (sol.size() == 0)
+						{
+							valid = false;
+							break;
+						}
+					}
 					// update cost of solution if it is a valid one
-					if (n->m_solution.size() == m_numAgents)
+					if (valid)
 					{
 
 						// for (int a = 0; a < getAgents(); a++)
