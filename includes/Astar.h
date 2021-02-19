@@ -35,10 +35,12 @@ public:
     	Node *parent;
     	double gScore;
     	double hScore;
-        double segCost{0};
+        int segCost{0};
 	};
 
     int SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols);
+
+    bool testSeg(Node *n, std::vector<std::vector<State*>> other);
 
     bool is_disjoint(const std::vector<State*> v1, 
         const std::vector<State*> v2) const;
@@ -50,9 +52,18 @@ public:
 	public:
     	int operator() (const Node *n1, const Node *n2)
     	{
-    		double fScore1 = n1->gScore + n1->hScore;
-    		double fScore2 = n2->gScore + n2->hScore;
-        	return fScore1 > fScore2;
+    		if (n1->segCost == n2->segCost)
+            {
+                // which is smaller cost
+                double fScore1 = n1->gScore + n1->hScore;
+                double fScore2 = n2->gScore + n2->hScore;
+                return fScore1 > fScore2;
+            }
+            else
+            {
+                // which segments are smaller
+                return n1->segCost > n2->segCost;
+            }  
     	}
 	};
 

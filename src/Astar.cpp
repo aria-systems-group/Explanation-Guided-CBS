@@ -38,6 +38,52 @@ bool A_star::is_disjoint(const std::vector<State*> v1,
     return true;
 }
 
+
+bool A_star::testSeg(Node *n, std::vector<std::vector<State*>> other)
+{
+	// find all n->parents that share cost of n
+	// Node *currNode = n;
+	// std::vector<Node*> currAgentSeg;
+	// while (currNode != nullptr)
+	// {
+	// 	currAgentSeg.push_back(currNode);
+	// 	currNode = currNode->parent;
+	// }
+
+	// // get all agent path segments of same time interval
+	// std::vector<std::vector<State*>>  allAgentSegs(getEnv()->getGoals().size());
+	// for (int a = 0; a < other.size(); a++)
+	// {
+	// 	std::vector<State*> agentSol = other[a];
+	// 	if (other[a].size() == 0)
+	// 	{
+	// 		for (Node *tmpNode: currAgentSeg)
+	// 		{
+	// 			allAgentSegs[a].push_back(tmpNode->state);
+	// 		}
+	// 	}
+	// 	else
+	// 		for (Node *tmp: currAgentSeg)
+	// 		{
+	// 			int tmpTime = tmp->state->time;
+	// 			if (tmpTime < other[a].size())
+	// 				allAgentSegs[a].push_back(other[a][tmpTime]);
+	// 		}
+	// }
+
+	// for (std::vector<State*> segment: allAgentSegs)
+	// {
+	// 	std::cout << segment.size() << std::endl;
+	// }
+
+
+	
+	// exit(1);
+	return 0;
+}
+
+
+
 int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
 	// std::string test;
@@ -113,8 +159,7 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 			}
 			else
 			{
-				std::vector<State*> currSol = otherSols[a];
-				if (currTime < currSol.size())
+				if (currTime < otherSols[a].size())
 					agentVisited[a].push_back(otherSols[a][currTime]);
 			}
 		}
@@ -145,10 +190,8 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 
 						for (int a = 0; a < otherSols.size(); a++)
 						{
-							// std::cout << "Changing Costs for Agent: " << a << std::endl; 
 							for (int t = lastSegmentTime; t < currTime; t++)
 							{
-								// std::cout << "Time: " << t << std::endl;
 								if (a == m_env->getAgent())
 								{
 									if (t < currPathSeg.size())
@@ -161,14 +204,14 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 								}
 								else
 								{
-									std::vector<State*> currSol = otherSols[a];
-									if (t < currSol.size())
+									if (t < otherSols[a].size())
 									{
 										// std::cout << "Changing other agent " << std::endl;
 										otherSols[a][t]->cost = currCost;
 									}
 								}
 							}
+							
 						}
 						lastSegmentTime = currTime;
 
@@ -205,17 +248,17 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 						for (int a = 0; a < otherSols.size(); a++)
 						{
 							agentVisited[a].clear();
-							// if (a == m_env->getAgent())
-							// {
-							// 	if (currTime < currPathSeg.size())
-							// 		agentVisited[a].push_back(currPathSeg[currTime]);
-							// }
-							// else
-							// {
-							// 	std::vector<State*> currSol = otherSols[a];
-							// 	if (currTime < currSol.size())
-							// 		agentVisited[a].push_back(otherSols[a][currTime]);
-							// }
+							if (a == m_env->getAgent())
+							{
+								if (currTime < currPathSeg.size())
+									agentVisited[a].push_back(currPathSeg[currTime]);
+							}
+							else
+							{
+								std::vector<State*> currSol = otherSols[a];
+								if (currTime < currSol.size())
+									agentVisited[a].push_back(otherSols[a][currTime]);
+							}
 						}
 					}
 				}
@@ -302,6 +345,8 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	// clear all previous information
 	solution.clear();
 
+	std::string test;
+
 	// init open min-heap
 	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap;
 	// used for seeing if a node is in the heap
@@ -324,10 +369,9 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 
 		if (m_env->isStateGoal(current->state))
 		{
-			// std::cout << "found goal!" << std::endl;
-			// if (parentSol.size() != 0)
-			// SegHeuristic(current, parentSol);
 			Node *solNode = current;
+
+			solNode->segCost = SegHeuristic(solNode, parentSol);
 
           	while (solNode != nullptr)
           	{
@@ -344,48 +388,46 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		// with this list of constraints, we provide it to expandNode()
 		// which consquentially uses it for isStateValide()
 		// see Environment.h for details
-		// std::cout << "entering expand" << std::endl;
 		m_env->expandState(current->state, neighbors, relevantConstraints);
-		// std::cout << "exited expand" << std::endl;
 
 
 		// for all neighbors...
 		for (State *st: neighbors)
 		{
 			// create node
-			Node *n = new Node(st);
+			Node *n = new Node(st, m_env->heuristicFunc(st));
 			n->parent = current;
-			
 			// the edge weight from current to neighbor assumed to always = 1
-			int tentative_gScore = current->gScore + 1;
+			int tentative_gScore = n->parent->gScore + 1;
 			if (tentative_gScore < n->gScore)
 			{
 				
 				n->gScore = tentative_gScore;
-				// update h-score
-				// if a parent solution exists, lets calculate the segment cost
-				// make it dominate by mult. by gridspace
-				// otherwise, use dist to goal heuristic
-				if (parentSol.size() != 0)
-					n->hScore = m_env->getXdim() * m_env->getYdim() * (SegHeuristic(n, parentSol));
-				else
-					n->hScore = m_env->heuristicFunc(startState);
-
 				// if neighbor not in open list
 				if (open_list.find(*st) == open_list.end())
 				{
-					if (parentSol.size() != 0)
+
+					// if other agent solutions are not provided, we simply add node
+					if (parentSol.size() == 0)
 					{
-						if (n->hScore <= getBound())
+						open_heap.emplace(n);
+						open_list.insert(*st);
+					}
+					// otherwise, need to make sure we can explain it
+					else
+					{
+						// THIS WORKS BUT IS SLOWWWWW
+						n->segCost = SegHeuristic(n, parentSol);
+						// THIS IS A TEST FUNCTION
+						// bool newSeg = testSeg(n, parentSol);
+						if (n->segCost <= getBound())
 						{
 							open_heap.emplace(n);
 							open_list.insert(*st);
 						}
-					}
-					else if (parentSol.size() == 0)
-					{
-						open_heap.emplace(n);
-						open_list.insert(*st);
+						// if explanation is not satisfiable, then the node is no good
+						// else
+						// 	open_list.insert(*st);
 					}
 				}
 				else
