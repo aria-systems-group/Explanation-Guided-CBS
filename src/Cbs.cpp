@@ -640,6 +640,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	std::string test;
 
 	conflictNode *rootNode;
+	int treeSize = 0;
 	
 	if (rootSol.size() != m_numAgents)
 		return false;
@@ -647,6 +648,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	{
 		rootNode = new conflictNode(rootSol);
 		open_heap.emplace(rootNode);
+		treeSize ++;
 	}
 
 	while (!open_heap.empty())
@@ -702,6 +704,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
   			{
   				std::cout << "Solution is Satisfiable!" << std::endl;
   				solution = current->m_solution;
+  				std::cout << "Number of Conflict Nodes: " << treeSize << std::endl;
 				return true;
   			}
   			else
@@ -792,6 +795,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 
 						n->m_cost = n->calcCost();
 						open_heap.emplace(n);
+						treeSize ++;
 					}
 					// else
 					// {
@@ -883,6 +887,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						// std::cin >>test;
 						n->m_cost = n->calcCost();
 						open_heap.emplace(n);
+						treeSize ++;
 					}
 					// else
 					// {
@@ -901,5 +906,6 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 		}
 	}
 	std::cout << "No solution" << std::endl;
+	std::cout << "Number of Conflict Nodes: " << treeSize;
 	return 0;
 }
