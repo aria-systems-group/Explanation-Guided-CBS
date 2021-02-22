@@ -521,21 +521,22 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 		if (c == nullptr)
 		{
 			// if no conflicts occur, then we found a solution
-			auto stop = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-			auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
-  			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << duration2.count() << " seconds" << std::endl;
+			
   			// int solCost = segmentSolution(current->m_solution);
   			int solCost = current->segmentSolution();
   			if (solCost <= m_bound)
   			{
   				std::cout << "Solution is Satisfiable!" << std::endl;
+  				auto stop = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+				auto duration2 = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+  				std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << duration2.count() << " seconds" << std::endl;
   				solution = current->m_solution;
 				return true;
   			}
   			else
   			{
-  				std::cout << "Solution is Not satisfiable." << std::endl;
+  				// std::cout << "Solution is Not satisfiable." << std::endl;
   				open_heap.pop();
   				conflictNode *current = open_heap.top();
   			}
