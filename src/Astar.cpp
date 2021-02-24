@@ -326,26 +326,11 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 bool A_star::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
 {
-
-	// std::cout << "A* planning for agent: " << m_env->getAgent() << std::endl;
-	// if (relevantConstraints.size() == 0)
-	// {
-	// 	std::cout << "No Constraints." << std::endl;
-	// }
-	// else
-	// {
-	// 	std::cout << "Current Constraint List: " << std::endl;
-	// 	for (Constraint *c: relevantConstraints)
-	// 	{
-	// 		std::cout << "Agent: " << c->getVertexConstraint()->m_agent << " " <<
-	// 		"State: " << c->getVertexConstraint()->m_state << std::endl;
-	// 	}
-	// }
-
 	// clear all previous information
 	solution.clear();
 
-	std::string test;
+	// debug string
+	// std::string test;
 
 	// init open min-heap
 	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap;
@@ -355,8 +340,6 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	// init start node
 	Node *startNode = new Node(startState, m_env->heuristicFunc(startState), 0);
 	
-	// std::cout << *startState << std::endl;
-
 	open_heap.emplace(startNode);
 	open_list.insert(*startState);
 
@@ -378,6 +361,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
           	  solution.insert(solution.begin(), solNode->state);
           	  solNode = solNode->parent;
           	}
+          	// std::cout << "here" << std::endl;
 			return true;
 		}
 
@@ -397,45 +381,78 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 			// create node
 			Node *n = new Node(st, m_env->heuristicFunc(st));
 			n->parent = current;
-			// the edge weight from current to neighbor assumed to always = 1
-			int tentative_gScore = n->parent->gScore + 1;
-			if (tentative_gScore < n->gScore)
-			{
-				
-				n->gScore = tentative_gScore;
-				// if neighbor not in open list
-				if (open_list.find(*st) == open_list.end())
-				{
 
-					// if other agent solutions are not provided, we simply add node
-					if (parentSol.size() == 0)
+			if (parentSol.size() != 0)
+			{
+				// EXP-A* loop
+				// THIS WORKS BUT IS SLOWWWWW
+				n->segCost = SegHeuristic(n, parentSol);
+
+				if (n->segCost <= getBound())
+				{
+					// satisfiable node, continue on
+					if (n->segCost < n->parent->segCost)
 					{
+						// blindly add node to list
+						// not checking if it is a node we found before
+						// not checking if in open
 						open_heap.emplace(n);
 						open_list.insert(*st);
 					}
-					// otherwise, need to make sure we can explain it
 					else
 					{
-						// THIS WORKS BUT IS SLOWWWWW
-						n->segCost = SegHeuristic(n, parentSol);
-						// THIS IS A TEST FUNCTION
-						// bool newSeg = testSeg(n, parentSol);
-						if (n->segCost <= getBound())
+						// two cases to consider
+						// 1. ==
+						// 2. >
+						// either way, we should check to see if 
+						// it is the same node and if same state
+						// only if not either of those, do we add node
+						int tentative_gScore = n->parent->gScore + 1;
+						if (tentative_gScore < n->gScore)
 						{
-							open_heap.emplace(n);
-							open_list.insert(*st);
+							n->gScore = tentative_gScore;
+							if (open_list.find(*st) == open_list.end())
+							{
+								open_heap.emplace(n);
+								open_list.insert(*st);
+							}
+							else
+							{
+								delete n;
+							}
+
 						}
-						// if explanation is not satisfiable, then the node is no good
-						// else
-						// 	open_list.insert(*st);
+						else
+						{
+							delete n;
+						}
 					}
 				}
 				else
 					delete n;
 			}
-			// no need for this node to take up memory
 			else
-				delete n;
+			{
+				// A* loop
+				int tentative_gScore = n->parent->gScore + 1;
+				if (tentative_gScore < n->gScore)
+				{
+					n->gScore = tentative_gScore;
+					if (open_list.find(*st) == open_list.end())
+					{
+						open_heap.emplace(n);
+						open_list.insert(*st);
+					}
+					else
+					{
+						delete n;
+					}
+				}
+				else
+				{
+					delete n;
+				}
+			}
 		}
 	}
 	std::cout << "No Solution Found using A* using current constraints." << std::endl;
