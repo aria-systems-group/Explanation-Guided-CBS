@@ -177,19 +177,36 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 
 	if (parent.size() == 0)
 	{
-		// at root node, plan for all agents
-		for (int a = 0; a < startStates.size(); a++)
+		// at root node
+
+		// plan for initial agent first
+		bool success = m_planner->plan(startStates[0], singleSol, 
+			agentRelevantCs, parent);
+
+		if (success)
 		{
-			if (cont)
+			sol[0] = singleSol;
+			// plan for remaining agents using Exp-A*
+			for (int a = 1; a < startStates.size(); a++)
 			{
-				bool success = m_planner->plan(startStates[a], singleSol, 
-					agentRelevantCs, parent);
-				if (success)
-					sol[a] = singleSol;
-				else
-					cont = false;
+				if (cont)
+				{
+					bool success = m_planner->plan(startStates[a], singleSol, 
+						agentRelevantCs, sol);
+					if (success)
+						sol[a] = singleSol;
+					else
+					{
+						cont = false;
+					}
+					m_planner->getEnv()->updateAgent();
+				}
 			}
-			m_planner->getEnv()->updateAgent();
+		}
+		else
+		{
+			std::cout << "No Solution To Problem Exists." << std::endl;
+			return sol;
 		}
 	}
 	else
@@ -297,101 +314,6 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		}
 	}
 
-	
-
-
-
-	// for (int a = 0; a < startStates.size(); a++) // (const State &st : startStates)
-	// {	
-	// 	// need to provide A* with constraints relevant to 
-	// 	// the agent. 
-	// 	// for each agent, cycle through c
-	// 	std::vector<Constraint*> agentRelevantCs;
-	// 	for (Constraint *c: constraints)
-	// 	{
-	// 		if (c->getVertexConstraint() != nullptr)
-	// 		{
-	// 			if (c->getVertexConstraint()->agent == a)
-	// 				agentRelevantCs.push_back(c);
-	// 		}
-	// 		if (c->getEdgeConstraint() != nullptr)
-	// 		{
-	// 			if (c->getEdgeConstraint()->agent == a)
-	// 				agentRelevantCs.push_back(c);
-	// 		}
-	// 	}
-	// 	// std::cout << "entering planner" << std::endl;
-	// 	// std::cout << "Agent: " << a << ", Start: " << startStates[a] << ", Goal: " << m_planner->getEnv()->getGoals()[a] << std::endl;
-	// 	if (cont)
-	// 	{
-			
-	// 		if (parent.size() == 0)
-	// 		{
-	// 			bool success = m_planner->plan(startStates[a], singleSol, 
-	// 				agentRelevantCs, parent);
-	// 			if (success)
-	// 				sol.push_back(singleSol);
-	// 			else
-	// 				cont = false;
-	// 		}
-	// 		// if the most current constraint in the list of constraints is not 
-	// 		// for agent a, then the solution will not change
-	// 		// do this for both vertex of edge constraints
-	// 		else
-	// 		{
-	// 			VertexConstraint *currVC = constraints[0]->getVertexConstraint();
-	// 			EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
-	// 			// std::cout << currVC << std::endl;
-	// 			// std::cout << currEC << std::endl;
-	// 			if (currVC != nullptr)
-	// 			{
-	// 				// if the newest vertex constraint not with agent a
-	// 				if (currVC->agent != a)
-	// 				{
-	// 					// new sol = parent sol
-	// 					sol.push_back(parent[a]);
-	// 				}
-	// 				// newest vertex constraint is relevant to agent a
-	// 				// need to replan
-	// 				else
-	// 				{
-	// 					bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs, parent);
-	// 					if (success)
-	// 						sol.push_back(singleSol);
-	// 					else
-	// 						cont = false;
-	// 				}
-	// 			}
-	// 			else if (currEC != nullptr)
-	// 			{
-	// 				// if the newest edge constraint not with agent a
-	// 				if (currEC->agent != a)
-	// 				{
-	// 					// new sol = parent sol
-	// 					sol.push_back(parent[a]);
-	// 				}
-	// 				// newest edge constraint is relevant to agent a
-	// 				// need to replan
-	// 				else
-	// 				{
-	// 					bool success = m_planner->plan(startStates[a], singleSol, 
-	// 						agentRelevantCs, parent);
-	// 					if (success)
-	// 						sol.push_back(singleSol);
-	// 					else
-	// 						cont = false;
-	// 				}
-	// 			}
-	// 		}
-	// 	}
-		
-	// 	// std::cout << "exited planner" << std::endl;
-	// 	// if sol found, add it --- else, return no solution
-		
-	// 	m_planner->getEnv()->updateAgent();
-	// }
-	// // wrap environment idx back to first agent
-	// m_planner->getEnv()->updateAgent();
 	// update agent to the correct one
 	while (m_planner->getEnv()->getAgent() != 0)
 	{
