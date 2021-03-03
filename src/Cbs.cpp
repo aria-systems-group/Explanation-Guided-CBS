@@ -186,6 +186,7 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		if (success)
 		{
 			sol[0] = singleSol;
+			m_planner->getEnv()->updateAgent();
 			// plan for remaining agents using Exp-A*
 			for (int a = 1; a < startStates.size(); a++)
 			{
@@ -564,13 +565,26 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	conflictNode *rootNode;
 	int treeSize = 0;
 	
-	if (rootSol.size() != m_numAgents)
-		return false;
-	else
+	bool valid = true;
+	for (std::vector<State*> sol: rootSol)
+	{
+		if (sol.size() == 0)
+		{
+			valid = false;
+			break;
+		}
+	}
+
+	if (valid)
 	{
 		rootNode = new conflictNode(rootSol);
 		open_heap.emplace(rootNode);
 		treeSize ++;
+	}
+	else
+	{
+		std::cout << "No CBS solution to problem with given explanation bound" << std::endl;
+		return false;
 	}
 
 	while (!open_heap.empty())
