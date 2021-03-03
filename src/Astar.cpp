@@ -39,60 +39,15 @@ bool A_star::is_disjoint(const std::vector<State*> v1,
 }
 
 
-bool A_star::testSeg(Node *n, std::vector<std::vector<State*>> other)
-{
-	// find all n->parents that share cost of n
-	// Node *currNode = n;
-	// std::vector<Node*> currAgentSeg;
-	// while (currNode != nullptr)
-	// {
-	// 	currAgentSeg.push_back(currNode);
-	// 	currNode = currNode->parent;
-	// }
-
-	// // get all agent path segments of same time interval
-	// std::vector<std::vector<State*>>  allAgentSegs(getEnv()->getGoals().size());
-	// for (int a = 0; a < other.size(); a++)
-	// {
-	// 	std::vector<State*> agentSol = other[a];
-	// 	if (other[a].size() == 0)
-	// 	{
-	// 		for (Node *tmpNode: currAgentSeg)
-	// 		{
-	// 			allAgentSegs[a].push_back(tmpNode->state);
-	// 		}
-	// 	}
-	// 	else
-	// 		for (Node *tmp: currAgentSeg)
-	// 		{
-	// 			int tmpTime = tmp->state->time;
-	// 			if (tmpTime < other[a].size())
-	// 				allAgentSegs[a].push_back(other[a][tmpTime]);
-	// 		}
-	// }
-
-	// for (std::vector<State*> segment: allAgentSegs)
-	// {
-	// 	std::cout << segment.size() << std::endl;
-	// }
-
-
-	
-	// exit(1);
-	return 0;
-}
-
-
-
 int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
-	// std::string test;
-	// std::cout << "Segmenting while planning for agent: " << m_env->getAgent() << std::endl;
+	std::string test;
+	if (otherSols.size() == 0)
+		return 1;
 	// given a node and other solutions, this function 
 	// returns the number of segments from the start node to n->state
-	// std::cout << "Segmenting Solution w.r.t. parent segments" << std::endl;
 
-	// 1. get the path to state. 
+	// 1. get the path from current state back to root. 
 	std::vector<State*> currPathSeg;
 	Node *currCopy = n;
 	while (currCopy != nullptr)
@@ -103,23 +58,34 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 	 
 	// 2. find out how many steps we can go. 
 	// i.e. what is this nodes state time point. 
+	// int longTime = currPathSeg.back()->time;
+	// std::cout << "here" << std::endl;
 	int longTime = 0;
 	for (int a = 0; a < otherSols.size(); a++)
 	{
-		std::vector<State*> currSol;
 		if (a == m_env->getAgent())
-			currSol = currPathSeg;
+		{
+			// std::cout << "in here" << std::endl;
+			int tmp = currPathSeg.back()->time;
+			if (tmp > longTime)
+				longTime = tmp;
+		}
 		else
-			currSol = otherSols[a];
-
-		if (currSol.size() > longTime)
-			longTime = currSol.size();
+		{
+			if (otherSols[a].size() > 0)
+			{
+				int tmp = otherSols[a].back()->time;
+				if (tmp > longTime)
+					longTime = tmp;
+			}
+		}
 	}
+	// std::cout << "now here" << std::endl;
+	
 
 	// Clear all costs 
 	for (int a = 0; a < otherSols.size(); a++)
 	{
-		// std::cout << "Agent: " << a << std::endl;
 		for (int t = 0; t <= longTime; t++)
 		{
 			if (a == m_env->getAgent())
@@ -127,7 +93,6 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 				if (t < currPathSeg.size())
 				{
 					currPathSeg[t]->cost = 0;
-					// std::cout << *currPathSeg[t] << std::endl;
 				}
 			}
 			else
@@ -135,7 +100,6 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 				if (t < otherSols[a].size())
 				{
 					otherSols[a][t]->cost = 0;
-					// std::cout << *otherSols[a][t] << std::endl;
 				}
 			}
 		}
@@ -173,20 +137,10 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 				if (a1 != a2)
 				{
 					// 4c. check disjoint
-					// std::cout << "Checking Agents: " << a1 << " , " << a2 << std::endl;
 					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
 					if (!disjoint)
 					{
-						// std::cout << "Segmenting at : " << currTime << std::endl;
 						// 4d. add cost for all states prior to currTime
-						
-
-						// for (State *st: currPathSeg)
-						// {
-						// 	std::cout << "Address: " << st << std::endl;
-						// 	std::cout << " Values: " << *st << std::endl;
-						// }
-
 
 						for (int a = 0; a < otherSols.size(); a++)
 						{
@@ -196,17 +150,13 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 								{
 									if (t < currPathSeg.size())
 									{
-										// std::cout << "Changing planning agent " << std::endl;
 										currPathSeg[t]->cost = currCost;
-										// std::cout << "Address: " << currPathSeg[t] << std::endl;
-										// std::cout << " Values: " << *currPathSeg[t] << std::endl;
 									}
 								}
 								else
 								{
 									if (t < otherSols[a].size())
 									{
-										// std::cout << "Changing other agent " << std::endl;
 										otherSols[a][t]->cost = currCost;
 									}
 								}
@@ -215,34 +165,8 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 						}
 						lastSegmentTime = currTime;
 
-						// std::cout << "Not Disjoint" << std::endl;
-						// std::cout << "old cost: " << currCost << std::endl;
 						// update cost for future
 						currCost ++;
-						// std::cout << "new cost: " << currCost << std::endl;
-
-						// for (int a = 0; a < otherSols.size(); a++)
-						// {
-						// 	std::cout << "Agent: " << a << std::endl;
-						// 	for (int t = 0; t <= longTime; t++)
-						// 	{
-						// 		if (a == m_env->getAgent())
-						// 		{
-						// 			if (t < currPathSeg.size())
-						// 			{
-						// 				std::cout << *currPathSeg[t] << std::endl;
-						// 			}
-						// 		}
-						// 		else
-						// 		{
-						// 			if (t < otherSols[a].size())
-						// 			{
-						// 				std::cout << *otherSols[a][t] << std::endl;
-						// 			}
-						// 		}
-						// 	}
-						// }
-
 
 						// 4e. clear visited lists and re-init with currTime state
 						for (int a = 0; a < otherSols.size(); a++)
@@ -255,8 +179,7 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 							}
 							else
 							{
-								std::vector<State*> currSol = otherSols[a];
-								if (currTime < currSol.size())
+								if (currTime < otherSols[a].size())
 									agentVisited[a].push_back(otherSols[a][currTime]);
 							}
 						}
@@ -265,11 +188,6 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 			}
 		}
 	}
-	// std::cout << "here" << std::endl;
-	// std::cout << longTime << std::endl;
-	// std::cout << otherSols[0].size() << std::endl;
-	// std::cout << otherSols[1].size() << std::endl;
-
 	for (int a = 0; a < otherSols.size(); a++)
 	{
 		// std::cout << "Agent: " << a << std::endl;
@@ -280,7 +198,6 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 				if (t < currPathSeg.size())
 				{
 					currPathSeg[t]->cost = currCost;
-					// std::cout << *currPathSeg[t] << std::endl;
 				}
 			}
 			else
@@ -288,39 +205,63 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 				if (t < otherSols[a].size())
 				{
 					otherSols[a][t]->cost = currCost;
-					// std::cout << *otherSols[a][t] << std::endl;
 				}
 			}
 		}
-	}
-
-	// for (int a = 0; a < otherSols.size(); a++)
-	// {
-	// 	std::cout << "Agent: " << a << std::endl;
-	// 	for (int t = 0; t <= longTime; t++)
-	// 	{
-	// 		if (a == m_env->getAgent())
-	// 		{
-	// 			if (t < currPathSeg.size())
-	// 			{
-	// 				// currPathSeg[t]->cost = currCost;
-	// 				std::cout << *currPathSeg[t] << std::endl;
-	// 			}
-	// 		}
-	// 		else
-	// 		{
-	// 			if (t < otherSols[a].size())
-	// 			{
-	// 				// otherSols[a][t]->cost = currCost;
-	// 				std::cout << *otherSols[a][t] << std::endl;
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// std::cin >> test;
-	
+	}	
 	return currCost;
+}
+
+int A_star::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
+{
+	int longTime = 0;
+	for (std::vector<State*> sol: parSol)
+	{
+		// get last time
+		if (sol.size() > 0)
+		{
+			int currTime = sol.back()->time;
+			if (currTime > longTime)
+				longTime = currTime;
+		}
+	}
+	return longTime;
+}
+
+bool A_star::crossCheck(const Node *n, const int longTime) const
+{
+	std::string test;
+	//see if currState is same location as any other on path back to root
+	State *currState = n->state;
+	const Node *cpy = n->parent;
+	// can do whatever we want before longTime is hit
+	// after longTime, currState cannot reach previous state in loop
+	if (currState->time < longTime || longTime == 0)
+		return false;
+	else if (currState->time > (m_env->getXdim() * m_env->getYdim()))
+		return true;
+	else
+	{
+		while (cpy != nullptr)
+		{
+			if (currState->isSameLocation((cpy->state)))
+			{
+				if (m_env->getAgent() == 4)
+				{
+					std::cout << "returning cross: " << std::endl;
+					std::cin >> test;
+				}
+				return true;
+			}
+			cpy = cpy->parent;
+		}
+		if (m_env->getAgent() == 4)
+		{
+			std::cout << "returning NO cross: " << std::endl;
+			std::cin >> test;
+		}
+	}
+	return false;
 }
 
 bool A_star::plan(State *startState, std::vector<State*> &solution, 
@@ -329,8 +270,10 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	// clear all previous information
 	solution.clear();
 
+	const int longTime = getLongestPath(parentSol);
+
 	// debug string
-	// std::string test;
+	std::string test;
 
 	// init open min-heap
 	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap;
@@ -345,11 +288,12 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 
 	// init neighbors
 	std::vector<State*> neighbors;
+	int total  = 1;
 
 	while (!open_heap.empty())
 	{
 		Node *current = open_heap.top();
-
+		
 		if (m_env->isStateGoal(current->state))
 		{
 			Node *solNode = current;
@@ -361,7 +305,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
           	  solution.insert(solution.begin(), solNode->state);
           	  solNode = solNode->parent;
           	}
-          	// std::cout << "here" << std::endl;
+          	std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
 			return true;
 		}
 
@@ -374,6 +318,20 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		// see Environment.h for details
 		m_env->expandState(current->state, neighbors, relevantConstraints);
 
+		// if (m_env->getAgent() == 4)
+		// {
+		// 	std::cout << current->state->time << std::endl;
+		// 	if (current->state->time == 15)
+		// 	{
+		// 		std::cout << "# of neighbors: " << neighbors.size() << std::endl;
+		// 		for (State *st: neighbors)
+		// 		{
+		// 			std::cout << *st << std::endl;
+		// 		}
+		// 	}
+
+		// }
+
 
 		// for all neighbors...
 		for (State *st: neighbors)
@@ -381,50 +339,62 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 			// create node
 			Node *n = new Node(st, m_env->heuristicFunc(st));
 			n->parent = current;
+			
 
-			if (parentSol.size() != 0)
+
+			// testing section
+			n->segCost = SegHeuristic(n, parentSol);  // bottle neck
+			// if satisfiable
+			// if (m_env->getAgent() == 4)
+			// {
+			// 	if (current->state->time == 15)
+			// 	{
+			// 		std::cout << "Neighbor state: " << *(n->state) << std::endl;
+			// 		std::cout << "seg cost: " << n->segCost << std::endl;
+			// 		std::cin >> test;
+			// 	}
+			// }
+
+
+			if (n->segCost <= getBound())
 			{
-				// EXP-A* loop
-				// THIS WORKS BUT IS SLOWWWWW
-				n->segCost = SegHeuristic(n, parentSol);
 
-				if (n->segCost <= getBound())
+				bool cross = crossCheck(n, longTime);
+				if (!cross)
 				{
-					// satisfiable node, continue on
-					if (n->segCost < n->parent->segCost)
+					// either longTime not reached
+					// or there was no cross with iteself
+
+					// if new segment not created
+					// greedily add node
+					if (n->segCost <= n->parent->segCost)
 					{
-						// blindly add node to list
-						// not checking if it is a node we found before
-						// not checking if in open
+						n->gScore = n->parent->gScore + 1;
 						open_heap.emplace(n);
 						open_list.insert(*st);
+						// if (m_env->getAgent() == 4)
+						// {
+						// 	if (current->state->time == 15)
+						// 		std::cout << "added" << std::endl;
+						// }
+						total++;
 					}
 					else
 					{
-						// two cases to consider
-						// 1. ==
-						// 2. >
-						// either way, we should check to see if 
-						// it is the same node and if same state
-						// only if not either of those, do we add node
+						// new segment needed, proceed as normal
 						int tentative_gScore = n->parent->gScore + 1;
 						if (tentative_gScore < n->gScore)
 						{
 							n->gScore = tentative_gScore;
-							if (open_list.find(*st) == open_list.end())
-							{
-								open_heap.emplace(n);
-								open_list.insert(*st);
-							}
-							else
-							{
-								delete n;
-							}
-
-						}
-						else
-						{
-							delete n;
+							open_heap.emplace(n);
+							open_list.insert(*st);
+							// if (m_env->getAgent() == 4)
+							// {
+							// 	if (current->state->time == 15)
+							// 		std::cout << "added" << std::endl;
+							// }
+							total++;
+							// }
 						}
 					}
 				}
@@ -432,29 +402,18 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 					delete n;
 			}
 			else
-			{
-				// A* loop
-				int tentative_gScore = n->parent->gScore + 1;
-				if (tentative_gScore < n->gScore)
-				{
-					n->gScore = tentative_gScore;
-					if (open_list.find(*st) == open_list.end())
-					{
-						open_heap.emplace(n);
-						open_list.insert(*st);
-					}
-					else
-					{
-						delete n;
-					}
-				}
-				else
-				{
-					delete n;
-				}
-			}
+				delete n;
+			// if (m_env->getAgent() == 4)
+			// {
+			// 	if (current->state->time == 15)
+			// 	{
+			// 		std::cout << "should be added by now" << std::endl;
+			// 		std::cin >> test;
+			// 	}
+			// }
 		}
 	}
 	std::cout << "No Solution Found using A* using current constraints." << std::endl;
+	std::cout << "total nodes Explored by A*: " << total << std::endl;
 	return false;
 }

@@ -27,20 +27,20 @@ public:
     	  return os;
     	}
 
-        
-
     	// gScore = is the cost of the path from the start node
     	// hScore = heuristic cost function (Equclidean dist from node to goal)
     	State *state;
     	Node *parent;
     	double gScore;
     	double hScore;
-        int segCost{0};
+        int segCost{1};
 	};
 
-    int SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols);
+    int getLongestPath(const std::vector<std::vector<State*>>& parSol) const;
 
-    bool testSeg(Node *n, std::vector<std::vector<State*>> other);
+    bool crossCheck(const Node *n, const int longTime) const;
+
+    int SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols);
 
     bool is_disjoint(const std::vector<State*> v1, 
         const std::vector<State*> v2) const;
@@ -57,7 +57,10 @@ public:
                 // which is smaller cost
                 double fScore1 = n1->gScore + n1->hScore;
                 double fScore2 = n2->gScore + n2->hScore;
+                // std::cout << fScore1 << "vs. " << fScore2 << std::endl;
                 return fScore1 > fScore2;
+                // return n1->hScore > n2->hScore;
+                // return n1->gScore > n2->gScore;
             }
             else
             {

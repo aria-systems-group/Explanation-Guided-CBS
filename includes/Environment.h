@@ -113,25 +113,10 @@ class Environment {
 
                 if (e != nullptr)
                 {
-
-                    // Edge Constraints are defined as follows! 
-                    // c->type = Conflict::Edge;
-                    // c->time1 = a1Curr.time;
-                    // c->time2 = a1Nxt.time;
-                    // c->agent1 = a1;
-                    // c->agent2 = a2;
-                    // c->x1 = a1Curr.x ; c->y1 = a1Curr.y;
-                    // c->x2 = a1Nxt.x ; c->y2 = a1Nxt.y;
-
                     if ((e->x1 == curr->x) && (e->y1 == curr->y) && (e->time1 == curr->time))
                     {
                         if ((e->x2 == nxt->x) && (e->y2 == nxt->y) && (e->time2 == nxt->time))
                         {
-                            // std::cout << e->time << ": " << e->x1 << " " << e->y1 << std::endl;
-                            // std::cout << e->time + 1 << ": " << e->x2 << " " << e->y2 << std::endl;
-                            // std::cout << curr << std::endl;
-                            // std::cout << nxt << std::endl;
-                            // std::cin >> test;
                             return false;
                         }
                     }
