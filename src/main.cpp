@@ -157,8 +157,36 @@ int main(int argc, char** argv) {
 				}
 			}
 			// now we have exisisting solution in the form we need
+			// currently only plans for final agent
+			while (mapf->getAgent() != numAgents)
+			{
+				mapf->updateAgent();
+			}
+			A_star *planner = new A_star(mapf, false); // boolean tells exp-A* CBS not involved
+			std::ofstream out("txt/solution.txt");
+			std::vector<State*> solution;
+			std::vector<Constraint*> constraints;
+			int bound;
+			std::cout << "Enter Desired Explainability Bound: ";
+			std::cin >> bound;
+			// give exp-A* a bound
+			planner->updateBound(bound);
 			// create instance of expA* and plan
-			std::cout << "here" << std::endl;
+			bool success = planner->plan(startStates[numAgents], solution, constraints, existing);
+
+			if (success)
+			{
+				for (std::vector<State*> agentSol: existing)
+				{
+					int it = std::distance(existing.begin(), 
+						std::find(existing.begin(), existing.end(), agentSol));
+					out << agentNames[it] << std::endl;
+					for (State *st: agentSol)
+					{
+						out << *st << std::endl;
+					}
+				}
+			}
 
 		}
 		else
@@ -166,17 +194,13 @@ int main(int argc, char** argv) {
 			std::cout << "Could not find file. Exiting..." << std::endl;
 			exit(1);
 		}
-
-
-
-
 	}
 
 	else if (p == "cbs" || p == "Cbs" || p == "CBS")
 	{
 		// CBS implementation!
 		int costBound;
-		std::cout << "Please enter an Explainability Bound: " << std::endl; 
+		std::cout << "Please enter an Explainability Bound: "; 
 		std::cin >> costBound;
 		
 		// init planner

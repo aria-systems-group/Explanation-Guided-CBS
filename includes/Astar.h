@@ -9,7 +9,7 @@
 class A_star
 {
 public:
-	A_star(Environment *env);
+	A_star(Environment *env, const bool useCBS = true);
 
 	bool plan(State *startState, std::vector<State*> &solution, 
         std::vector<Constraint*> relevantConstraints, 
@@ -80,4 +80,5 @@ public:
 private:
 	Environment *m_env;
     int m_bound{std::numeric_limits<int>::infinity()};
+    const bool useCBS;
 };

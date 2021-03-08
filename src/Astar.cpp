@@ -4,8 +4,9 @@
 #include "../includes/State.h"
 #include "../includes/Environment.h"
 #include "../includes/Astar.h"
+#include <chrono>
 
-A_star::A_star(Environment *env): m_env(env) {};
+A_star::A_star(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
 
 bool A_star::is_disjoint(const std::vector<State*> v1, 
 	const std::vector<State*> v2) const
@@ -42,7 +43,6 @@ bool A_star::is_disjoint(const std::vector<State*> v1,
 
 int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
-	std::string test;
 	if (otherSols.size() == 0)
 		return 1;
 	// given a node and other solutions, this function 
@@ -56,161 +56,317 @@ int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 		currPathSeg.insert(currPathSeg.begin(), currCopy->state);
 		currCopy = currCopy->parent;
 	}
-	 
-	// 2. find out how many steps we can go. 
-	// i.e. what is this nodes state time point. 
-	// int longTime = currPathSeg.back()->time;
-	// std::cout << "here" << std::endl;
-	int longTime = 0;
-	for (int a = 0; a < otherSols.size(); a++)
-	{
-		if (a == m_env->getAgent())
-		{
-			// std::cout << "in here" << std::endl;
-			int tmp = currPathSeg.back()->time;
-			if (tmp > longTime)
-				longTime = tmp;
-		}
-		else
-		{
-			if (otherSols[a].size() > 0)
-			{
-				int tmp = otherSols[a].back()->time;
-				if (tmp > longTime)
-					longTime = tmp;
-			}
-		}
-	}
-	// std::cout << "now here" << std::endl;
-	
 
-	// Clear all costs 
-	for (int a = 0; a < otherSols.size(); a++)
+	if (useCBS)
 	{
-		for (int t = 0; t <= longTime; t++)
-		{
-			if (a == m_env->getAgent())
-			{
-				if (t < currPathSeg.size())
-				{
-					currPathSeg[t]->cost = 0;
-				}
-			}
-			else
-			{
-				if (t < otherSols[a].size())
-				{
-					otherSols[a][t]->cost = 0;
-				}
-			}
-		}
-	}
-
-	// 3. init a visited list for all agents and an indexing variable
-	std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
-	int lastSegmentTime = 0;
-	int currCost = 1;
-
-	// 4. segment the solution
-	for (int currTime = 0; currTime <= longTime; currTime++)
-	{
-		// 4a. add visited state for currTime
+		// 2. find out how many steps we can go. 
+		// i.e. what is this nodes state time point. 
+		// int longTime = currPathSeg.back()->time;
+		// std::cout << "here" << std::endl;
+		int longTime = 0;
 		for (int a = 0; a < otherSols.size(); a++)
 		{
 			if (a == m_env->getAgent())
 			{
-				if (currTime < currPathSeg.size())
-					agentVisited[a].push_back(currPathSeg[currTime]);
+				// std::cout << "in here" << std::endl;
+				int tmp = currPathSeg.back()->time;
+				if (tmp > longTime)
+					longTime = tmp;
 			}
 			else
 			{
-				if (currTime < otherSols[a].size())
-					agentVisited[a].push_back(otherSols[a][currTime]);
+				if (otherSols[a].size() > 0)
+				{
+					int tmp = otherSols[a].back()->time;
+					if (tmp > longTime)
+						longTime = tmp;
+				}
 			}
 		}
 
-		// 4b. see if agent visited is disjoint
-		for (int a1 = 0; a1 < otherSols.size(); a1++)
+		// Clear all costs 
+		for (int a = 0; a < otherSols.size(); a++)
 		{
-			for (int a2 = 0; a2 < otherSols.size(); a2++)
+			for (int t = 0; t <= longTime; t++)
 			{
-				// if these are not the same agent
-				if (a1 != a2)
+				if (a == m_env->getAgent())
 				{
-					// 4c. check disjoint
-					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
-					if (!disjoint)
+					if (t < currPathSeg.size())
 					{
-						// 4d. add cost for all states prior to currTime
+						currPathSeg[t]->cost = 0;
+					}
+				}
+				else
+				{
+					if (t < otherSols[a].size())
+					{
+						otherSols[a][t]->cost = 0;
+					}
+				}
+			}
+		}
 
-						for (int a = 0; a < otherSols.size(); a++)
+		// 3. init a visited list for all agents and an indexing variable
+		std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
+		int lastSegmentTime = 0;
+		int currCost = 1;
+
+		// 4. segment the solution
+		for (int currTime = 0; currTime <= longTime; currTime++)
+		{
+			// 4a. add visited state for currTime
+			for (int a = 0; a < otherSols.size(); a++)
+			{
+				if (a == m_env->getAgent())
+				{
+					if (currTime < currPathSeg.size())
+						agentVisited[a].push_back(currPathSeg[currTime]);
+				}
+				else
+				{
+					if (currTime < otherSols[a].size())
+						agentVisited[a].push_back(otherSols[a][currTime]);
+				}
+			}
+
+			// 4b. see if agent visited is disjoint
+			for (int a1 = 0; a1 < otherSols.size(); a1++)
+			{
+				for (int a2 = 0; a2 < otherSols.size(); a2++)
+				{
+					// if these are not the same agent
+					if (a1 != a2)
+					{
+						// 4c. check disjoint
+						bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+						if (!disjoint)
 						{
-							for (int t = lastSegmentTime; t < currTime; t++)
+							// 4d. add cost for all states prior to currTime
+	
+							for (int a = 0; a < otherSols.size(); a++)
 							{
+								for (int t = lastSegmentTime; t < currTime; t++)
+								{
+									if (a == m_env->getAgent())
+									{
+										if (t < currPathSeg.size())
+										{
+										currPathSeg[t]->cost = currCost;
+										}
+									}
+									else
+									{
+										if (t < otherSols[a].size())
+										{
+											otherSols[a][t]->cost = currCost;
+										}
+									}
+								}
+							}	
+						
+							lastSegmentTime = currTime;
+
+							// update cost for future
+							currCost ++;
+
+							// 4e. clear visited lists and re-init with currTime state
+							for (int a = 0; a < otherSols.size(); a++)
+							{
+								agentVisited[a].clear();
 								if (a == m_env->getAgent())
 								{
-									if (t < currPathSeg.size())
-									{
-										currPathSeg[t]->cost = currCost;
-									}
+									if (currTime < currPathSeg.size())
+										agentVisited[a].push_back(currPathSeg[currTime]);
 								}
 								else
 								{
-									if (t < otherSols[a].size())
-									{
-										otherSols[a][t]->cost = currCost;
-									}
+									if (currTime < otherSols[a].size())
+										agentVisited[a].push_back(otherSols[a][currTime]);
 								}
-							}
-							
-						}
-						lastSegmentTime = currTime;
-
-						// update cost for future
-						currCost ++;
-
-						// 4e. clear visited lists and re-init with currTime state
-						for (int a = 0; a < otherSols.size(); a++)
-						{
-							agentVisited[a].clear();
-							if (a == m_env->getAgent())
-							{
-								if (currTime < currPathSeg.size())
-									agentVisited[a].push_back(currPathSeg[currTime]);
-							}
-							else
-							{
-								if (currTime < otherSols[a].size())
-									agentVisited[a].push_back(otherSols[a][currTime]);
 							}
 						}
 					}
 				}
 			}
 		}
-	}
-	for (int a = 0; a < otherSols.size(); a++)
-	{
-		// std::cout << "Agent: " << a << std::endl;
-		for (int t = lastSegmentTime; t <= longTime; t++)
+		for (int a = 0; a < otherSols.size(); a++)
 		{
-			if (a == m_env->getAgent())
+			// std::cout << "Agent: " << a << std::endl;
+			for (int t = lastSegmentTime; t <= longTime; t++)
 			{
-				if (t < currPathSeg.size())
+				if (a == m_env->getAgent())
 				{
-					currPathSeg[t]->cost = currCost;
+					if (t < currPathSeg.size())
+					{
+						currPathSeg[t]->cost = currCost;
+					}
 				}
-			}
-			else
-			{
-				if (t < otherSols[a].size())
+				else
 				{
-					otherSols[a][t]->cost = currCost;
+					if (t < otherSols[a].size())
+					{
+						otherSols[a][t]->cost = currCost;
+					}
 				}
 			}
 		}
-	}	
-	return currCost;
+		return currCost;
+	}
+	else
+	{
+		// 2. find out how many steps we can go. 
+		// i.e. what is this nodes state time point. 
+		// int longTime = currPathSeg.back()->time;
+		// std::cout << "here" << std::endl;
+		int longTime = 0;
+		for (int a = 0; a <= otherSols.size(); a++)
+		{
+			if (a == m_env->getAgent())
+			{
+				// std::cout << "in here" << std::endl;
+				int tmp = currPathSeg.back()->time;
+				if (tmp > longTime)
+					longTime = tmp;
+			}
+			else
+			{
+				if (otherSols[a].size() > 0)
+				{
+					int tmp = otherSols[a].back()->time;
+					if (tmp > longTime)
+						longTime = tmp;
+				}
+			}
+		}
+
+		// Clear all costs 
+		for (int a = 0; a <= otherSols.size(); a++)
+		{
+			for (int t = 0; t <= longTime; t++)
+			{
+				if (a == m_env->getAgent())
+				{
+					if (t < currPathSeg.size())
+					{
+						currPathSeg[t]->cost = 0;
+					}
+				}
+				else
+				{
+					if (t < otherSols[a].size())
+					{
+						otherSols[a][t]->cost = 0;
+					}
+				}
+			}
+		}
+
+		// 3. init a visited list for all agents and an indexing variable
+		std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
+		int lastSegmentTime = 0;
+		int currCost = 1;
+
+		// 4. segment the solution
+		for (int currTime = 0; currTime <= longTime; currTime++)
+		{
+			// 4a. add visited state for currTime
+			for (int a = 0; a <= otherSols.size(); a++)
+			{
+				if (a == m_env->getAgent())
+				{
+					if (currTime < currPathSeg.size())
+						agentVisited[a].push_back(currPathSeg[currTime]);
+				}
+				else
+				{
+					if (currTime < otherSols[a].size())
+						agentVisited[a].push_back(otherSols[a][currTime]);
+				}
+			}
+
+			// 4b. see if agent visited is disjoint
+			for (int a1 = 0; a1 <= otherSols.size(); a1++)
+			{
+				for (int a2 = 0; a2 <= otherSols.size(); a2++)
+				{
+					// if these are not the same agent
+					if (a1 != a2)
+					{
+						// 4c. check disjoint
+						bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+						if (!disjoint)
+						{
+							// 4d. add cost for all states prior to currTime
+	
+							for (int a = 0; a <= otherSols.size(); a++)
+							{
+								for (int t = lastSegmentTime; t < currTime; t++)
+								{
+									if (a == m_env->getAgent())
+									{
+										if (t < currPathSeg.size())
+										{
+										currPathSeg[t]->cost = currCost;
+										}
+									}
+									else
+									{
+										if (t < otherSols[a].size())
+										{
+											otherSols[a][t]->cost = currCost;
+										}
+									}
+								}
+							}	
+						
+							lastSegmentTime = currTime;
+
+							// update cost for future
+							currCost ++;
+
+							// 4e. clear visited lists and re-init with currTime state
+							for (int a = 0; a <= otherSols.size(); a++)
+							{
+								agentVisited[a].clear();
+								if (a == m_env->getAgent())
+								{
+									if (currTime < currPathSeg.size())
+										agentVisited[a].push_back(currPathSeg[currTime]);
+								}
+								else
+								{
+									if (currTime < otherSols[a].size())
+										agentVisited[a].push_back(otherSols[a][currTime]);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		for (int a = 0; a <= otherSols.size(); a++)
+		{
+			// std::cout << "Agent: " << a << std::endl;
+			for (int t = lastSegmentTime; t <= longTime; t++)
+			{
+				if (a == m_env->getAgent())
+				{
+					if (t < currPathSeg.size())
+					{
+						currPathSeg[t]->cost = currCost;
+					}
+				}
+				else
+				{
+					if (t < otherSols[a].size())
+					{
+						otherSols[a][t]->cost = currCost;
+					}
+				}
+			}
+		}
+		return currCost;
+	}
 }
 
 int A_star::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
@@ -268,8 +424,13 @@ bool A_star::crossCheck(const Node *n, const int longTime) const
 bool A_star::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
 {
+
+	auto start = std::chrono::high_resolution_clock::now();
 	// clear all previous information
 	solution.clear();
+
+	if (useCBS == false)
+		m_env->includeCollisionChecks();
 
 	const int longTime = getLongestPath(parentSol);
 
@@ -307,6 +468,15 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
           	  solNode = solNode->parent;
           	}
           	std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
+			if (useCBS == false)
+				parentSol.push_back(solution);
+			
+			auto stop = std::chrono::high_resolution_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
+  				(duration.count() / 1000000.0) << " seconds" << std::endl;
+
+
 			return true;
 		}
 
@@ -355,7 +525,6 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 			// 		std::cin >> test;
 			// 	}
 			// }
-
 
 			if (n->segCost <= getBound())
 			{
