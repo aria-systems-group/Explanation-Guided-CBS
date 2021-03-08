@@ -97,22 +97,22 @@ class Environment {
                     return false;
             }
 
-            // if (useCollisionChecking)
-            // {
-            //     // from exising solutions, get a list of states to check
-            //     std::vector<State*> needCheck;
-            //     for (std::vector<State*> sol: m_existingSol)
-            //     {
-            //         if (nxt->time <= sol.back()->time)
-            //             needCheck.push_back(sol[nxt->time]);
-            //     }
-            //     // next, check that needCheck and curr are not the same state
-            //     for (State *st: needCheck)
-            //     {
-            //         if (st->isSameLocation(nxt))
-            //             return false;
-            //     }
-            // }
+            if (useCollisionChecking)
+            {
+                // from exising solutions, get a list of states to check
+                std::vector<State*> needCheck;
+                for (std::vector<State*> sol: m_existingSol)
+                {
+                    if (nxt->time <= sol.back()->time)
+                        needCheck.push_back(sol[nxt->time]);
+                }
+                // next, check that needCheck and curr are not the same state
+                for (State *st: needCheck)
+                {
+                    if (st->isSameLocation(nxt))
+                        return false;
+                }
+            }
             // need to also account for constraints
             // iterate through constraints and see if state matches any, 
             // if so, return false
