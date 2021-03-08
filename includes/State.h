@@ -6,11 +6,8 @@
 
 
 struct State {
-  State(int time, int x, int y) : time(time), x(x), y(y) {}
+  State(int time, int x, int y, int c = 1) : time(time), x(x), y(y), cost{c} {}
 
-  // bool operator==(const State *s) const {
-  //   return time == s->time && x == s->x && y == s->y;
-  // }
   State(const State* other) 
   { // copy constructor
       time = int(other->time);
@@ -18,22 +15,6 @@ struct State {
       y = int(other->y);
       cost = int(other->cost);
   }
-  // State* operator=(const State* other) 
-  // { // copy assignment constructor
-  //   // protect against self assignment
-  //   if (this != &other) 
-  //   {
-  //       if (p != 0) 
-  //       {
-  //         *p = *other.p;
-  //       } 
-  //       else 
-  //       { // p is null - no memory allocated yet
-  //           p = new int(*other.p);
-  //       }
-  //   }
-  //   return *this;
-  //      }
 
    bool operator==(const State& s) const {
     return time == s.time && x == s.x && y == s.y;
@@ -64,7 +45,7 @@ struct State {
   int time;
   int x;
   int y;
-  int cost = 0;
+  int cost;
 };
 
 // create default constructor
