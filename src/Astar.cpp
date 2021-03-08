@@ -430,8 +430,8 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	solution.clear();
 
 	if (useCBS == false)
-		m_env->includeCollisionChecks();
-
+		m_env->includeCollisionChecks(parentSol);
+	
 	const int longTime = getLongestPath(parentSol);
 
 	// debug string
