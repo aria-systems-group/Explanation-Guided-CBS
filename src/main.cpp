@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_set>
 #include <fstream>
+#include <string>
 #include "yaml.h"
 #include "../includes/State.h"
 #include "../includes/Environment.h"
@@ -49,9 +50,6 @@ int main(int argc, char** argv) {
 
 	if (p == "Astar")
 	{
-
-
-
 		// A* implementation!!
 
 		// init planner
@@ -83,6 +81,95 @@ int main(int argc, char** argv) {
 		}
 		if (numSucc == startStates.size())
 			std::cout << "Successful planning using A*" << std::endl;
+	}
+
+	else if (p == "expAstar" || p == "Exp-Astar" || p == "exp-Astar")
+	{
+		// get name of exisisting solution file
+		// std::cout << inputYaml << std::endl;
+		const int yamlSize = inputYaml.size();
+		std::string inputSolution = "existingSolutions/" + 
+			inputYaml.substr(5, yamlSize - (2 * 5)) + ".txt";
+
+		// put solution into format that expAstar expects
+		std::ifstream SolutionFile;
+		SolutionFile.open(inputSolution);
+		if (SolutionFile.is_open())
+		{
+			int numAgents = 0;
+			std::string line;
+			// count number of agents
+			while (std::getline(SolutionFile, line))
+			{
+				if (line.substr(0, 5) == "agent")
+					numAgents ++;	
+			}
+			Solution existing(numAgents);
+			std::ifstream solReader;
+			solReader.open(inputSolution);
+			std::string test;
+			// no need to check if file is open this time
+			// already did that
+			std::string l;
+			std::getline(solReader, l); // agent0
+			for (int i = 0; i < numAgents; i++)
+			{
+				// going to append states to existing
+				std::getline(solReader, l); // initial state
+				while (l.substr(0, 5) != "agent" && !solReader.eof())
+				{
+					// get state on on l
+					// // cycle through l to get t, x, y
+					int t, x, y;
+					bool xFound = false, yFound = false;
+					int bg = 0; int sz = 1;
+					for (int i = 0; i < l.length(); i++)
+					{
+						std::string s = l.substr(bg, sz);
+						// std::cout << s << std::endl;
+						if (s.back() == ':')
+						{
+							t = std::stoi(s);
+							bg = l.find(s.back()) + 2;
+							sz = 1;
+							// std::cout << "found t: " << t << std::endl;
+						}
+						else if (s.back() == ',' && !xFound && !yFound)
+						{
+							x = std::stoi(s);
+							bg = bg + sz;
+							sz = 1; xFound = true;
+							// std::cout << "found x: " << x << std::endl;
+						}
+						else if (s.back() == ',' && xFound && !yFound)
+						{
+							y = std::stoi(s);
+							bg = bg + sz;
+							sz = 1; yFound = true;
+							// std::cout << "found y: " << y << std::endl;
+						}
+						else
+							sz ++;
+					}
+					State *st = new State(t, x, y);
+					existing[i].push_back(st);
+					std::getline(solReader, l);
+				}
+			}
+			// now we have exisisting solution in the form we need
+			// create instance of expA* and plan
+			std::cout << "here" << std::endl;
+
+		}
+		else
+		{
+			std::cout << "Could not find file. Exiting..." << std::endl;
+			exit(1);
+		}
+
+
+
+
 	}
 
 	else if (p == "cbs" || p == "Cbs" || p == "CBS")
