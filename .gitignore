@@ -6,3 +6,4 @@ Makefile
 .DS_Store
 /yaml
 /txt
+/existingSolutions
