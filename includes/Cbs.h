@@ -6,7 +6,7 @@
 
 typedef std::vector<std::vector<State*>> Solution;
 
-// Now EXP - CBS
+// EXP - CBS
 class CBS
 {
 public:
@@ -25,13 +25,8 @@ public:
 
 		};
 
-		bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
-
-		int segmentSolution();
-
 		int calcCost()
 		{
-			// return segmentSolution();
 			int cost = 0;
 			for (std::vector<State*> sol: m_solution)
 			{
@@ -42,14 +37,7 @@ public:
 
 		int getSegCost() const
 		{
-			int cost = 0;
-			for (std::vector<State*> sol: m_solution)
-			{
-				int agentCost = sol.back()->cost;
-				if (cost < agentCost)
-					cost = agentCost;
-			}
-			return cost;
+			return m_solution[0].back()->cost;
 		}
 
 		Solution m_solution;
