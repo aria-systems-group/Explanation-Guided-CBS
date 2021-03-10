@@ -6,7 +6,7 @@
 
 typedef std::vector<std::vector<State*>> Solution;
 
-
+// EXP - CBS
 class CBS
 {
 public:
