@@ -87,12 +87,12 @@ int main(int argc, char** argv) {
 	else if (p == "cbs" || p == "Cbs" || p == "CBS")
 	{
 		// CBS implementation!
-		int costBound;
-		std::cout << "Please enter an Explainability Bound: " << std::endl; 
-		std::cin >> costBound;
+		// int costBound;
+		// std::cout << "Please enter an Explainability Bound: " << std::endl; 
+		// std::cin >> costBound;
 		
 		// init planner
-		CBS *planner = new CBS(mapf, costBound);
+		CBS *planner = new CBS(mapf);
 
 		// init solution
 		Solution solution;

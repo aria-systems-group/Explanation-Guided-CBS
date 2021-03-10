@@ -10,7 +10,7 @@ typedef std::vector<std::vector<State*>> Solution;
 class CBS
 {
 public:
-	CBS(Environment *env, const int bound);
+	CBS(Environment *env);
 
 	bool plan(const std::vector<State*>& startStates, Solution& solution);
 
@@ -25,21 +25,21 @@ public:
 
 		};
 
-		bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
+		// bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
 
-		int segmentSolution(Solution &sol);
+		// int segmentSolution(Solution &sol);
 
-		int segmentSolution();
+		// int segmentSolution();
 
 		int calcCost()
 		{
-			return segmentSolution();
-			// int cost  = 0;
-			// for (std::vector<State> sol: m_solution)
-			// {
-			// 	cost = cost + sol.size();
-			// }
-			// return cost;
+			// return segmentSolution();
+			int cost  = 0;
+			for (std::vector<State*> sol: m_solution)
+			{
+				cost = cost + sol.size();
+			}
+			return cost;
 		};
 
 		Solution m_solution;
@@ -67,7 +67,6 @@ public:
 
 protected:
 	Environment *m_env;
-	const int m_bound;
 	int m_numAgents;
 	A_star *m_planner{nullptr};
 };

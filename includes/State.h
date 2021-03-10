@@ -41,7 +41,7 @@ struct State {
   int time;
   int x;
   int y;
-  int cost = 0;
+  int cost = 1;
 };
 
 // create default constructor
