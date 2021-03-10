@@ -5,7 +5,7 @@
 #include <unordered_set>
 #include "../includes/Conflict.h"
 
-// This is Exp - A* Planner
+// Exp - A* Planner
 class A_star
 {
 public:
