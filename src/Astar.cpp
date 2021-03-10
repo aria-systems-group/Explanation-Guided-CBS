@@ -430,12 +430,12 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	solution.clear();
 
 	if (useCBS == false)
+	{
+		std::cout << "planning without CBS... using collision checking" << std::endl;
 		m_env->includeCollisionChecks(parentSol);
+	}
 	
 	const int longTime = getLongestPath(parentSol);
-
-	// debug string
-	std::string test;
 
 	// init open min-heap
 	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap;
@@ -475,8 +475,6 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
   			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
   				(duration.count() / 1000000.0) << " seconds" << std::endl;
-
-
 			return true;
 		}
 
@@ -489,21 +487,6 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		// see Environment.h for details
 		m_env->expandState(current->state, neighbors, relevantConstraints);
 
-		// if (m_env->getAgent() == 4)
-		// {
-		// 	std::cout << current->state->time << std::endl;
-		// 	if (current->state->time == 15)
-		// 	{
-		// 		std::cout << "# of neighbors: " << neighbors.size() << std::endl;
-		// 		for (State *st: neighbors)
-		// 		{
-		// 			std::cout << *st << std::endl;
-		// 		}
-		// 	}
-
-		// }
-
-
 		// for all neighbors...
 		for (State *st: neighbors)
 		{
@@ -515,72 +498,37 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 
 			// testing section
 			n->segCost = SegHeuristic(n, parentSol);  // bottle neck
-			// if satisfiable
-			// if (m_env->getAgent() == 4)
-			// {
-			// 	if (current->state->time == 15)
-			// 	{
-			// 		std::cout << "Neighbor state: " << *(n->state) << std::endl;
-			// 		std::cout << "seg cost: " << n->segCost << std::endl;
-			// 		std::cin >> test;
-			// 	}
-			// }
 
-			if (n->segCost <= getBound())
+			bool cross = crossCheck(n, longTime);
+			if (!cross)
 			{
+				// either longTime not reached
+				// or there was no cross with iteself
 
-				bool cross = crossCheck(n, longTime);
-				if (!cross)
+				// if new segment not created
+				// greedily add node
+				if (n->segCost <= n->parent->segCost)
 				{
-					// either longTime not reached
-					// or there was no cross with iteself
-
-					// if new segment not created
-					// greedily add node
-					if (n->segCost <= n->parent->segCost)
-					{
-						n->gScore = n->parent->gScore + 1;
-						open_heap.emplace(n);
-						open_list.insert(*st);
-						// if (m_env->getAgent() == 4)
-						// {
-						// 	if (current->state->time == 15)
-						// 		std::cout << "added" << std::endl;
-						// }
-						total++;
-					}
-					else
-					{
-						// new segment needed, proceed as normal
-						int tentative_gScore = n->parent->gScore + 1;
-						if (tentative_gScore < n->gScore)
-						{
-							n->gScore = tentative_gScore;
-							open_heap.emplace(n);
-							open_list.insert(*st);
-							// if (m_env->getAgent() == 4)
-							// {
-							// 	if (current->state->time == 15)
-							// 		std::cout << "added" << std::endl;
-							// }
-							total++;
-							// }
-						}
-					}
+					n->gScore = n->parent->gScore + 1;
+					open_heap.emplace(n);
+					open_list.insert(*st);
+					total++;
 				}
 				else
-					delete n;
+				{
+					// new segment needed, proceed as normal
+					int tentative_gScore = n->parent->gScore + 1;
+					if (tentative_gScore < n->gScore)
+					{
+						n->gScore = tentative_gScore;
+						open_heap.emplace(n);
+						open_list.insert(*st);
+						total++;
+					}
+				}
 			}
 			else
 				delete n;
-			// if (m_env->getAgent() == 4)
-			// {
-			// 	if (current->state->time == 15)
-			// 	{
-			// 		std::cout << "should be added by now" << std::endl;
-			// 		std::cin >> test;
-			// 	}
-			// }
 		}
 	}
 	std::cout << "No Solution Found using A* using current constraints." << std::endl;

@@ -70,15 +70,8 @@ public:
     	}
 	};
 
-    void updateBound(const int maxSegments)
-    {
-        m_bound = maxSegments;
-    };
-
 	Environment* getEnv() {return m_env;};
-    int getBound() {return m_bound;};
 private:
 	Environment *m_env;
-    int m_bound{std::numeric_limits<int>::infinity()};
     const bool useCBS;
 };

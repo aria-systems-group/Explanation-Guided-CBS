@@ -166,11 +166,6 @@ int main(int argc, char** argv) {
 			std::ofstream out("txt/solution.txt");
 			std::vector<State*> solution;
 			std::vector<Constraint*> constraints;
-			int bound;
-			std::cout << "Enter Desired Explainability Bound: ";
-			std::cin >> bound;
-			// give exp-A* a bound
-			planner->updateBound(bound);
 			// create instance of expA* and plan
 			bool success = planner->plan(startStates[numAgents], solution, constraints, existing);
 

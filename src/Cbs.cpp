@@ -6,7 +6,6 @@
 CBS::CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
 {
 	m_planner = new A_star(m_env);
-	m_planner->updateBound(m_bound);
 	m_numAgents = m_env->getGoals().size();
 	Constraint m_constraint{Constraint()};
 };
