@@ -467,14 +467,14 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
           	  solution.insert(solution.begin(), solNode->state);
           	  solNode = solNode->parent;
           	}
-          	std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
+          	// std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
 			if (useCBS == false)
 				parentSol.push_back(solution);
 			
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-  			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
-  				(duration.count() / 1000000.0) << " seconds" << std::endl;
+  			// std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
+  				// (duration.count() / 1000000.0) << " seconds" << std::endl;
 			return true;
 		}
 
@@ -531,7 +531,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 				delete n;
 		}
 	}
-	std::cout << "No Solution Found using A* using current constraints." << std::endl;
-	std::cout << "total nodes Explored by A*: " << total << std::endl;
+	// std::cout << "No Solution Found using A* using current constraints." << std::endl;
+	// std::cout << "total nodes Explored by A*: " << total << std::endl;
 	return false;
 }
