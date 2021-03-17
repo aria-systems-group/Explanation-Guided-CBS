@@ -473,8 +473,13 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 			
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-  			// std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
-  				// (duration.count() / 1000000.0) << " seconds" << std::endl;
+			if (useCBS == false)
+			{
+				std::cout << "Found Solution using Exp-A*" << std::endl;
+				std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
+  					(duration.count() / 1000000.0) << " seconds" << std::endl;
+
+			}
 			return true;
 		}
 
