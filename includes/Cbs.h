@@ -53,6 +53,8 @@ public:
 
 	int getAgents() {return m_numAgents;};
 
+	int getBound() {return m_bound;};
+
 	// for open heap
 	class myconflictComparator
 	{

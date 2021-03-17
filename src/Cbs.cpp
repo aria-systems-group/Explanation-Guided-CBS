@@ -295,6 +295,92 @@ Conflict* CBS::validateSolution(conflictNode *n)
 			}
 		}
 	}
+	// no actual conflicts found
+	// time to check explanations
+	const int cost = n->getSegCost();
+	if (cost > getBound() && getBound() > 0)
+	{
+
+		// get long time
+		int longTime = 0;
+		for (std::vector<State*> sol: n->m_solution)
+		{
+			if (sol.back()->time > longTime)
+				longTime = sol.back()->time;
+		}
+		// cycle through long time to search for segments
+		int currCost = 1;
+		std::vector<std::vector<State*>> agentVisited(getAgents());
+		for (int t = 0; t <= longTime; t++)
+		{
+			// check for segment
+			if (n->m_solution[0][t]->cost > currCost)
+			{
+				// found a new segment
+				// add current time to visited
+				for (int a = 0; a < getAgents(); a++)
+				{
+					if (n->m_solution[a].back()->time >= t)
+					{
+						agentVisited[a].push_back(n->m_solution[a][t]);
+					}
+				}
+				// somewhere in agentVisited, a state is repeated
+				// find it using a double for loop
+				for (int a1 = 0; a1 < getAgents(); a1++)
+				{
+					for (int a2 = 0; a2 < getAgents(); a2++)
+					{
+						if (a1 != a2)
+						{
+							// for all agents
+							// check for repeates for all visited states
+							for (int k1 = 0; k1 < agentVisited[a1].size(); k1++)
+							{
+								for (int k2 = 0; k2 < agentVisited[a2].size(); k2++)
+								{
+									if (agentVisited[a1][k1]->isSameLocation(agentVisited[a2][k2]))
+									{
+										// return first conflict
+										// times are k1 and k2
+										// states are in visited a1 and a2
+										c = new Conflict;
+										c->type = Conflict::Explanation;
+										c->time1 = agentVisited[a1][k1]->time;
+										c->time2 = agentVisited[a2][k2]->time;
+										c->agent1 = a1;
+										c->agent2 = a2;
+										c->x1 = agentVisited[a1][k1]->x ; c->y1 = agentVisited[a1][k1]->y;
+										c->x2 = agentVisited[a2][k2]->x ; c->y2 = agentVisited[a2][k2]->y;
+										return c;
+										// if we end up wanting to find all conflicts, use this
+										// for (int a = 0; a < getAgents(); a++)
+										// 	agentVisited[a].clear();
+										// currCost++;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				// add states to visited
+				for (int a = 0; a < getAgents(); a++)
+				{
+					if (n->m_solution[a].back()->time >= t)
+						agentVisited[a].push_back(n->m_solution[a][t]);
+				}
+			}
+		}
+	}
+	else if (getBound() == 0)
+	{
+		std::cout << "A solution cannot be explained in less than one segment." << std::endl;
+		std::cout << "Exiting CBS prematurely. Please retry using a feasible explanation bound." << std::endl;
+		exit(1);
+	}	
 	return c;
 }
 
@@ -307,7 +393,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	solution.clear();
 
 	// init open min-heap
-	std::priority_queue <conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap;
+	std::priority_queue < conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap;
 	// used for seeing if a node is in the heap
 	
 	// find solution with no constraints
@@ -347,6 +433,15 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 
 	while (!open_heap.empty())
 	{
+		// if ((treeSize % 10) == 0)
+		// {
+		// 	std::cout << treeSize << std::endl;
+		// 	exit(1);
+		// }
+		if ((treeSize - 1) % 100 == 0)
+		{
+			std::cout << treeSize << std::endl;
+		}
 
 		// get best node
 		conflictNode *current = open_heap.top();
@@ -367,7 +462,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 
   			std::cout << "Solution is Satisfiable!" << std::endl;
   			solution = current->m_solution;
-  			std::cout << "Number of Conflict Nodes: " << treeSize << std::endl;
+  			std::cout << "Number of Solutions Searched: " << treeSize << std::endl;
 			return true;
 		}
 		else
@@ -381,8 +476,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 				{
 					// vertex Conflict is defined as follows
 					// as per paper, new node is initialized with parent solution
-					std::vector<std::vector<State*>> empty;
-					conflictNode *n = new conflictNode(empty);
+					conflictNode *n = new conflictNode(current->m_solution);
 					// new node branches from current
 					n->parent = current;
 					// create constraint
@@ -433,10 +527,12 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						treeSize ++;
 					}
 				}
-				if (c->type == Conflict::Edge)
+				else if (c->type == Conflict::Edge)
 				{
 					// as per paper, new node is initialized with parent solution
 					conflictNode *n = new conflictNode(current->m_solution);
+					// new node branches from current
+					n->parent = current;
 					// new node branches from current
 					// create constraint -- changes based on which agent we are talking about
 
@@ -487,10 +583,64 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 						treeSize ++;
 					}
 				}
+				else if (c->type == Conflict::Explanation)
+				{
+					// for each explanation bound, we need to make a child node
+					// and give it a vertex constraint and solve again
+					conflictNode *n = new conflictNode(current->m_solution);
+					// new node branches from current
+					n->parent = current;
+
+					if (a == 0)
+					{
+						VertexConstraint *v = new VertexConstraint(c->agent1, 
+							c->time1, c->x1, c->y1);
+						n->m_constraint.add(v);
+					}
+					else
+					{
+						VertexConstraint *v = new VertexConstraint(c->agent2, 
+							c->time2, c->x2, c->y2);
+						n->m_constraint.add(v);
+					}
+
+					std::vector<Constraint*> constriants;
+					conflictNode *currNode = n;
+
+					while (currNode != nullptr)
+					{
+						constriants.push_back(&(currNode->m_constraint));
+						currNode = currNode->parent;
+					}
+
+					auto t1 = std::chrono::high_resolution_clock::now();
+					n->m_solution = lowLevelSearch(startStates, constriants, 
+						n->parent->m_solution);
+					auto t2 = std::chrono::high_resolution_clock::now();
+					auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
+					timeAstar = timeAstar + duration.count();
+
+					bool valid = true;
+					for (std::vector<State*> sol: n->m_solution)
+					{
+						if (sol.size() == 0)
+						{
+							valid = false;
+							break;
+						}
+					}
+					// update cost of solution if it is a valid one
+					if (valid)
+					{
+						n->m_cost = n->calcCost();
+						open_heap.emplace(n);
+						treeSize ++;
+					}
+				}
 			}
 		}
 	}
-	std::cout << "No solution found..." << std::endl;
-	std::cout << "Number of Conflict Nodes: " << treeSize;
+	std::cout << "No solution found with given explanation bound." << std::endl;
+	std::cout << "Number of Solutions Searched: " << treeSize;
 	return 0;
 }

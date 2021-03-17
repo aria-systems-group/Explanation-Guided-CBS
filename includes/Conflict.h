@@ -2,13 +2,13 @@
 
 #include "../includes/State.h"
 
-//                                               
 
 struct Conflict
 {
   enum Type {
     Vertex,
     Edge,
+    Explanation
   };
 
   size_t agent1;
@@ -31,6 +31,9 @@ struct Conflict
       case Edge:
         return os << "Edge(" << c.time1 << ": (" << c.x1 << "," << c.y1 << "), " << c.time2 << ": (" << c.x2
                   << "," << c.y2 << ")";
+      case Explanation:
+        return os << "Explanation Conflict: " << std::endl << "Agent: " << c.agent1 << " " << "Time: " << c.time1 << ": Vertex(" << c.x1 << "," << c.y1 << ")" << std::endl
+          << "Agent: " << c.agent2 << " " << "Time: " << c.time2 << ": Vertex(" << c.x1 << "," << c.y1 << ")";
     }
     return os;
   }
