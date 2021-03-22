@@ -12,7 +12,7 @@ class CBS
 public:
 	CBS(Environment *env, const int bound);
 
-	bool plan(const std::vector<State*>& startStates, Solution& solution);
+	bool plan(const std::vector<State*>& startStates, Solution& solution, bool verbose = false);
 
 	struct conflictNode
 	{
@@ -37,7 +37,13 @@ public:
 
 		int getSegCost() const
 		{
-			return m_solution[0].back()->cost;
+			int cost = 0;
+			for (std::vector<State*> sol: m_solution)
+			{
+				if (cost < sol->back->cost)
+					cost = sol->back->cost;
+			}
+			return cost;
 		}
 
 		Solution m_solution;

@@ -1,5 +1,8 @@
 #include "../includes/Cbs.h"
 #include <chrono>
+#include <fstream>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 
 // Constructor
@@ -384,10 +387,14 @@ Conflict* CBS::validateSolution(conflictNode *n)
 	return c;
 }
 
-bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
+bool CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool verbose)
 {
 	std::cout << "Now Planning with CBS" << std::endl;
 	int timeAstar = 0;
+	int numExps = 0;
+	std::string test;
+	std::string dirName;
+	Solution empty(getAgents());
 	auto start = std::chrono::high_resolution_clock::now();
 
 	solution.clear();
@@ -438,7 +445,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 		// 	std::cout << treeSize << std::endl;
 		// 	exit(1);
 		// }
-		if ((treeSize - 1) % 100 == 0)
+		if ((treeSize - 1) % 10 == 0)
 		{
 			std::cout << treeSize << std::endl;
 		}
@@ -475,8 +482,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 				if (c->type == Conflict::Vertex)
 				{
 					// vertex Conflict is defined as follows
-					// as per paper, new node is initialized with parent solution
-					conflictNode *n = new conflictNode(current->m_solution);
+					// as per paper, new node is initialized with empty solution
+					conflictNode *n = new conflictNode(empty);
 					// new node branches from current
 					n->parent = current;
 					// create constraint
@@ -529,8 +536,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 				}
 				else if (c->type == Conflict::Edge)
 				{
-					// as per paper, new node is initialized with parent solution
-					conflictNode *n = new conflictNode(current->m_solution);
+					// as per paper, new node is initialized with empty solution
+					conflictNode *n = new conflictNode(empty);
 					// new node branches from current
 					n->parent = current;
 					// new node branches from current
@@ -585,9 +592,34 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 				}
 				else if (c->type == Conflict::Explanation)
 				{
+					if (a == 0 && verbose)
+					{
+						std::cout << "Found explanation constraint" << std::endl;
+						dirName = "txt/exp" + std::to_string(numExps);
+						int check = mkdir(dirName.c_str(), 0777);
+						// print constraint found
+						std::string fileName0 = (dirName + "/conflict.txt");
+						std::ofstream out0(fileName0);
+						out0 << *c << std::endl;
+						// print solution that found exp constriant
+						std::string fileName1 = (dirName + "/tmpSol_prior.txt");
+						std::ofstream out1(fileName1);
+						for (std::vector<State*> agentSol: current->m_solution)
+						{
+							int it = std::distance(current->m_solution.begin(), 
+								std::find(current->m_solution.begin(), 
+									current->m_solution.end(), agentSol));
+							out1 << m_env->getAgentNames()[it] << std::endl;
+							for (State *st: agentSol)
+							{
+								out1 << *st << std::endl;
+							}
+						}
+					}
+
 					// for each explanation bound, we need to make a child node
 					// and give it a vertex constraint and solve again
-					conflictNode *n = new conflictNode(current->m_solution);
+					conflictNode *n = new conflictNode(empty);
 					// new node branches from current
 					n->parent = current;
 
@@ -629,12 +661,37 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 							break;
 						}
 					}
+					
 					// update cost of solution if it is a valid one
 					if (valid)
 					{
+						if (verbose)
+						{
+							// print solution that found exp constriant
+							std::string fileName2 = (dirName + "/tmpSol_post_" + 
+								"_agent_" + std::to_string(a) + ".txt");
+							std::ofstream out2(fileName2);
+							for (std::vector<State*> agentSol: n->m_solution)
+							{
+								int it = std::distance(n->m_solution.begin(), 
+									std::find(n->m_solution.begin(), 
+										n->m_solution.end(), agentSol));
+								out2 << m_env->getAgentNames()[it] << std::endl;
+								for (State *st: agentSol)
+								{
+									out2 << *st << std::endl;
+								}
+							}
+						}
 						n->m_cost = n->calcCost();
 						open_heap.emplace(n);
 						treeSize ++;
+					}
+					if (a == 1 && verbose)
+					{
+						numExps++;
+						std::cout << "Enter anything to continue: ";
+						std::cin >> test;
 					}
 				}
 			}
