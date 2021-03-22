@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
 	}
 
 	// create environment object
-	Environment *mapf = new Environment(dimx, dimy, obstacles, goals);
+	Environment *mapf = new Environment(dimx, dimy, obstacles, goals, agentNames);
 
 	if (p == "Astar")
 	{
