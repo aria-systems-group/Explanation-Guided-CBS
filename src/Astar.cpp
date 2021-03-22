@@ -390,7 +390,7 @@ bool A_star::crossCheck(const Node *n, const int longTime) const
 	std::string test;
 	//see if currState is same location as any other on path back to root
 	State *currState = n->state;
-	const Node *cpy = n->parent;
+	Node *cpy = n->parent;
 	// can do whatever we want before longTime is hit
 	// after longTime, currState cannot reach previous state in loop
 	if (currState->time < longTime || longTime == 0)
@@ -403,20 +403,20 @@ bool A_star::crossCheck(const Node *n, const int longTime) const
 		{
 			if (currState->isSameLocation((cpy->state)))
 			{
-				if (m_env->getAgent() == 4)
-				{
-					std::cout << "returning cross: " << std::endl;
-					std::cin >> test;
-				}
+				// if (m_env->getAgent() == 1)
+				// {
+				// 	std::cout << "returning cross: " << std::endl;
+				// 	std::cin >> test;
+				// }
 				return true;
 			}
 			cpy = cpy->parent;
 		}
-		if (m_env->getAgent() == 4)
-		{
-			std::cout << "returning NO cross: " << std::endl;
-			std::cin >> test;
-		}
+		// if (m_env->getAgent() == 1)
+		// {
+		// 	std::cout << "returning NO cross: " << std::endl;
+		// 	std::cin >> test;
+		// }
 	}
 	return false;
 }
@@ -444,10 +444,13 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 
 	// init start node
 	Node *startNode = new Node(startState, m_env->heuristicFunc(startState), 0);
-	
-	open_heap.emplace(startNode);
-	open_list.insert(*startState);
 
+	if (m_env->isStateValid(startState, startState, relevantConstraints))
+	{
+		open_heap.emplace(startNode);
+		open_list.insert(*startState);
+	}
+	
 	// init neighbors
 	std::vector<State*> neighbors;
 	int total  = 1;
@@ -455,6 +458,9 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	while (!open_heap.empty())
 	{
 		Node *current = open_heap.top();
+
+		// if (current->state->x >= 6)
+		// 	std::cout << *(current->state) << std::endl;
 		
 		if (m_env->isStateGoal(current->state))
 		{

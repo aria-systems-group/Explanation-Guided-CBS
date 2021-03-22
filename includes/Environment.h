@@ -37,12 +37,13 @@ struct hash<Location> {
 class Environment {
     public:
         Environment(const int dimx, const int dimy, std::unordered_set<Location*> obstacles,
-                std::vector<Location*> goals):
+                std::vector<Location*> goals, std::vector<std::string> names):
             m_dimx(dimx),
             m_dimy(dimy),
             m_obstacles(std::move(obstacles)),
             m_goals(std::move(goals)),
-            m_agentIdx(0)
+            m_agentIdx(0),
+            m_agentNames(names)
             {}
 
         double heuristicFunc(const State *st) const
@@ -167,6 +168,7 @@ class Environment {
 
         const int getXdim() {return m_dimx;};
         const int getYdim() {return m_dimy;};
+        const std::vector<std::string> getAgentNames() {return m_agentNames;};
 
     private:
         bool useCollisionChecking = false;
@@ -176,4 +178,5 @@ class Environment {
         const std::vector<Location*> m_goals;
         std::vector<std::vector<State*>> m_existingSol;
         int m_agentIdx;  // this cycles through the agents so that A* does not need to worry about it
+        std::vector<std::string> m_agentNames;
 };
