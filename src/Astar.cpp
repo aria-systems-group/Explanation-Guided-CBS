@@ -473,7 +473,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
           	  solution.insert(solution.begin(), solNode->state);
           	  solNode = solNode->parent;
           	}
-          	// std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
+          	std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
 			if (useCBS == false)
 				parentSol.push_back(solution);
 			

@@ -195,8 +195,22 @@ int main(int argc, char** argv) {
 	{
 		// CBS implementation!
 		int costBound;
+		bool verbose;
+		std::string ans;
 		std::cout << "Please enter an Explainability Bound: "; 
 		std::cin >> costBound;
+		std::cout << "Output Intermediate Solutions? [y/n]: "; 
+		std::cin >> ans;
+
+		if (ans == "y")
+			verbose = true;
+		else if (ans == "n")
+			verbose = false;
+		else
+		{
+			std::cout << "Invalid Response. Terminating Program." << std::endl;
+			exit(1);
+		}
 		
 		// init planner
 		CBS *planner = new CBS(mapf, costBound);
@@ -205,7 +219,7 @@ int main(int argc, char** argv) {
 		Solution solution;
 
 		// plan
-		bool success = planner->plan(startStates, solution);
+		bool success = planner->plan(startStates, solution, verbose);
 
 		if (success)
 		{

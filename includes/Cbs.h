@@ -40,8 +40,8 @@ public:
 			int cost = 0;
 			for (std::vector<State*> sol: m_solution)
 			{
-				if (cost < sol->back->cost)
-					cost = sol->back->cost;
+				if (cost < sol.back()->cost)
+					cost = sol.back()->cost;
 			}
 			return cost;
 		}
@@ -55,7 +55,7 @@ public:
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
 		std::vector<Constraint*> constriants, Solution& parent);
 
-	Conflict* validateSolution(conflictNode *n);
+	std::vector<Conflict*> validateSolution(conflictNode *n);
 
 	int getAgents() {return m_numAgents;};
 
