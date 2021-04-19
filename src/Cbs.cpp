@@ -501,6 +501,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	// std::cout << "Root Node Cost: " << rootNode->m_cost << std::endl;
 
 	open_heap.emplace(rootNode);
+	int tree_sz = 1;
 
 	while (!open_heap.empty())
 	{
@@ -530,6 +531,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
   			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
   			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << (duration.count() / 1000000.0) << " seconds" << std::endl;
+  			std::cout << "Size of Conflict Tree: " << tree_sz << std::endl;
   			solution = current->m_solution;
 			return true;
   			// }
@@ -547,6 +549,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 			// for each agent in conflict (currently only two at a time)
 			for (int a = 0; a < 2; a++)
 			{
+				tree_sz ++;
 				// std::cout << "found conflict. " << std::endl;
 				if (c->type == Conflict::Vertex)
 				{
