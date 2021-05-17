@@ -424,7 +424,7 @@ bool A_star::crossCheck(const Node *n, const int longTime) const
 bool A_star::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
 {
-
+	// std::cout << "entering a*" << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
 	// clear all previous information
 	solution.clear();
@@ -454,13 +454,18 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	// init neighbors
 	std::vector<State*> neighbors;
 	int total  = 1;
-
+	int time = 1;
 	while (!open_heap.empty())
 	{
 		Node *current = open_heap.top();
-
-		// if (current->state->x >= 6)
-		// 	std::cout << *(current->state) << std::endl;
+		auto currStop = std::chrono::high_resolution_clock::now();
+		auto currDuration = std::chrono::duration_cast<std::chrono::microseconds>(currStop - start);
+		if ((currDuration.count() / 1000000.0) > (100 * time))
+		{
+			std::cout << "Planning in A* for greater than " << 
+				(100 * time) << " seconds." << std::endl;
+			time++;
+		}
 		
 		if (m_env->isStateGoal(current->state))
 		{
@@ -473,19 +478,20 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
           	  solution.insert(solution.begin(), solNode->state);
           	  solNode = solNode->parent;
           	}
-          	std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
-			if (useCBS == false)
-				parentSol.push_back(solution);
-			
+          	// std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 			if (useCBS == false)
 			{
+				parentSol.push_back(solution);
 				std::cout << "Found Solution using Exp-A*" << std::endl;
 				std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
   					(duration.count() / 1000000.0) << " seconds" << std::endl;
 
 			}
+			// notify user that solution was found after 100 seconds
+			if (time > 1)
+				std::cout << "Found Solution" << std::endl;
 			return true;
 		}
 

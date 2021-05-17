@@ -37,10 +37,10 @@ struct State {
     return x < s.x && y < s.y;
   }
 
-  bool operator >(const State& s) const
-  {
-    return x > s.x && y > s.y;
-  }
+  // bool operator >(const State& s) const
+  // {
+  //   return x > s.x && y > s.y;
+  // }
 
   int time;
   int x;
