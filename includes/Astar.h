@@ -23,7 +23,7 @@ public:
 
     	friend std::ostream& operator<<(std::ostream& os, const Node& node)
     	{
-    	  os << "state: " << node.state << " fScore: " << (node.gScore + node.hScore);
+    	  os << "state: " << *node.state << " fScore: " << (node.gScore + node.hScore);
     	  return os;
     	}
 
@@ -34,7 +34,12 @@ public:
     	double gScore;
     	double hScore;
         int segCost{1};
+        bool isWaiting = true;
 	};
+
+    int noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol);
+
+    int getMaxCost(std::vector<std::vector<State*>> existSol);
 
     int getLongestPath(const std::vector<std::vector<State*>>& parSol) const;
 
@@ -44,6 +49,8 @@ public:
 
     bool is_disjoint(const std::vector<State*> v1, 
         const std::vector<State*> v2) const;
+
+    bool checkPathValidity(Node *curr);
 
 	// To compare two Nodes -- f(n) = g(n) + h(n)
 	// calculate the best next-node from open heap

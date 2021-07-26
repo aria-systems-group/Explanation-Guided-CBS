@@ -54,7 +54,7 @@ class Environment {
         }
 
         void expandState(const State *st, std::vector<State*>& neighbors, 
-            std::vector<Constraint*> constraints)
+            std::vector<Constraint*> constraints, bool isNodeWaiting)
         {
             // clear previous data
             neighbors.clear();
@@ -67,6 +67,12 @@ class Environment {
             State *right = new State(st->time + 1, st->x + 1, st->y);
             // init and check "left" state
             State *left = new State(st->time + 1, st->x - 1, st->y);
+            // init and add self state
+            if (isNodeWaiting)
+            {
+                State *stay = new State(st->time + 1, st->x, st->y);
+                neighbors.push_back(stay);
+            }
 
             if (isStateValid(st, up, constraints))
             {

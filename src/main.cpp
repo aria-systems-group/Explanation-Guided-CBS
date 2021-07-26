@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 	std::vector<State*> startStates;
 	std::vector<std::string> agentNames;
 
-	// parsing yaml now
+	// parsing yaml
 	const auto& dim = config["map"]["dimensions"];
 	int dimx = dim[0].as<int>();
 	int dimy = dim[1].as<int>();

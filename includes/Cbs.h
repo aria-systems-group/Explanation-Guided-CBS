@@ -170,6 +170,7 @@ public:
 		int m_idx = 0;
 		bool m_solFlag = false;
 		bool m_eval = false;
+		// bool m_isWaiting = true;
 	};
 
 	void showTree(const conflictNode *curr, std::vector<Conflict*> cnf);
