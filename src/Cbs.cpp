@@ -461,6 +461,102 @@ Conflict* CBS::validateSolution(conflictNode *n)
 	return c;
 }
 
+bool CBS::is_disjoint(const std::vector<State*> v1, 
+	const std::vector<State*> v2) const
+{
+    if(v1.empty() || v2.empty()) return true;
+    typename std::vector<State*>::const_iterator 
+        it1 = v1.begin(), 
+        it1End = v1.end();
+    while(it1 != it1End)  //  && it2 != it2End
+    {
+    	typename std::vector<State*>::const_iterator 
+        it2 = v2.begin(), 
+        it2End = v2.end();
+    	while (it2 != it2End)
+    	{
+    		// std::cout << **it1 << std::endl;
+    		// std::cout << *it2 << std::endl;
+    		// std::cout << (*it1)->isSameLocation(*it2) << std::endl;
+    		if((*it1)->isSameLocation(*it2))
+    			return false;
+    		else
+    			it2++;
+    	}
+        it1++;
+    }
+    return true;
+}
+
+void CBS::segmentSolution(Solution sol)
+{
+	int longTime = 0;
+	for (int a = 0; a < sol.size(); a++)
+	{
+		int tmp = sol[a].back()->time;
+		if (tmp > longTime)
+			longTime = tmp;
+	}
+	// 3. init a visited list for all agents and an indexing variable
+	std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
+	int lastSegmentTime = 0;
+	int currCost = 1;
+
+	for (int currTime = 0; currTime <= longTime; currTime++)
+	{
+		// add visited state for currTime
+		for (int a = 0; a < sol.size(); a++)
+			if (sol[a].back()->time >= currTime)
+				agentVisited[a].push_back(sol[a][currTime]);
+
+		// 4b. see if agent visited is disjoint
+		for (int a1 = 0; a1 < sol.size(); a1++)
+		{
+			for (int a2 = 0; a2 < sol.size(); a2++)
+			{
+				// if these are not the same agent
+				if (a1 != a2)
+				{
+					// 4c. check disjoint
+					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+					if (!disjoint)
+					{
+						// 4d. add cost for all states prior to currTime
+						for (int a = 0; a < sol.size(); a++)
+						{
+							for (int t = lastSegmentTime; t < currTime; t++)
+							{
+								if (sol[a].back()->time >= t)
+									sol[a][t]->cost = currCost;
+							}
+						}	
+						lastSegmentTime = currTime;
+
+						// update cost for future
+						currCost ++;
+
+						// 4e. clear visited lists and re-init with currTime state
+						for (int a = 0; a < sol.size(); a++)
+						{
+							agentVisited[a].clear();
+							if (sol[a].back()->time >= currTime)
+								agentVisited[a].push_back(sol[a][currTime]);
+						}
+					}
+				}
+			}
+		}
+	}
+	for (int a = 0; a < sol.size(); a++)
+	{
+		for (int t = lastSegmentTime; t <= longTime; t++)
+		{
+			if (sol[a].back()->time >= t)
+				sol[a][t]->cost = currCost;
+		}
+	}
+}
+
 bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 {
 	std::cout << "Planning with CBS... " << std::endl;
@@ -527,7 +623,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
   			// int solCost = current->segmentSolution();
   			// if (solCost <= m_bound)
   			// {
-  			std::cout << "Solution is Satisfiable!" << std::endl;
+			segmentSolution(current->m_solution);
+  			// std::cout << "Solution is Satisfiable!" << std::endl;
   			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
   			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << (duration.count() / 1000000.0) << " seconds" << std::endl;

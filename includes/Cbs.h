@@ -53,6 +53,10 @@ public:
 
 	Conflict* validateSolution(conflictNode *n);
 
+	void segmentSolution(Solution sol);
+
+	bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
+
 	int getAgents() {return m_numAgents;};
 
 	// for open heap
