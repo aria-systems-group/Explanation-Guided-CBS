@@ -15,7 +15,10 @@ int main(int argc, char** argv) {
 	std::string p = argv[1];
 
 	std::string inputYaml = argv[2];
-
+	std::string dir2file = inputYaml.substr(inputYaml.rfind("/")+1);
+	std::string fileType = ".yaml";
+	std::string::size_type end = dir2file.find(fileType);
+	std::string output_name = "txt/" + dir2file.erase(end, fileType.length()) + "_sol.txt";
 
 	YAML::Node config = YAML::LoadFile(inputYaml);  // path not perfect
 
@@ -61,7 +64,8 @@ int main(int argc, char** argv) {
 		std::vector<State*> solution;
 		std::vector<Constraint*> constraints;
 
-		std::ofstream out("txt/solution.txt");
+		std::ofstream out(output_name);
+		std::cout << "Outputting Solution to: " << output_name << std::endl;
 		int numSucc = 0;
 		for (State *a : startStates)
 		{
@@ -164,7 +168,8 @@ int main(int argc, char** argv) {
 				mapf->updateAgent();
 			}
 			A_star *planner = new A_star(mapf, false); // boolean tells exp-A* CBS not involved
-			std::ofstream out("txt/solution.txt");
+			std::ofstream out(output_name);
+			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			std::vector<State*> solution;
 			std::vector<Constraint*> constraints;
 			// create instance of expA* and plan
@@ -225,7 +230,8 @@ int main(int argc, char** argv) {
 		if (success)
 		{
 			std::cout << "Successful planning using CBS" << std::endl;
-			std::ofstream out("txt/solution.txt");
+			std::ofstream out(output_name);
+			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			for (std::vector<State*> agentSol: solution)
 			{
 				int it = std::distance(solution.begin(), 
