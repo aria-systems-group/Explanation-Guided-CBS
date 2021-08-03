@@ -47,6 +47,9 @@ public:
 
     int SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols);
 
+    int SegHeuristic_combinedAgent(Node *n, std::vector<std::vector<State*>>& otherSols);
+
+
     bool is_disjoint(const std::vector<State*> v1, 
         const std::vector<State*> v2) const;
 

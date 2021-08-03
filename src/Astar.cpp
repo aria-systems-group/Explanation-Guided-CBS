@@ -41,6 +41,163 @@ bool A_star::is_disjoint(const std::vector<State*> v1,
 }
 
 
+int A_star::SegHeuristic_combinedAgent(Node *n, std::vector<std::vector<State*>>& otherSols)
+{
+	if (otherSols.size() == 0)
+		return 1;
+	// given a node and other solutions, this function 
+	// returns the number of segments from the start node to n->state
+
+	// 1. get the path from current state back to root. 
+	std::vector<State*> currPathSeg;
+	Node *currCopy = n;
+	while (currCopy != nullptr)
+	{
+		currPathSeg.insert(currPathSeg.begin(), currCopy->state);
+		currCopy = currCopy->parent;
+	}
+
+	if (useCBS)
+	{
+		// 2. find out how many steps we can go. 
+		// i.e. what is this nodes state time point. 
+		// int longTime = currPathSeg.back()->time;
+		// std::cout << "here" << std::endl;
+		int longTime = 0;
+		for (int a = 0; a < otherSols.size(); a++)
+		{
+			if (a == m_env->getAgent())
+			{
+				// std::cout << "in here" << std::endl;
+				int tmp = currPathSeg.back()->time;
+				if (tmp > longTime)
+					longTime = tmp;
+			}
+			else
+			{
+				if (otherSols[a].size() > 0)
+				{
+					int tmp = otherSols[a].back()->time;
+					if (tmp > longTime)
+						longTime = tmp;
+				}
+			}
+		}
+		// Clear all costs 
+		for (int a = 0; a < otherSols.size(); a++)
+		{
+			for (int t = 0; t <= longTime; t++)
+			{
+				if (a == m_env->getAgent())
+				{
+					if (t < currPathSeg.size())
+					{
+						currPathSeg[t]->cost = 0;
+					}
+				}
+				else
+				{
+					if (t < otherSols[a].size())
+					{
+						otherSols[a][t]->cost = 0;
+					}
+				}
+			}
+		}
+
+		// 3. init a visited list for all agents and an indexing variable
+		std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
+		int lastSegmentTime = 0;
+		int currCost = 1;
+
+		// 4. segment the solution
+		for (int currTime = 0; currTime <= longTime; currTime++)
+		{
+			// 4a. add visited state for currTime
+			for (int a = 0; a < otherSols.size(); a++)
+			{
+				if (a == m_env->getAgent())
+				{
+					if (currTime < currPathSeg.size())
+						agentVisited[a].push_back(currPathSeg[currTime]);
+				}
+				else
+				{
+					if (currTime < otherSols[a].size())
+						agentVisited[a].push_back(otherSols[a][currTime]);
+				}
+			}
+
+			// 4b. see if agent visited is disjoint
+			for (int a1 = 0; a1 < otherSols.size(); a1++)
+			{
+				for (int a2 = 0; a2 < otherSols.size(); a2++)
+				{
+					// if these are not the same agent
+					if ((a1 != a2) && (a1 == m_env->getAgent() || a2 == m_env->getAgent()))
+					{
+						// 4c. check disjoint
+						bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+						if (!disjoint)
+						{
+							// 4d. add cost for all states prior to currTime
+							for (int a = 0; a < otherSols.size(); a++)
+							{
+								for (int t = lastSegmentTime; t < currTime; t++)
+								{
+									if (a == m_env->getAgent())
+									{
+										if (t < currPathSeg.size())
+										{
+											currPathSeg[t]->cost = currCost;
+										}
+									}
+									else
+									{
+										if (t < otherSols[a].size())
+										{
+											otherSols[a][t]->cost = currCost;
+										}
+									}
+								}
+							}	
+						
+							lastSegmentTime = currTime;
+
+							// update cost for future
+							currCost ++;
+
+							// 4e. clear visited lists and re-init with currTime state
+							for (int a = 0; a < otherSols.size(); a++)
+							{
+								agentVisited[a].clear();
+								if (a == m_env->getAgent())
+								{
+									if (currTime < currPathSeg.size())
+										agentVisited[a].push_back(currPathSeg[currTime]);
+								}
+								else
+								{
+									if (currTime < otherSols[a].size())
+										agentVisited[a].push_back(otherSols[a][currTime]);
+								}
+							}
+						}
+					}	
+				}
+			}
+		}
+		return currCost;
+	}
+	else
+	{
+		std::cout << "ERROR: incorrect heuristic used in A*. Aborting..." << std::endl; 
+		exit(1);
+		return 0;
+	}
+
+}
+
 int A_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
 	if (otherSols.size() == 0)
@@ -767,7 +924,8 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 			}
 			else
 			{
-				n->segCost = SegHeuristic(n, parentSol);  // updates all state costs
+				// n->segCost = SegHeuristic(n, parentSol);  // updates all state costs
+				n->segCost = SegHeuristic_combinedAgent(n, parentSol);
 			}
 			
 
