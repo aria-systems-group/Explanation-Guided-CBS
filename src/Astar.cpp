@@ -187,6 +187,27 @@ int A_star::SegHeuristic_combinedAgent(Node *n, std::vector<std::vector<State*>>
 				}
 			}
 		}
+		for (int a = 0; a < otherSols.size(); a++)
+		{
+			// std::cout << "Agent: " << a << std::endl;
+			for (int t = lastSegmentTime; t <= longTime; t++)
+			{
+				if (a == m_env->getAgent())
+				{
+					if (t < currPathSeg.size())
+					{
+						currPathSeg[t]->cost = currCost;
+					}
+				}
+				else
+				{
+					if (t < otherSols[a].size())
+					{
+						otherSols[a][t]->cost = currCost;
+					}
+				}
+			}
+		}
 		return currCost;
 	}
 	else
