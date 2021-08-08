@@ -502,17 +502,23 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool 
 		if (cnf.empty())
 		{
 			// if no conflicts occur, then we found a solution
-			auto stop = std::chrono::high_resolution_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-  			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
-  				(duration.count() / 1000000.0) << " seconds" << std::endl;
-  			
-  			std::cout << "Time Spent in A*: " << timeAstar << " microseconds" << 
-  				" or approx. " << (timeAstar / 1000000.0) << " seconds" << std::endl;
-
-  			std::cout << "Solution is Satisfiable!" << std::endl;
   			current->m_solFlag = true;
   			solution = current->m_solution;
+  			auto stop = std::chrono::high_resolution_clock::now();
+  			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  			// get final cost
+  			int cost = 0;
+  			for (std::vector<State*> a: solution)
+  			{
+  				if (a.back()->cost > cost)
+  					cost = a.back()->cost;
+  			}
+  			// output results nicely
+  			std::cout << "Solution found with " << cost << " segments!" << std::endl;
+  			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
+  				(duration.count() / 1000000.0) << " seconds" << std::endl;
+  			std::cout << "Time Spent in A*: " << timeAstar << " microseconds" << 
+  				" or approx. " << (timeAstar / 1000000.0) << " seconds" << std::endl;
   			std::cout << "Size of Conflict Tree: " << treeSize << std::endl;
 
   			showTree(current, cnf);
