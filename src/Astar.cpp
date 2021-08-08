@@ -945,8 +945,8 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 			}
 			else
 			{
-				// n->segCost = SegHeuristic(n, parentSol);  // updates all state costs
-				n->segCost = SegHeuristic_combinedAgent(n, parentSol);
+				n->segCost = SegHeuristic(n, parentSol);  // updates all state costs
+				// n->segCost = SegHeuristic_combinedAgent(n, parentSol);
 			}
 			
 
