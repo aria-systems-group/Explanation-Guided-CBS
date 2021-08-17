@@ -5,6 +5,8 @@
 #include "yaml.h"
 #include "../includes/State.h"
 #include "../includes/Environment.h"
+#include "../includes/Astar.h"
+#include "../includes/Cbs.h"
 #include "../includes/ExpAstar.h"
 #include "../includes/ExpCBS.h"
 
@@ -52,10 +54,10 @@ int main(int argc, char** argv) {
 	// create environment object
 	Environment *mapf = new Environment(dimx, dimy, obstacles, goals, agentNames);
 
-	else if (p == "Exp-astar" || p == "Exp-Astar" || p == "Exp-A*")
+	if (p == "Exp-astar" || p == "Exp-Astar")
 	{
+		// Exp-A* implementation
 		// get name of exisisting solution file
-		// std::cout << inputYaml << std::endl;
 		const int yamlSize = inputYaml.size();
 		std::string inputSolution = "existingSolutions/" + 
 			inputYaml.substr(5, yamlSize - (2 * 5)) + ".txt";
@@ -133,7 +135,6 @@ int main(int argc, char** argv) {
 			}
 			ExpA_star *planner = new ExpA_star(mapf, false); // boolean tells exp-A* ExpCBS not involved
 			std::ofstream out(output_name);
-			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			std::vector<State*> solution;
 			std::vector<Constraint*> constraints;
 			// create instance of expA* and plan
@@ -141,6 +142,7 @@ int main(int argc, char** argv) {
 
 			if (success)
 			{
+				std::cout << "Outputting Solution to: " << output_name << std::endl;
 				for (std::vector<State*> agentSol: existing)
 				{
 					int it = std::distance(existing.begin(), 
@@ -160,13 +162,38 @@ int main(int argc, char** argv) {
 			exit(1);
 		}
 	}
+	else if (p == "cbs" || p == "Cbs" || p == "CBS")
+	{
+		// CBS implementation!
+		// init planner
+		CBS *planner = new CBS(mapf);
 
+		// init solution
+		Solution solution;
+
+		// plan
+		bool success = planner->plan(startStates, solution);
+
+		if (success)
+		{
+			std::cout << "Successful planning using CBS" << std::endl;
+			std::ofstream out(output_name);
+			std::cout << "Outputting Solution to: " << output_name << std::endl;
+			for (std::vector<State*> agentSol: solution)
+			{
+				int it = std::distance(solution.begin(), 
+					std::find(solution.begin(), solution.end(), agentSol));
+				out << agentNames[it] << std::endl;
+				for (State *st: agentSol)
+				{
+					out << *st << std::endl;
+				}
+			}
+		}
+	}
 	else if (p == "Exp-cbs" || p == "Exp-Cbs" || p == "Exp-CBS")
 	{
-		
-		// init planner
-		ExpCBS *planner = new ExpCBS(mapf, costBound);
-		// ExpCBS implementation!
+		// Exp-CBS implementation
 		int costBound;
 		bool verbose;
 		std::string ans;
@@ -174,6 +201,9 @@ int main(int argc, char** argv) {
 		std::cin >> costBound;
 		std::cout << "Output Intermediate Solutions? [y/n]: "; 
 		std::cin >> ans;
+
+		// init planner
+		ExpCBS *planner = new ExpCBS(mapf, costBound);
 
 		if (ans == "y")
 			verbose = true;
