@@ -1,9 +1,10 @@
-Planner
-/pseudocodes
 /obj
-Makefile
+/pseudoCodes
 /vizTools
-.DS_Store
 /yaml
 /txt
 /existingSolutions
+Planner
+Makefile
+*.xlsx
+.DS_Store

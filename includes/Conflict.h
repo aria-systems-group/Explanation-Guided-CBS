@@ -2,13 +2,13 @@
 
 #include "../includes/State.h"
 
-//                                               
 
 struct Conflict
 {
   enum Type {
     Vertex,
     Edge,
+    Explanation
   };
 
   size_t agent1;
@@ -31,6 +31,9 @@ struct Conflict
       case Edge:
         return os << "Edge(" << c.time1 << ": (" << c.x1 << "," << c.y1 << "), " << c.time2 << ": (" << c.x2
                   << "," << c.y2 << ")";
+      case Explanation:
+        return os << "Explanation Conflict: " << std::endl << "Agent: " << c.agent1 << " " << "Time: " << c.time1 << ": Vertex(" << c.x1 << "," << c.y1 << ")" << std::endl
+          << "Agent: " << c.agent2 << " " << "Time: " << c.time2 << ": Vertex(" << c.x1 << "," << c.y1 << ")";
     }
     return os;
   }
@@ -41,7 +44,14 @@ struct VertexConstraint
 {
 	VertexConstraint(int agent, int t, int x, int y): 
 		agent{agent}, time{t}, x{x}, y{y} {}
-	// constraints are for single agent (i.e. agent 1 cannot go to a state s at time t)
+	
+  friend std::ostream& operator<<(std::ostream& os, const VertexConstraint& v)
+  {
+    return os << "Agent: " << v.agent << " Vertex(" << v.time << ": (" << v.x <<
+      "," << v.y << "))";
+  }
+
+  // constraints are for single agent (i.e. agent 1 cannot go to a state s at time t)
 	const int agent;
 	const int time;
 	const int x;
@@ -53,11 +63,18 @@ struct EdgeConstraint
 {
 	EdgeConstraint(int agent, int time1, int time2, int x1, int y1, int x2, int y2)
       : agent{agent}, time1(time1), time2(time2), x1(x1), y1(y1), x2(x2), y2(y2) {}
-    const int agent;
-    const int time1;
+  
+  friend std::ostream& operator<<(std::ostream& os, const EdgeConstraint& e)
+  {
+    return os << "Agent: " << e.agent << " Edge(" << e.time1 << ": (" << e.x1 << "," << e.y1 << "), " << e.time2 << ": (" << e.x2
+                  << "," << e.y2 << "))";
+  }
+
+  const int agent;
+  const int time1;
 	const int x1;
 	const int y1;
-    const int time2;
+  const int time2;
 	const int x2;
 	const int y2;
 };
@@ -73,7 +90,13 @@ public:
 	VertexConstraint* getVertexConstraint() {return vertexC;};
 
 	EdgeConstraint* getEdgeConstraint() {return edgeC;};
+
 private:
 	VertexConstraint *vertexC{nullptr};
 	EdgeConstraint *edgeC{nullptr};
 };
+
+
+
+
+

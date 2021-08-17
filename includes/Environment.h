@@ -37,12 +37,13 @@ struct hash<Location> {
 class Environment {
     public:
         Environment(const int dimx, const int dimy, std::unordered_set<Location*> obstacles,
-                std::vector<Location*> goals):
+                std::vector<Location*> goals, std::vector<std::string> names):
             m_dimx(dimx),
             m_dimy(dimy),
             m_obstacles(std::move(obstacles)),
             m_goals(std::move(goals)),
-            m_agentIdx(0)
+            m_agentIdx(0),
+            m_agentNames(names)
             {}
 
         double heuristicFunc(const State *st) const
@@ -53,7 +54,7 @@ class Environment {
         }
 
         void expandState(const State *st, std::vector<State*>& neighbors, 
-            std::vector<Constraint*> constraints)
+            std::vector<Constraint*> constraints, bool isNodeWaiting)
         {
             // clear previous data
             neighbors.clear();
@@ -66,6 +67,12 @@ class Environment {
             State *right = new State(st->time + 1, st->x + 1, st->y);
             // init and check "left" state
             State *left = new State(st->time + 1, st->x - 1, st->y);
+            // init and add self state
+            if (isNodeWaiting)
+            {
+                State *stay = new State(st->time + 1, st->x, st->y);
+                neighbors.push_back(stay);
+            }
 
             if (isStateValid(st, up, constraints))
             {
@@ -96,6 +103,23 @@ class Environment {
                 if (nxt->x == obs->x && nxt->y == obs->y)
                     return false;
             }
+
+            if (useCollisionChecking)
+            {
+                // from exising solutions, get a list of states to check
+                std::vector<State*> needCheck;
+                for (std::vector<State*> sol: m_existingSol)
+                {
+                    if (nxt->time <= sol.back()->time)
+                        needCheck.push_back(sol[nxt->time]);
+                }
+                // next, check that needCheck and curr are not the same state
+                for (State *st: needCheck)
+                {
+                    if (st->isSameLocation(nxt))
+                        return false;
+                }
+            }
             // need to also account for constraints
             // iterate through constraints and see if state matches any, 
             // if so, return false
@@ -113,31 +137,22 @@ class Environment {
 
                 if (e != nullptr)
                 {
-
-                    // Edge Constraints are defined as follows! 
-                    // c->type = Conflict::Edge;
-                    // c->time1 = a1Curr.time;
-                    // c->time2 = a1Nxt.time;
-                    // c->agent1 = a1;
-                    // c->agent2 = a2;
-                    // c->x1 = a1Curr.x ; c->y1 = a1Curr.y;
-                    // c->x2 = a1Nxt.x ; c->y2 = a1Nxt.y;
-
                     if ((e->x1 == curr->x) && (e->y1 == curr->y) && (e->time1 == curr->time))
                     {
                         if ((e->x2 == nxt->x) && (e->y2 == nxt->y) && (e->time2 == nxt->time))
                         {
-                            // std::cout << e->time << ": " << e->x1 << " " << e->y1 << std::endl;
-                            // std::cout << e->time + 1 << ": " << e->x2 << " " << e->y2 << std::endl;
-                            // std::cout << curr << std::endl;
-                            // std::cout << nxt << std::endl;
-                            // std::cin >> test;
                             return false;
                         }
                     }
                 }
             }
             return true;
+        }
+
+        void includeCollisionChecks(const std::vector<std::vector<State*>> parentSol)
+        {
+            useCollisionChecking = true;
+            m_existingSol = parentSol;
         }
 
         bool isStateGoal(const State *st) const
@@ -153,16 +168,21 @@ class Environment {
                 m_agentIdx = 0;
         }
 
-        // std::vector<Location> getGoals() {return m_goals;}
-
         int getAgent() {return m_agentIdx;}
 
         const std::vector<Location*> getGoals() {return m_goals;};
 
+        const int getXdim() {return m_dimx;};
+        const int getYdim() {return m_dimy;};
+        const std::vector<std::string> getAgentNames() {return m_agentNames;};
+
     private:
+        bool useCollisionChecking = false;
         const int m_dimx;
         const int m_dimy;
         const std::unordered_set<Location*> m_obstacles;
         const std::vector<Location*> m_goals;
+        std::vector<std::vector<State*>> m_existingSol;
         int m_agentIdx;  // this cycles through the agents so that A* does not need to worry about it
+        std::vector<std::string> m_agentNames;
 };

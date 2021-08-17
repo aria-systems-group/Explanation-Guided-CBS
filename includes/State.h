@@ -6,11 +6,15 @@
 
 
 struct State {
-  State(int time, int x, int y) : time(time), x(x), y(y) {}
+  State(int time, int x, int y, int c = 1) : time(time), x(x), y(y), cost{c} {}
 
-  // bool operator==(const State *s) const {
-  //   return time == s->time && x == s->x && y == s->y;
-  // }
+  State(const State* other) 
+  { // copy constructor
+      time = int(other->time);
+      x = int(other->x);
+      y = int(other->y);
+      cost = int(other->cost);
+  }
 
    bool operator==(const State& s) const {
     return time == s.time && x == s.x && y == s.y;
@@ -33,15 +37,15 @@ struct State {
     return x < s.x && y < s.y;
   }
 
-  bool operator >(const State& s) const
-  {
-    return x > s.x && y > s.y;
-  }
+  // bool operator >(const State& s) const
+  // {
+  //   return x > s.x && y > s.y;
+  // }
 
   int time;
   int x;
   int y;
-  int cost = 1;
+  int cost;
 };
 
 // create default constructor
