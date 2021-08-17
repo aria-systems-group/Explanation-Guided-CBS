@@ -1,6 +1,6 @@
 #pragma once
 #include "Environment.h"
-#include "../includes/Astar.h"
+#include "../includes/ExpAstar.h"
 #include "../includes/Conflict.h"
 #include <chrono>
 #include <unordered_set>
@@ -210,5 +210,5 @@ protected:
 	const int m_bound;
 	int m_numAgents;
 	conflictNode* m_root = nullptr;
-	A_star *m_planner{nullptr};
+	ExpA_star *m_planner{nullptr};
 };

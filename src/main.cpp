@@ -5,7 +5,7 @@
 #include "yaml.h"
 #include "../includes/State.h"
 #include "../includes/Environment.h"
-#include "../includes/Astar.h"
+#include "../includes/ExpAstar.h"
 #include "../includes/ExpCBS.h"
 
 
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 		// A* implementation!!
 
 		// init planner
-		A_star *planner = new A_star(mapf);
+		ExpA_star *planner = new ExpA_star(mapf);
 
 		// init solution and empty constraints
 		Solution notUsed;
@@ -88,7 +88,7 @@ int main(int argc, char** argv) {
 			std::cout << "Successful planning using A*" << std::endl;
 	}
 
-	else if (p == "expAstar" || p == "Exp-Astar" || p == "exp-Astar")
+	else if (p == "Exp-astar" || p == "Exp-Astar" || p == "Exp-A*")
 	{
 		// get name of exisisting solution file
 		// std::cout << inputYaml << std::endl;
@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
 			{
 				mapf->updateAgent();
 			}
-			A_star *planner = new A_star(mapf, false); // boolean tells exp-A* ExpCBS not involved
+			ExpA_star *planner = new ExpA_star(mapf, false); // boolean tells exp-A* ExpCBS not involved
 			std::ofstream out(output_name);
 			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			std::vector<State*> solution;
