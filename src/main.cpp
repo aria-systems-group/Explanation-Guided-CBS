@@ -52,42 +52,6 @@ int main(int argc, char** argv) {
 	// create environment object
 	Environment *mapf = new Environment(dimx, dimy, obstacles, goals, agentNames);
 
-	if (p == "Astar")
-	{
-		// A* implementation!!
-
-		// init planner
-		ExpA_star *planner = new ExpA_star(mapf);
-
-		// init solution and empty constraints
-		Solution notUsed;
-		std::vector<State*> solution;
-		std::vector<Constraint*> constraints;
-
-		std::ofstream out(output_name);
-		std::cout << "Outputting Solution to: " << output_name << std::endl;
-		int numSucc = 0;
-		for (State *a : startStates)
-		{
-			bool success = planner->plan(a, solution, constraints, notUsed);
-
-			if (success)
-			{
-				int it = std::distance(startStates.begin(), 
-					std::find(startStates.begin(), startStates.end(), a));
-    			out << agentNames[it] << std::endl;
-    			for (State *st: solution) 
-    			{
-    			 	out << *st << std::endl;
-    			}
-			}
-			mapf->updateAgent();
-			numSucc ++;
-		}
-		if (numSucc == startStates.size())
-			std::cout << "Successful planning using A*" << std::endl;
-	}
-
 	else if (p == "Exp-astar" || p == "Exp-Astar" || p == "Exp-A*")
 	{
 		// get name of exisisting solution file
