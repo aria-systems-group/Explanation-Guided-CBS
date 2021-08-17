@@ -6,7 +6,7 @@
 #include "../includes/State.h"
 #include "../includes/Environment.h"
 #include "../includes/Astar.h"
-#include "../includes/Cbs.h"
+#include "../includes/ExpCBS.h"
 
 
 
@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
 			{
 				mapf->updateAgent();
 			}
-			A_star *planner = new A_star(mapf, false); // boolean tells exp-A* CBS not involved
+			A_star *planner = new A_star(mapf, false); // boolean tells exp-A* ExpCBS not involved
 			std::ofstream out(output_name);
 			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			std::vector<State*> solution;
@@ -197,9 +197,9 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	else if (p == "cbs" || p == "Cbs" || p == "CBS")
+	else if (p == "Exp-cbs" || p == "Exp-Cbs" || p == "Exp-CBS")
 	{
-		// CBS implementation!
+		// ExpCBS implementation!
 		int costBound;
 		bool verbose;
 		std::string ans;
@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
 		}
 		
 		// init planner
-		CBS *planner = new CBS(mapf, costBound);
+		ExpCBS *planner = new ExpCBS(mapf, costBound);
 
 		// init solution
 		Solution solution;
@@ -229,7 +229,7 @@ int main(int argc, char** argv) {
 
 		if (success)
 		{
-			std::cout << "Successful planning using CBS" << std::endl;
+			std::cout << "Successful planning using ExpCBS" << std::endl;
 			std::ofstream out(output_name);
 			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			for (std::vector<State*> agentSol: solution)
