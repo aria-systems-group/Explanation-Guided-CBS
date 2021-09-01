@@ -659,7 +659,7 @@ bool ExpA_star::checkPathValidity(Node *curr)
 	if (cpy->parent == nullptr)
 		return true;
 	
-	while (cpy->parent != nullptr && cpy->state->cost == curr->state->cost)
+	while (cpy->parent != nullptr && cpy->segCost == curr->segCost)  // state->cost
 	{
 		cpy = cpy->parent;
 		currSeg.push_back(cpy);
@@ -678,7 +678,7 @@ bool ExpA_star::checkPathValidity(Node *curr)
 	// std::cout << "here: " << *currCopy << " " << currCopy->isWaiting << std::endl; 
 	// std::cin >> test;
 	// std::cout << "now here: " << std::endl;
-	if (currCopy->state->cost == currCopy->parent->state->cost)
+	if (currCopy->segCost == currCopy->parent->segCost)
 	{
 		// std::cout << "in this loop " << std::endl;
 		// currCopy and parent the part of same segment
