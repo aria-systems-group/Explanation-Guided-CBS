@@ -3,12 +3,12 @@
 #include <queue>
 #include "../includes/State.h"
 #include "../includes/Environment.h"
-#include "../includes/ExpAstar.h"
+#include "../includes/EG-Astar-H.h"
 #include <chrono>
 
-ExpA_star::ExpA_star(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
+EG_Astar_H::EG_Astar_H(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
 
-bool ExpA_star::is_disjoint(const std::vector<State*> v1, 
+bool EG_Astar_H::is_disjoint(const std::vector<State*> v1, 
 	const std::vector<State*> v2) const
 {
     if(v1.empty() || v2.empty()) return true;
@@ -41,7 +41,7 @@ bool ExpA_star::is_disjoint(const std::vector<State*> v1,
 }
 
 
-int ExpA_star::SegHeuristic_combinedAgent(Node *n, std::vector<std::vector<State*>>& otherSols)
+int EG_Astar_H::SegHeuristic_combinedAgent(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
 	if (otherSols.size() == 0)
 		return 1;
@@ -219,7 +219,7 @@ int ExpA_star::SegHeuristic_combinedAgent(Node *n, std::vector<std::vector<State
 
 }
 
-int ExpA_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
+int EG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
 	if (otherSols.size() == 0)
 		return 1;
@@ -547,7 +547,7 @@ int ExpA_star::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols
 	}
 }
 
-int ExpA_star::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
+int EG_Astar_H::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
 {
 	int longTime = 0;
 	for (std::vector<State*> sol: parSol)
@@ -563,7 +563,7 @@ int ExpA_star::getLongestPath(const std::vector<std::vector<State*>>& parSol) co
 	return longTime;
 }
 
-bool ExpA_star::crossCheck(const Node *n, const int longTime) const
+bool EG_Astar_H::crossCheck(const Node *n, const int longTime) const
 {
 	std::string test;
 	//see if currState is same location as any other on path back to root
@@ -642,7 +642,7 @@ bool ExpA_star::crossCheck(const Node *n, const int longTime) const
 // 	}
 // }
 
-bool ExpA_star::checkPathValidity(Node *curr)
+bool EG_Astar_H::checkPathValidity(Node *curr)
 {
 	// given a new node (and consequentially a path)
 	// make sure it fits into canonical form
@@ -749,7 +749,7 @@ bool ExpA_star::checkPathValidity(Node *curr)
 	return true;
 }
 
-int ExpA_star::getMaxCost(std::vector<std::vector<State*>> existSol)
+int EG_Astar_H::getMaxCost(std::vector<std::vector<State*>> existSol)
 {
 	int max_seg = 0;
 	int missing  = 0;
@@ -777,7 +777,7 @@ int ExpA_star::getMaxCost(std::vector<std::vector<State*>> existSol)
 	return max_seg;
 }
 
-int ExpA_star::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol)
+int EG_Astar_H::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol)
 {
 	// path is on the latest segment
 	// any current intersection is a segment
@@ -815,7 +815,7 @@ int ExpA_star::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> exi
 	return (curr->parent->segCost);
 }
 
-bool ExpA_star::plan(State *startState, std::vector<State*> &solution, 
+bool EG_Astar_H::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
 {
 	std::string test;
@@ -889,6 +889,7 @@ bool ExpA_star::plan(State *startState, std::vector<State*> &solution,
 			Node *solNode = current;
 
 			solNode->segCost = SegHeuristic(solNode, parentSol);
+			int expCost = solNode->segCost;
 
           	while (solNode != nullptr)
           	{
@@ -903,7 +904,8 @@ bool ExpA_star::plan(State *startState, std::vector<State*> &solution,
 			if (useCBS == false)
 			{
 				parentSol.push_back(solution);
-				std::cout << "Found Solution using Exp-A*" << std::endl;
+				std::cout << "Found Solution using EG-A*-H" << std::endl;
+				std::cout << "Solution Explanation cost: " << expCost << std::endl;
 				std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
   					(duration.count() / 1000000.0) << " seconds" << std::endl;
 

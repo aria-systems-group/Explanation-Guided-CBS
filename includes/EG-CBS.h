@@ -1,6 +1,7 @@
 #pragma once
 #include "Environment.h"
-#include "../includes/ExpAstar.h"
+#include "../includes/EG-Astar-H.h"
+#include "../includes/EG-Astar.h"
 #include "../includes/Conflict.h"
 #include <chrono>
 #include <unordered_set>
@@ -14,13 +15,13 @@
 
 typedef std::vector<std::vector<State*>> Solution;
 
-// EXP - CBS
-class ExpCBS
+// EG - CBS
+class EG_CBS
 {
 public:
-	ExpCBS(Environment *env, const int bound);
+	EG_CBS(Environment *env, const int bound);
 
-	bool plan(const std::vector<State*>& startStates, Solution& solution, bool verbose = false);
+	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useHeuristic, bool verbose);
 
 	struct conflictNode
 	{
@@ -178,7 +179,7 @@ public:
 	bool isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec);
 
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constriants, Solution& parent);
+		std::vector<Constraint*> constriants, Solution& parent, const bool useHeuristic);
 
 	std::vector<Conflict*> validateSolution(conflictNode *n);
 
@@ -210,5 +211,6 @@ protected:
 	const int m_bound;
 	int m_numAgents;
 	conflictNode* m_root = nullptr;
-	ExpA_star *m_planner{nullptr};
+	EG_Astar_H *m_planner_H{nullptr};
+	EG_Astar *m_planner{nullptr};
 };

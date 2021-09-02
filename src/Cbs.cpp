@@ -244,7 +244,7 @@ bool CBS::is_disjoint(const std::vector<State*> v1,
     return true;
 }
 
-void CBS::segmentSolution(Solution sol)
+int CBS::segmentSolution(Solution sol)
 {
 	int longTime = 0;
 	for (int a = 0; a < sol.size(); a++)
@@ -311,6 +311,7 @@ void CBS::segmentSolution(Solution sol)
 				sol[a][t]->cost = currCost;
 		}
 	}
+	return currCost;
 }
 
 bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
@@ -351,12 +352,14 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 
 		if (c == nullptr)
 		{
-			segmentSolution(current->m_solution);
+			int expCost = segmentSolution(current->m_solution);
   			// std::cout << "Solution is Satisfiable!" << std::endl;
   			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  			std::cout << "Successful planning using CBS" << std::endl;
   			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << (duration.count() / 1000000.0) << " seconds" << std::endl;
   			std::cout << "Size of Conflict Tree: " << tree_sz << std::endl;
+  			std::cout << "Solution Explanation Cost: " << expCost << std::endl;
   			solution = current->m_solution;
 			return true;
 		}
@@ -367,7 +370,6 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 			// for each agent in conflict (currently only two at a time)
 			for (int a = 0; a < 2; a++)
 			{
-				tree_sz ++;
 				// std::cout << "found conflict. " << std::endl;
 				if (c->type == Conflict::Vertex)
 				{
@@ -404,6 +406,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					{
 						n->m_cost = n->calcCost();
 						open_heap.emplace(n);
+						tree_sz ++;
 					}
 				}
 				if (c->type == Conflict::Edge)
@@ -441,6 +444,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					{
 						n->m_cost = n->calcCost();
 						open_heap.emplace(n);
+						tree_sz ++;
 					}
 				}
 			}

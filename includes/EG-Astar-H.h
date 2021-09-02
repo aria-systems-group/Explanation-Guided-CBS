@@ -5,11 +5,11 @@
 #include <unordered_set>
 #include "../includes/Conflict.h"
 
-// Exp - A* Planner
-class ExpA_star
+// EG - A* with heuristics
+class EG_Astar_H
 {
 public:
-	ExpA_star(Environment *env, const bool useCBS = true);
+	EG_Astar_H(Environment *env, const bool useCBS = true);
 
 	bool plan(State *startState, std::vector<State*> &solution, 
         std::vector<Constraint*> relevantConstraints, 

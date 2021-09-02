@@ -7,8 +7,9 @@
 #include "../includes/Environment.h"
 #include "../includes/Astar.h"
 #include "../includes/Cbs.h"
-#include "../includes/ExpAstar.h"
-#include "../includes/ExpCBS.h"
+#include "../includes/EG-Astar-H.h"
+#include "../includes/EG-Astar.h"
+#include "../includes/EG-CBS.h"
 
 
 
@@ -54,14 +55,14 @@ int main(int argc, char** argv) {
 	// create environment object
 	Environment *mapf = new Environment(dimx, dimy, obstacles, goals, agentNames);
 
-	if (p == "Exp-astar" || p == "Exp-Astar")
+	if (p == "EG-astar" || p == "EG-Astar")
 	{
-		// Exp-A* implementation
+		// EG-A*-H implementation
 		// get name of exisisting solution file
 		const int yamlSize = inputYaml.size();
 		std::string inputSolution = "existingSolutions/" + 
 			inputYaml.substr(5, yamlSize - (2 * 5)) + ".txt";
-
+			std::cout << "Searching for partial solution file: " << inputSolution << std::endl;
 		// put solution into format that expAstar expects
 		std::ifstream SolutionFile;
 		SolutionFile.open(inputSolution);
@@ -133,11 +134,11 @@ int main(int argc, char** argv) {
 			{
 				mapf->updateAgent();
 			}
-			ExpA_star *planner = new ExpA_star(mapf, false); // boolean tells exp-A* ExpCBS not involved
+			// initialize EG-A* and plan
+			EG_Astar *planner = new EG_Astar(mapf, false); // boolean says EG-CBS not involved
 			std::ofstream out(output_name);
 			std::vector<State*> solution;
 			std::vector<Constraint*> constraints;
-			// create instance of expA* and plan
 			bool success = planner->plan(startStates[numAgents], solution, constraints, existing);
 
 			if (success)
@@ -158,7 +159,115 @@ int main(int argc, char** argv) {
 		}
 		else
 		{
-			std::cout << "Could not find file. Exiting..." << std::endl;
+			std::cout << "Could not find existing solution file. Exiting without solution" << std::endl;
+			exit(1);
+		}
+	}
+	else if (p == "EG-astar-H" || p == "EG-Astar-H")
+	{
+		// EG-A*-H implementation
+		// get name of exisisting solution file
+		const int yamlSize = inputYaml.size();
+		std::string inputSolution = "existingSolutions/" + 
+			inputYaml.substr(5, yamlSize - (2 * 5)) + ".txt";
+			std::cout << "Searching for partial solution file: " << inputSolution << std::endl;
+		// put solution into format that expAstar expects
+		std::ifstream SolutionFile;
+		SolutionFile.open(inputSolution);
+		if (SolutionFile.is_open())
+		{
+			int numAgents = 0;
+			std::string line;
+			// count number of agents
+			while (std::getline(SolutionFile, line))
+			{
+				if (line.substr(0, 5) == "agent")
+					numAgents ++;	
+			}
+			Solution existing(numAgents);
+			std::ifstream solReader;
+			solReader.open(inputSolution);
+			std::string test;
+			// no need to check if file is open this time
+			// already did that
+			std::string l;
+			std::getline(solReader, l); // agent0
+			for (int i = 0; i < numAgents; i++)
+			{
+				// going to append states to existing
+				std::getline(solReader, l); // initial state
+				while (l.substr(0, 5) != "agent" && !solReader.eof())
+				{
+					// get state on on l
+					// // cycle through l to get t, x, y
+					int t, x, y;
+					bool xFound = false, yFound = false;
+					int bg = 0; int sz = 1;
+					for (int i = 0; i < l.length(); i++)
+					{
+						std::string s = l.substr(bg, sz);
+						// std::cout << s << std::endl;
+						if (s.back() == ':')
+						{
+							t = std::stoi(s);
+							bg = l.find(s.back()) + 2;
+							sz = 1;
+							// std::cout << "found t: " << t << std::endl;
+						}
+						else if (s.back() == ',' && !xFound && !yFound)
+						{
+							x = std::stoi(s);
+							bg = bg + sz;
+							sz = 1; xFound = true;
+							// std::cout << "found x: " << x << std::endl;
+						}
+						else if (s.back() == ',' && xFound && !yFound)
+						{
+							y = std::stoi(s);
+							bg = bg + sz;
+							sz = 1; yFound = true;
+							// std::cout << "found y: " << y << std::endl;
+						}
+						else
+							sz ++;
+					}
+					State *st = new State(t, x, y);
+					existing[i].push_back(st);
+					std::getline(solReader, l);
+				}
+			}
+			// now we have exisisting solution in the form we need
+			// currently only plans for final agent
+			while (mapf->getAgent() != numAgents)
+			{
+				mapf->updateAgent();
+			}
+			// initialize EG-A*-H and plan
+			EG_Astar_H *planner = new EG_Astar_H(mapf, false); // boolean says EG-CBS not involved
+			std::ofstream out(output_name);
+			std::vector<State*> solution;
+			std::vector<Constraint*> constraints;
+			bool success = planner->plan(startStates[numAgents], solution, constraints, existing);
+
+			if (success)
+			{
+				std::cout << "Outputting Solution to: " << output_name << std::endl;
+				for (std::vector<State*> agentSol: existing)
+				{
+					int it = std::distance(existing.begin(), 
+						std::find(existing.begin(), existing.end(), agentSol));
+					out << agentNames[it] << std::endl;
+					for (State *st: agentSol)
+					{
+						out << *st << std::endl;
+					}
+				}
+			}
+
+		}
+		else
+		{
+			std::cout << "Could not find existing solution file. Exiting without solution" << std::endl;
 			exit(1);
 		}
 	}
@@ -176,7 +285,6 @@ int main(int argc, char** argv) {
 
 		if (success)
 		{
-			std::cout << "Successful planning using CBS" << std::endl;
 			std::ofstream out(output_name);
 			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			for (std::vector<State*> agentSol: solution)
@@ -189,25 +297,39 @@ int main(int argc, char** argv) {
 					out << *st << std::endl;
 				}
 			}
+			std::cout << "Done!" << std::endl;
 		}
 	}
-	else if (p == "Exp-cbs" || p == "Exp-Cbs" || p == "Exp-CBS")
+	else if (p == "EG-cbs" || p == "EG-CBS" || p == "Eg-Cbs" || p == "eg-CBS")
 	{
 		// Exp-CBS implementation
 		int costBound;
 		bool verbose;
-		std::string ans;
+		bool useHeuristics;
+		std::string ans1;
+		std::string ans2;
 		std::cout << "Please enter an Explainability Bound: "; 
 		std::cin >> costBound;
+		std::cout << "Would you like to use heuristics in EG-A*? [y/n]: ";
+		std::cin >> ans1;
 		std::cout << "Output Intermediate Solutions? [y/n]: "; 
-		std::cin >> ans;
+		std::cin >> ans2;
 
 		// init planner
-		ExpCBS *planner = new ExpCBS(mapf, costBound);
+		EG_CBS *planner = new EG_CBS(mapf, costBound);
 
-		if (ans == "y")
+		if (ans1 == "y")
+			useHeuristics = true;
+		else if (ans1 == "n")
+			useHeuristics = false;
+		else
+		{
+			std::cout << "Invalid Response. Terminating Program." << std::endl;
+			exit(1);
+		}
+		if (ans2 == "y")
 			verbose = true;
-		else if (ans == "n")
+		else if (ans2 == "n")
 			verbose = false;
 		else
 		{
@@ -219,11 +341,11 @@ int main(int argc, char** argv) {
 		Solution solution;
 
 		// plan
-		bool success = planner->plan(startStates, solution, verbose);
+		bool success = planner->plan(startStates, solution, useHeuristics, verbose);
 
 		if (success)
 		{
-			std::cout << "Successful planning using ExpCBS" << std::endl;
+			std::cout << "Successful planning using EG-CBS" << std::endl;
 			std::ofstream out(output_name);
 			std::cout << "Outputting Solution to: " << output_name << std::endl;
 			for (std::vector<State*> agentSol: solution)

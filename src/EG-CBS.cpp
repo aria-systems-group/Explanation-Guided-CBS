@@ -1,187 +1,335 @@
-#include "../includes/ExpCBS.h"
+#include "../includes/EG-CBS.h"
 #include <filesystem>
 
 // Constructor
-ExpCBS::ExpCBS(Environment *env, const int bound): m_env(env), m_bound{bound}
+EG_CBS::EG_CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
 {
-	m_planner = new ExpA_star(m_env);
+	m_planner_H = new EG_Astar_H(m_env);
+	m_planner = new EG_Astar(m_env);
 	m_numAgents = m_env->getGoals().size();
 	Constraint m_constraint{Constraint()};
 };
 
 
 // calculate constraint specific solution
-Solution ExpCBS::lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constraints, Solution& parent)
+Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates, 
+		std::vector<Constraint*> constraints, Solution& parent, const bool useHeuristic)
 {
 	// we have a list of constraints for all agents from current node
-	// to root node. 
-
-	// low level planner should only be provided with the constraints
-	// it needs to worry about.
-
-	while (m_planner->getEnv()->getAgent() != 0)
+	// to root node.
+	if (!useHeuristic)
 	{
-		m_planner->getEnv()->updateAgent();
-	}
-
-	Solution sol(getAgents());
-	std::vector<State*> singleSol;
-	std::vector<Constraint*> agentRelevantCs;
-	bool cont = true;
-
-	if (parent.size() == 0)
-	{
-		// at root node
-		// plan for initial agent first
-		bool success = m_planner->plan(startStates[0], singleSol, 
-			agentRelevantCs, parent);
-
-		if (success)
+		// use EG-A* object in m_planner
+		// low level planner should only be provided with the constraints
+		// it needs to worry about.
+		while (m_planner->getEnv()->getAgent() != 0)
 		{
-			sol[0] = singleSol;
 			m_planner->getEnv()->updateAgent();
-			// plan for remaining agents using Exp-A*
-			for (int a = 1; a < startStates.size(); a++)
+		}
+
+		Solution sol(getAgents());
+		std::vector<State*> singleSol;
+		std::vector<Constraint*> agentRelevantCs;
+		bool cont = true;
+
+		if (parent.size() == 0)
+		{
+			// at root node
+			// plan for initial agent first
+			bool success = m_planner->plan(startStates[0], singleSol, 
+				agentRelevantCs, parent);
+
+			if (success)
 			{
-				if (cont)
+				sol[0] = singleSol;
+				m_planner->getEnv()->updateAgent();
+				// plan for remaining agents using Exp-A*
+				for (int a = 1; a < startStates.size(); a++)
 				{
-					bool success = m_planner->plan(startStates[a], singleSol, 
-						agentRelevantCs, sol);
-					if (success)
-						sol[a] = singleSol;
-					else
+					if (cont)
 					{
-						cont = false;
+						bool success = m_planner->plan(startStates[a], singleSol, 
+							agentRelevantCs, sol);
+						if (success)
+							sol[a] = singleSol;
+						else
+						{
+							cont = false;
+						}
+						m_planner->getEnv()->updateAgent();
 					}
-					m_planner->getEnv()->updateAgent();
 				}
+			}
+			else
+			{
+				std::cout << "No Solution To Problem Exists." << std::endl;
+				return sol;
 			}
 		}
 		else
 		{
-			std::cout << "No Solution To Problem Exists." << std::endl;
-			return sol;
+			// not at root node, only replan for a single agent
+			VertexConstraint *currVC = constraints[0]->getVertexConstraint();
+			EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
+			// if we added a vertex constaint, replan for that agent
+			if (currVC != nullptr)
+			{
+				// get the most recent solutions
+				for (int a = 0; a < startStates.size(); a++)
+				{
+					// new sol = parent sol
+					if (currVC->agent != a)
+					{
+						for (State* st: parent[a])
+						{
+							State *st_new = new State(st);
+							sol[a].push_back(st_new);
+						}
+					}
+				}
+				// get all relevant constriants
+				for (Constraint *c: constraints)
+				{
+					if (c->getVertexConstraint() != nullptr)
+					{
+						if (c->getVertexConstraint()->agent == currVC->agent)
+							agentRelevantCs.push_back(c);
+					}
+					if (c->getEdgeConstraint() != nullptr)
+					{
+						if (c->getEdgeConstraint()->agent == currVC->agent)
+							agentRelevantCs.push_back(c);
+					}
+				}
+				// update agent to the correct one
+				while (m_planner->getEnv()->getAgent() != currVC->agent)
+				{
+					m_planner->getEnv()->updateAgent();
+				}
+
+				bool success = m_planner->plan(startStates[currVC->agent], singleSol, 
+					agentRelevantCs, sol);
+				if (success)
+				{
+					sol[currVC->agent] = singleSol;
+				}
+				else
+					cont = false;
+				m_planner->getEnv()->updateAgent();
+			}
+			else if (currEC != nullptr)
+			{
+				// get the most recent solutions
+				for (int a = 0; a < startStates.size(); a++)
+				{
+					// new sol = parent sol
+					if (currEC->agent != a)
+					{
+						for (State* st: parent[a])
+						{
+							State *st_new = new State(st);
+							sol[a].push_back(st_new);
+						}
+					}
+				}
+				// get all relevant constriants
+				std::vector<Constraint*> agentRelevantCs;
+				for (Constraint *c: constraints)
+				{
+					if (c->getVertexConstraint() != nullptr)
+					{
+						if (c->getVertexConstraint()->agent == currEC->agent)
+							agentRelevantCs.push_back(c);
+					}
+					if (c->getEdgeConstraint() != nullptr)
+					{
+						if (c->getEdgeConstraint()->agent == currEC->agent)
+							agentRelevantCs.push_back(c);
+					}
+				}
+				// update agent to the correct one
+				while (m_planner->getEnv()->getAgent() != currEC->agent)
+				{
+					m_planner->getEnv()->updateAgent();
+				}
+					bool success = m_planner->plan(startStates[currEC->agent], singleSol, 
+						agentRelevantCs, sol);
+					if (success)
+					{
+						// sol[currEC->agent].clear();
+						sol[currEC->agent] = singleSol;
+					}
+					else
+						cont = false;
+				m_planner->getEnv()->updateAgent();
+			}
 		}
+		// update agent to the correct one
+		while (m_planner->getEnv()->getAgent() != 0)
+		{
+			m_planner->getEnv()->updateAgent();
+		}
+		return sol;
 	}
 	else
 	{
-		// not at root node, only replan for a single agent
-		VertexConstraint *currVC = constraints[0]->getVertexConstraint();
-		EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
-		// if we added a vertex constaint, replan for that agent
-		if (currVC != nullptr)
+		// use EG-A*-H object in m_planner_H
+		// low level planner should only be provided with the constraints
+		// it needs to worry about.
+		while (m_planner_H->getEnv()->getAgent() != 0)
 		{
-			// get the most recent solutions
-			for (int a = 0; a < startStates.size(); a++)
+			m_planner_H->getEnv()->updateAgent();
+		}
+
+		Solution sol(getAgents());
+		std::vector<State*> singleSol;
+		std::vector<Constraint*> agentRelevantCs;
+		bool cont = true;
+
+		if (parent.size() == 0)
+		{
+			// at root node
+			// plan for initial agent first
+			bool success = m_planner_H->plan(startStates[0], singleSol, 
+				agentRelevantCs, parent);
+
+			if (success)
 			{
-				// new sol = parent sol
-				if (currVC->agent != a)
+				sol[0] = singleSol;
+				m_planner_H->getEnv()->updateAgent();
+				// plan for remaining agents using Exp-A*
+				for (int a = 1; a < startStates.size(); a++)
 				{
-					for (State* st: parent[a])
+					if (cont)
 					{
-						State *st_new = new State(st);
-						sol[a].push_back(st_new);
+						bool success = m_planner_H->plan(startStates[a], singleSol, 
+							agentRelevantCs, sol);
+						if (success)
+							sol[a] = singleSol;
+						else
+						{
+							cont = false;
+						}
+						m_planner_H->getEnv()->updateAgent();
 					}
 				}
 			}
-
-			// get all relevant constriants
-			for (Constraint *c: constraints)
-			{
-				if (c->getVertexConstraint() != nullptr)
-				{
-					if (c->getVertexConstraint()->agent == currVC->agent)
-						agentRelevantCs.push_back(c);
-				}
-				if (c->getEdgeConstraint() != nullptr)
-				{
-					if (c->getEdgeConstraint()->agent == currVC->agent)
-						agentRelevantCs.push_back(c);
-				}
-			}
-
-			// update agent to the correct one
-			while (m_planner->getEnv()->getAgent() != currVC->agent)
-			{
-				m_planner->getEnv()->updateAgent();
-			}
-
-			bool success = m_planner->plan(startStates[currVC->agent], singleSol, 
-				agentRelevantCs, sol);
-			if (success)
-			{
-				sol[currVC->agent] = singleSol;
-			}
 			else
-				cont = false;
-			m_planner->getEnv()->updateAgent();
-		}
-		else if (currEC != nullptr)
-		{
-			// get the most recent solutions
-			for (int a = 0; a < startStates.size(); a++)
 			{
-				// new sol = parent sol
-				if (currEC->agent != a)
+				std::cout << "No Solution To Problem Exists." << std::endl;
+				return sol;
+			}
+		}
+		else
+		{
+			// not at root node, only replan for a single agent
+			VertexConstraint *currVC = constraints[0]->getVertexConstraint();
+			EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
+			// if we added a vertex constaint, replan for that agent
+			if (currVC != nullptr)
+			{
+				// get the most recent solutions
+				for (int a = 0; a < startStates.size(); a++)
 				{
-					for (State* st: parent[a])
+					// new sol = parent sol
+					if (currVC->agent != a)
 					{
-						State *st_new = new State(st);
-						sol[a].push_back(st_new);
+						for (State* st: parent[a])
+						{
+							State *st_new = new State(st);
+							sol[a].push_back(st_new);
+						}
 					}
 				}
-			}
-
-			// get all relevant constriants
-			std::vector<Constraint*> agentRelevantCs;
-			for (Constraint *c: constraints)
-			{
-				if (c->getVertexConstraint() != nullptr)
+				// get all relevant constriants
+				for (Constraint *c: constraints)
 				{
-					if (c->getVertexConstraint()->agent == currEC->agent)
-						agentRelevantCs.push_back(c);
+					if (c->getVertexConstraint() != nullptr)
+					{
+						if (c->getVertexConstraint()->agent == currVC->agent)
+							agentRelevantCs.push_back(c);
+					}
+					if (c->getEdgeConstraint() != nullptr)
+					{
+						if (c->getEdgeConstraint()->agent == currVC->agent)
+							agentRelevantCs.push_back(c);
+					}
 				}
-				if (c->getEdgeConstraint() != nullptr)
+				// update agent to the correct one
+				while (m_planner_H->getEnv()->getAgent() != currVC->agent)
 				{
-					if (c->getEdgeConstraint()->agent == currEC->agent)
-						agentRelevantCs.push_back(c);
+					m_planner_H->getEnv()->updateAgent();
 				}
-			}
 
-			// update agent to the correct one
-			while (m_planner->getEnv()->getAgent() != currEC->agent)
+				bool success = m_planner_H->plan(startStates[currVC->agent], singleSol, 
+					agentRelevantCs, sol);
+				if (success)
+				{
+					sol[currVC->agent] = singleSol;
+				}
+				else
+					cont = false;
+				m_planner_H->getEnv()->updateAgent();
+			}
+			else if (currEC != nullptr)
 			{
-				m_planner->getEnv()->updateAgent();
+				// get the most recent solutions
+				for (int a = 0; a < startStates.size(); a++)
+				{
+					// new sol = parent sol
+					if (currEC->agent != a)
+					{
+						for (State* st: parent[a])
+						{
+							State *st_new = new State(st);
+							sol[a].push_back(st_new);
+						}
+					}
+				}
+				// get all relevant constriants
+				std::vector<Constraint*> agentRelevantCs;
+				for (Constraint *c: constraints)
+				{
+					if (c->getVertexConstraint() != nullptr)
+					{
+						if (c->getVertexConstraint()->agent == currEC->agent)
+							agentRelevantCs.push_back(c);
+					}
+					if (c->getEdgeConstraint() != nullptr)
+					{
+						if (c->getEdgeConstraint()->agent == currEC->agent)
+							agentRelevantCs.push_back(c);
+					}
+				}
+				// update agent to the correct one
+				while (m_planner_H->getEnv()->getAgent() != currEC->agent)
+				{
+					m_planner_H->getEnv()->updateAgent();
+				}
+					bool success = m_planner_H->plan(startStates[currEC->agent], singleSol, 
+						agentRelevantCs, sol);
+					if (success)
+					{
+						// sol[currEC->agent].clear();
+						sol[currEC->agent] = singleSol;
+					}
+					else
+						cont = false;
+				m_planner_H->getEnv()->updateAgent();
 			}
-
-			bool success = m_planner->plan(startStates[currEC->agent], singleSol, 
-				agentRelevantCs, sol);
-			if (success)
-			{
-				// sol[currEC->agent].clear();
-				sol[currEC->agent] = singleSol;
-			}
-			else
-				cont = false;
-
-			m_planner->getEnv()->updateAgent();
 		}
+		// update agent to the correct one
+		while (m_planner_H->getEnv()->getAgent() != 0)
+		{
+			m_planner_H->getEnv()->updateAgent();
+		}
+		return sol;
 	}
-
-	// update agent to the correct one
-	while (m_planner->getEnv()->getAgent() != 0)
-	{
-		m_planner->getEnv()->updateAgent();
-	}
-
-
-	return sol;
 }
 
 // given a solution, find conflicts
 // this is where we add explainability conflicts
-std::vector<Conflict*> ExpCBS::validateSolution(conflictNode *n)
+std::vector<Conflict*> EG_CBS::validateSolution(conflictNode *n)
 {
 	// this function will step through all solution and look for conflicts
 	// if conflict is found, then we add it to the node
@@ -398,7 +546,7 @@ std::vector<Conflict*> ExpCBS::validateSolution(conflictNode *n)
 	return cnf;
 }
 
-bool ExpCBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
+bool EG_CBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
 {
 	for (Conflict *prev: vec)
 	{
@@ -414,7 +562,7 @@ bool ExpCBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
 }
 
 // wrapper function that prints tree structure & all node information
-void ExpCBS::showTree(const conflictNode *curr, std::vector<Conflict*> cnf)
+void EG_CBS::showTree(const conflictNode *curr, std::vector<Conflict*> cnf)
 {
 	// delete previous tree information
 	std::filesystem::remove_all("txt/nodes"); // Deletes one or more files recursively.
@@ -428,16 +576,16 @@ void ExpCBS::showTree(const conflictNode *curr, std::vector<Conflict*> cnf)
 
 } 
 
-bool ExpCBS::plan(const std::vector<State*>& startStates, Solution& solution, bool verbose)
+bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useHeuristic, bool verbose)
 {
 	std::cout << "Now Planning with ExpCBS" << std::endl;
+	auto start = std::chrono::high_resolution_clock::now();
 	int timeAstar = 0;
 	int numExps = 0;
 	int nodeIdx = 1;
 	std::string test;
 	std::string dirName;
 	Solution empty(getAgents());
-	auto start = std::chrono::high_resolution_clock::now();
 
 	solution.clear();
 
@@ -450,7 +598,7 @@ bool ExpCBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 	Solution par;
 
 	auto t1 = std::chrono::high_resolution_clock::now();
-	Solution rootSol = lowLevelSearch(startStates, constriants, par);
+	Solution rootSol = lowLevelSearch(startStates, constriants, par, useHeuristic);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	timeAstar = timeAstar + duration.count();
@@ -567,7 +715,7 @@ bool ExpCBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 						auto t1 = std::chrono::high_resolution_clock::now();
 						n->m_solution = lowLevelSearch(startStates, constriants, 
-							n->parent->m_solution);
+							n->parent->m_solution, useHeuristic);
 						auto t2 = std::chrono::high_resolution_clock::now();
 						auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 						timeAstar = timeAstar + duration.count();
@@ -625,7 +773,7 @@ bool ExpCBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 						auto t1 = std::chrono::high_resolution_clock::now();
 						n->m_solution = lowLevelSearch(startStates, constriants, 
-							n->parent->m_solution);
+							n->parent->m_solution, useHeuristic);
 						auto t2 = std::chrono::high_resolution_clock::now();
 						auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 						timeAstar = timeAstar + duration.count();
@@ -734,7 +882,7 @@ bool ExpCBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 							auto t1 = std::chrono::high_resolution_clock::now();
 							n->m_solution = lowLevelSearch(startStates, constriants, 
-								n->parent->m_solution);
+								n->parent->m_solution, useHeuristic);
 							auto t2 = std::chrono::high_resolution_clock::now();
 							auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 							timeAstar = timeAstar + duration.count();
