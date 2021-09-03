@@ -34,7 +34,7 @@ public:
     	double gScore;
     	double hScore;
         int segCost{1};
-        bool isWaiting = true;
+        bool isWaiting = false;
 	};
 
     // int noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol);
@@ -43,7 +43,7 @@ public:
 
     int getLongestPath(const std::vector<std::vector<State*>>& parSol) const;
 
-    // bool crossCheck(const Node *n, const int longTime) const;
+    bool crossCheck(const Node *n, const int longTime) const;
 
     int SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols);
 

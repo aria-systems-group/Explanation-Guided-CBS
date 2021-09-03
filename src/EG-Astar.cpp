@@ -384,41 +384,41 @@ int EG_Astar::getLongestPath(const std::vector<std::vector<State*>>& parSol) con
 	return longTime;
 }
 
-// bool EG_Astar::crossCheck(const Node *n, const int longTime) const
-// {
-// 	std::string test;
-// 	//see if currState is same location as any other on path back to root
-// 	State *currState = n->state;
-// 	Node *cpy = n->parent;
-// 	// can do whatever we want before longTime is hit
-// 	// after longTime, currState cannot reach previous state in loop
-// 	if (currState->time < longTime || longTime == 0)
-// 		return false;
-// 	else if (currState->time > (m_env->getXdim() * m_env->getYdim()))
-// 		return true;
-// 	else
-// 	{
-// 		while (cpy != nullptr)
-// 		{
-// 			if (currState->isSameLocation((cpy->state)))
-// 			{
-// 				// if (m_env->getAgent() == 1)
-// 				// {
-// 				// 	std::cout << "returning cross: " << std::endl;
-// 				// 	std::cin >> test;
-// 				// }
-// 				return true;
-// 			}
-// 			cpy = cpy->parent;
-// 		}
-// 		// if (m_env->getAgent() == 1)
-// 		// {
-// 		// 	std::cout << "returning NO cross: " << std::endl;
-// 		// 	std::cin >> test;
-// 		// }
-// 	}
-// 	return false;
-// }
+bool EG_Astar::crossCheck(const Node *n, const int longTime) const
+{
+	std::string test;
+	//see if currState is same location as any other on path back to root
+	State *currState = n->state;
+	Node *cpy = n->parent;
+	// can do whatever we want before longTime is hit
+	// after longTime, currState cannot reach previous state in loop
+	if (currState->time < longTime || longTime == 0)
+		return false;
+	else if (currState->time > (m_env->getXdim() * m_env->getYdim()))
+		return true;
+	else
+	{
+		while (cpy != nullptr)
+		{
+			if (currState->isSameLocation((cpy->state)))
+			{
+				// if (m_env->getAgent() == 1)
+				// {
+				// 	std::cout << "returning cross: " << std::endl;
+				// 	std::cin >> test;
+				// }
+				return true;
+			}
+			cpy = cpy->parent;
+		}
+		// if (m_env->getAgent() == 1)
+		// {
+		// 	std::cout << "returning NO cross: " << std::endl;
+		// 	std::cin >> test;
+		// }
+	}
+	return false;
+}
 
 // void ExpA_star::canonicalPath(Node *curr)
 // {
@@ -758,33 +758,32 @@ bool EG_Astar::plan(State *startState, std::vector<State*> &solution,
 			
 			
 			// plan as normal 
-			// if (!crossCheck(n, longTime)) 
+			if (!crossCheck(n, longTime)) 
 			// either longTime not reached
 			// or there was no cross with iteself
-			
-			// {
+			{
 			// if new segment not created
 			// greedily add node
-			if (n->segCost <= n->parent->segCost)
-			{
-				n->gScore = n->parent->gScore + 1;
-				open_heap.emplace(n);
-				open_list.insert(*st);
-				total++;
-			}
-			else
-			{
-				// new segment needed, proceed as normal
-				int tentative_gScore = n->parent->gScore + 1;
-				if (tentative_gScore < n->gScore)
+				if (n->segCost <= n->parent->segCost)
 				{
-					n->gScore = tentative_gScore;
+					n->gScore = n->parent->gScore + 1;
 					open_heap.emplace(n);
 					open_list.insert(*st);
 					total++;
 				}
+				else
+				{
+					// new segment needed, proceed as normal
+					int tentative_gScore = n->parent->gScore + 1;
+					if (tentative_gScore < n->gScore)
+					{
+						n->gScore = tentative_gScore;
+						open_heap.emplace(n);
+						open_list.insert(*st);
+						total++;
+					}
+				}
 			}
-			// }
 		}
 	}
 	return false;

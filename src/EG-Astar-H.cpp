@@ -961,36 +961,17 @@ bool EG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 				{
 					// took "stay" action n is waiting
 					n->isWaiting = true;
-					// n->parent->isWaiting = true;				
 				}
 				else
 				{
 					// did not "stay" n is not waiting
 					n->isWaiting = false;
-					
-					
-					// std::cin >> test;
-					// n->parent->isWaiting = true;
 				}
 			}
 			else
 			{
 				// new segment was created n isWaiting
 				n->isWaiting = true;
-				// if (n->parent->state->time == 0 && n->parent->state->x == 0 && n->parent->state->y == 4)
-				// {
-				// 	if (n->state->time == 1 && n->state->x == 1 && n->state->y == 4)
-				// 	{
-				// 		// std::cout << "here" << std::endl;
-
- 			// 			std::cout << *(n->state) << " " << n->isWaiting << " " << n->segCost << std::endl;
-				// 		std::cout << *(n->parent->state) << " " << n->parent->isWaiting << " " << n->parent->segCost << std::endl;				
-				// 		std::cout << (n->state)->isSameLocation(n->parent->state) << std::endl;
-				// 		std::cout << n->parent->isWaiting << std::endl;
-				// 		// std::cin >> test;
-				// 	}
-				// }
-				// n->parent->isWaiting = true;
 			}
 
 
