@@ -4,20 +4,114 @@
 // Constructor
 EG_CBS::EG_CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
 {
+	m_planner_A = new A_star(m_env);
 	m_planner_H = new EG_Astar_H(m_env);
 	m_planner = new EG_Astar(m_env);
 	m_numAgents = m_env->getGoals().size();
 	Constraint m_constraint{Constraint()};
 };
 
+bool EG_CBS::is_disjoint(const std::vector<State*> v1, 
+	const std::vector<State*> v2) const
+{
+    if(v1.empty() || v2.empty()) return true;
+    typename std::vector<State*>::const_iterator 
+        it1 = v1.begin(), 
+        it1End = v1.end();
+    while(it1 != it1End)  //  && it2 != it2End
+    {
+    	typename std::vector<State*>::const_iterator 
+        it2 = v2.begin(), 
+        it2End = v2.end();
+    	while (it2 != it2End)
+    	{
+    		if((*it1)->isSameLocation(*it2))
+    			return false;
+    		else
+    			it2++;
+    	}
+        it1++;
+    }
+    return true;
+}
+
+int EG_CBS::segmentSolution(Solution sol)
+{
+	int longTime = 0;
+	for (int a = 0; a < sol.size(); a++)
+	{
+		int tmp = sol[a].back()->time;
+		if (tmp > longTime)
+			longTime = tmp;
+	}
+	// 3. init a visited list for all agents and an indexing variable
+	std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
+	int lastSegmentTime = 0;
+	int currCost = 1;
+
+	for (int currTime = 0; currTime <= longTime; currTime++)
+	{
+		// add visited state for currTime
+		for (int a = 0; a < sol.size(); a++)
+			if (sol[a].back()->time >= currTime)
+				agentVisited[a].push_back(sol[a][currTime]);
+
+		// 4b. see if agent visited is disjoint
+		for (int a1 = 0; a1 < sol.size(); a1++)
+		{
+			for (int a2 = 0; a2 < sol.size(); a2++)
+			{
+				// if these are not the same agent
+				if (a1 != a2)
+				{
+					// 4c. check disjoint
+					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
+					if (!disjoint)
+					{
+						// 4d. add cost for all states prior to currTime
+						for (int a = 0; a < sol.size(); a++)
+						{
+							for (int t = lastSegmentTime; t < currTime; t++)
+							{
+								if (sol[a].back()->time >= t)
+									sol[a][t]->cost = currCost;
+							}
+						}	
+						lastSegmentTime = currTime;
+
+						// update cost for future
+						currCost ++;
+
+						// 4e. clear visited lists and re-init with currTime state
+						for (int a = 0; a < sol.size(); a++)
+						{
+							agentVisited[a].clear();
+							if (sol[a].back()->time >= currTime)
+								agentVisited[a].push_back(sol[a][currTime]);
+						}
+					}
+				}
+			}
+		}
+	}
+	for (int a = 0; a < sol.size(); a++)
+	{
+		for (int t = lastSegmentTime; t <= longTime; t++)
+		{
+			if (sol[a].back()->time >= t)
+				sol[a][t]->cost = currCost;
+		}
+	}
+	return currCost;
+}
 
 // calculate constraint specific solution
 Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constraints, Solution& parent, const bool useHeuristic)
+		std::vector<Constraint*> constraints, Solution& parent, const bool useEG, const bool useHeuristic)
 {
 	// we have a list of constraints for all agents from current node
 	// to root node.
-	if (!useHeuristic)
+	if (useEG && !useHeuristic)
 	{
 		// use EG-A* object in m_planner
 		// low level planner should only be provided with the constraints
@@ -171,7 +265,7 @@ Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		}
 		return sol;
 	}
-	else
+	else if (useEG && useHeuristic)
 	{
 		// use EG-A*-H object in m_planner_H
 		// low level planner should only be provided with the constraints
@@ -324,6 +418,166 @@ Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			m_planner_H->getEnv()->updateAgent();
 		}
 		return sol;
+	}
+	else if (!useEG && !useHeuristic)
+	{
+		// use A* object in m_planner_A
+		// low level planner should only be provided with the constraints
+		// it needs to worry about.
+		while (m_planner_A->getEnv()->getAgent() != 0)
+		{
+			m_planner_A->getEnv()->updateAgent();
+		}
+
+		Solution sol(getAgents());
+		std::vector<State*> singleSol;
+		std::vector<Constraint*> agentRelevantCs;
+		bool cont = true;
+
+		if (parent.size() == 0)
+		{
+			// at root node
+			// plan for initial agent first
+			bool success = m_planner_A->plan(startStates[0], singleSol, 
+				agentRelevantCs);
+
+			if (success)
+			{
+				sol[0] = singleSol;
+				m_planner_A->getEnv()->updateAgent();
+				// plan for remaining agents using Exp-A*
+				for (int a = 1; a < startStates.size(); a++)
+				{
+					if (cont)
+					{
+						bool success = m_planner_A->plan(startStates[a], singleSol, 
+							agentRelevantCs);
+						if (success)
+							sol[a] = singleSol;
+						else
+						{
+							cont = false;
+						}
+						m_planner_A->getEnv()->updateAgent();
+					}
+				}
+			}
+			else
+			{
+				std::cout << "No Solution To Problem Exists." << std::endl;
+				return sol;
+			}
+		}
+		else
+		{
+			// not at root node, only replan for a single agent
+			VertexConstraint *currVC = constraints[0]->getVertexConstraint();
+			EdgeConstraint *currEC = constraints[0]->getEdgeConstraint();
+			// if we added a vertex constaint, replan for that agent
+			if (currVC != nullptr)
+			{
+				// get the most recent solutions
+				for (int a = 0; a < startStates.size(); a++)
+				{
+					// new sol = parent sol
+					if (currVC->agent != a)
+					{
+						for (State* st: parent[a])
+						{
+							State *st_new = new State(st);
+							sol[a].push_back(st_new);
+						}
+					}
+				}
+				// get all relevant constriants
+				for (Constraint *c: constraints)
+				{
+					if (c->getVertexConstraint() != nullptr)
+					{
+						if (c->getVertexConstraint()->agent == currVC->agent)
+							agentRelevantCs.push_back(c);
+					}
+					if (c->getEdgeConstraint() != nullptr)
+					{
+						if (c->getEdgeConstraint()->agent == currVC->agent)
+							agentRelevantCs.push_back(c);
+					}
+				}
+				// update agent to the correct one
+				while (m_planner_A->getEnv()->getAgent() != currVC->agent)
+				{
+					m_planner_A->getEnv()->updateAgent();
+				}
+
+				bool success = m_planner_A->plan(startStates[currVC->agent], singleSol, 
+					agentRelevantCs);
+				if (success)
+				{
+					sol[currVC->agent] = singleSol;
+				}
+				else
+					cont = false;
+				m_planner_A->getEnv()->updateAgent();
+			}
+			else if (currEC != nullptr)
+			{
+				// get the most recent solutions
+				for (int a = 0; a < startStates.size(); a++)
+				{
+					// new sol = parent sol
+					if (currEC->agent != a)
+					{
+						for (State* st: parent[a])
+						{
+							State *st_new = new State(st);
+							sol[a].push_back(st_new);
+						}
+					}
+				}
+				// get all relevant constriants
+				std::vector<Constraint*> agentRelevantCs;
+				for (Constraint *c: constraints)
+				{
+					if (c->getVertexConstraint() != nullptr)
+					{
+						if (c->getVertexConstraint()->agent == currEC->agent)
+							agentRelevantCs.push_back(c);
+					}
+					if (c->getEdgeConstraint() != nullptr)
+					{
+						if (c->getEdgeConstraint()->agent == currEC->agent)
+							agentRelevantCs.push_back(c);
+					}
+				}
+				// update agent to the correct one
+				while (m_planner_A->getEnv()->getAgent() != currEC->agent)
+				{
+					m_planner_A->getEnv()->updateAgent();
+				}
+					bool success = m_planner_A->plan(startStates[currEC->agent], singleSol, 
+						agentRelevantCs);
+					if (success)
+					{
+						// sol[currEC->agent].clear();
+						sol[currEC->agent] = singleSol;
+					}
+					else
+						cont = false;
+				m_planner_A->getEnv()->updateAgent();
+			}
+		}
+		// update agent to the correct one
+		while (m_planner_A->getEnv()->getAgent() != 0)
+		{
+			m_planner_A->getEnv()->updateAgent();
+		}
+		int cost = segmentSolution(sol);
+		return sol;
+	}
+	else
+	{
+		std::cout << "Low-Level Planner not properly specified. Exiting with failure." << std::endl;
+		exit(1);
 	}
 }
 
@@ -576,7 +830,7 @@ void EG_CBS::showTree(const conflictNode *curr, std::vector<Conflict*> cnf)
 
 } 
 
-bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useHeuristic, bool verbose)
+bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useEG, bool useHeuristic, bool verbose)
 {
 	std::cout << "Now Planning with ExpCBS" << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
@@ -598,7 +852,7 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 	Solution par;
 
 	auto t1 = std::chrono::high_resolution_clock::now();
-	Solution rootSol = lowLevelSearch(startStates, constriants, par, useHeuristic);
+	Solution rootSol = lowLevelSearch(startStates, constriants, par, useEG, useHeuristic);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	timeAstar = timeAstar + duration.count();
@@ -715,7 +969,7 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 						auto t1 = std::chrono::high_resolution_clock::now();
 						n->m_solution = lowLevelSearch(startStates, constriants, 
-							n->parent->m_solution, useHeuristic);
+							n->parent->m_solution, useEG, useHeuristic);
 						auto t2 = std::chrono::high_resolution_clock::now();
 						auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 						timeAstar = timeAstar + duration.count();
@@ -773,7 +1027,7 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 						auto t1 = std::chrono::high_resolution_clock::now();
 						n->m_solution = lowLevelSearch(startStates, constriants, 
-							n->parent->m_solution, useHeuristic);
+							n->parent->m_solution, useEG, useHeuristic);
 						auto t2 = std::chrono::high_resolution_clock::now();
 						auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 						timeAstar = timeAstar + duration.count();
@@ -882,7 +1136,7 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 							auto t1 = std::chrono::high_resolution_clock::now();
 							n->m_solution = lowLevelSearch(startStates, constriants, 
-								n->parent->m_solution, useHeuristic);
+								n->parent->m_solution, useEG, useHeuristic);
 							auto t2 = std::chrono::high_resolution_clock::now();
 							auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 							timeAstar = timeAstar + duration.count();

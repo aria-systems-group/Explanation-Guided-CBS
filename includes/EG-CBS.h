@@ -2,6 +2,7 @@
 #include "Environment.h"
 #include "../includes/EG-Astar-H.h"
 #include "../includes/EG-Astar.h"
+#include "../includes/Astar.h"
 #include "../includes/Conflict.h"
 #include <chrono>
 #include <unordered_set>
@@ -21,7 +22,7 @@ class EG_CBS
 public:
 	EG_CBS(Environment *env, const int bound);
 
-	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useHeuristic, bool verbose);
+	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic, bool verbose);
 
 	struct conflictNode
 	{
@@ -178,8 +179,13 @@ public:
 
 	bool isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec);
 
+	int segmentSolution(Solution sol);
+
+	bool is_disjoint(const std::vector<State*> v1, 
+	const std::vector<State*> v2) const;
+
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constriants, Solution& parent, const bool useHeuristic);
+		std::vector<Constraint*> constriants, Solution& parent, const bool useEG, const bool useHeuristic);
 
 	std::vector<Conflict*> validateSolution(conflictNode *n);
 
@@ -213,4 +219,5 @@ protected:
 	conflictNode* m_root = nullptr;
 	EG_Astar_H *m_planner_H{nullptr};
 	EG_Astar *m_planner{nullptr};
+	A_star *m_planner_A{nullptr};
 };

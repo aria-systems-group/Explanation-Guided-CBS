@@ -305,61 +305,97 @@ int main(int argc, char** argv) {
 		// Exp-CBS implementation
 		int costBound;
 		bool verbose;
+		bool useEG;
 		bool useHeuristics;
 		std::string ans1;
 		std::string ans2;
+		std::string ans3;
 		std::cout << "Please enter an Explainability Bound: "; 
 		std::cin >> costBound;
-		std::cout << "Would you like to use heuristics in EG-A*? [y/n]: ";
+
+		// init planner and solution
+		EG_CBS *planner = new EG_CBS(mapf, costBound);
+		Solution solution;
+
+		// get desired behavior set up and plan
+		std::cout << "Would you like to output intermediate solutions? [y/n]: "; 
 		std::cin >> ans1;
-		std::cout << "Output Intermediate Solutions? [y/n]: "; 
+		std::cout << "Would you like to use EG-A*? [y/n]: ";
 		std::cin >> ans2;
 
-		// init planner
-		EG_CBS *planner = new EG_CBS(mapf, costBound);
-
 		if (ans1 == "y")
-			useHeuristics = true;
-		else if (ans1 == "n")
-			useHeuristics = false;
-		else
-		{
-			std::cout << "Invalid Response. Terminating Program." << std::endl;
-			exit(1);
-		}
-		if (ans2 == "y")
 			verbose = true;
-		else if (ans2 == "n")
+		else if (ans1 == "n")
 			verbose = false;
 		else
 		{
 			std::cout << "Invalid Response. Terminating Program." << std::endl;
 			exit(1);
 		}
-		
-		// init solution
-		Solution solution;
 
-		// plan
-		bool success = planner->plan(startStates, solution, useHeuristics, verbose);
-
-		if (success)
+		if (ans2 == "y")
 		{
-			std::cout << "Successful planning using EG-CBS" << std::endl;
-			std::ofstream out(output_name);
-			std::cout << "Outputting Solution to: " << output_name << std::endl;
-			for (std::vector<State*> agentSol: solution)
+			useEG = true;
+			std::cout << "Would you like to use heuristics in EG-A*? [y/n]: ";
+			std::cin >> ans3;
+			
+			if (ans3 == "y")
+				useHeuristics = true;
+			else if (ans3 == "n")
+				useHeuristics = false;
+			else
 			{
-				int it = std::distance(solution.begin(), 
-					std::find(solution.begin(), solution.end(), agentSol));
-				out << agentNames[it] << std::endl;
-				for (State *st: agentSol)
+				std::cout << "Invalid Response. Terminating Program." << std::endl;
+				exit(1);
+			}
+
+			// plan
+			bool success = planner->plan(startStates, solution, useEG, useHeuristics, verbose);
+			if (success)
+			{
+				std::cout << "Successful planning using EG-CBS" << std::endl;
+				std::ofstream out(output_name);
+				std::cout << "Outputting Solution to: " << output_name << std::endl;
+				for (std::vector<State*> agentSol: solution)
 				{
-					out << *st << std::endl;
+					int it = std::distance(solution.begin(), 
+						std::find(solution.begin(), solution.end(), agentSol));
+					out << agentNames[it] << std::endl;
+					for (State *st: agentSol)
+					{
+						out << *st << std::endl;
+					}
 				}
 			}
 		}
-
+		else if (ans2 == "n")
+		{
+			useEG = false;
+			useHeuristics = false;
+			// plan
+			bool success = planner->plan(startStates, solution, useEG, useHeuristics, verbose);
+			if (success)
+			{
+				std::cout << "Successful planning using EG-CBS" << std::endl;
+				std::ofstream out(output_name);
+				std::cout << "Outputting Solution to: " << output_name << std::endl;
+				for (std::vector<State*> agentSol: solution)
+				{
+					int it = std::distance(solution.begin(), 
+						std::find(solution.begin(), solution.end(), agentSol));
+					out << agentNames[it] << std::endl;
+					for (State *st: agentSol)
+					{
+						out << *st << std::endl;
+					}
+				}
+			}
+		}
+		else
+		{
+			std::cout << "Setting Up Planner.. Please review your responses and try again." << std::endl;
+			exit(1);
+		}
 	}
 
     return 0;
