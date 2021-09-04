@@ -34,7 +34,7 @@ public:
     	double gScore;
     	double hScore;
         int segCost{1};
-        bool isWaiting = false;
+        bool isWaiting = true;
 	};
 
     // int noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol);
