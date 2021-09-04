@@ -69,7 +69,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		// which consquentially uses it for isStateValide()
 		// see Environment.h for details
 		// std::cout << "entering expand" << std::endl;
-		m_env->expandState(current->state, neighbors, relevantConstraints, false);
+		m_env->expandState(current->state, neighbors, relevantConstraints, true);
 		// std::cout << "exited expand" << std::endl;
 
 
