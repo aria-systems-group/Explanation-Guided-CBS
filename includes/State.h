@@ -1,46 +1,46 @@
 #pragma once
-
+// standard includes
 #include <iostream>
 #include <boost/functional/hash.hpp>
 #include <boost/program_options.hpp>
 
 
+// Lowest-Level Datatype used by all planners
 struct State {
+  // Constructor
   State(int time, int x, int y, int c = 1) : time(time), x(x), y(y), cost{c} {}
 
+  // copy constructor
   State(const State* other) 
-  { // copy constructor
+  {
       time = int(other->time);
       x = int(other->x);
       y = int(other->y);
       cost = int(other->cost);
   }
 
-   bool operator==(const State& s) const {
+  // overload == operator for state comparison
+  bool operator==(const State& s) const {
     return time == s.time && x == s.x && y == s.y;
   }
 
+  // check if two States are at the same location
   bool isSameLocation(const State *s) const 
   {
     if (x == s->x && y == s->y) {return true;}
     else {return false;}
   }
 
-  bool equalExceptTime(const State& s) const { return x == s.x && y == s.y; }
-
+  // overload << operator for simple state print out
   friend std::ostream& operator<<(std::ostream& os, const State& s) {
     return os << s.time << ":(" << s.x << "," << s.y << "," << s.cost << ")";
   }
 
+  // overload < for hashing
   bool operator <(const State& s) const
   {
     return x < s.x && y < s.y;
   }
-
-  // bool operator >(const State& s) const
-  // {
-  //   return x > s.x && y > s.y;
-  // }
 
   int time;
   int x;
@@ -48,7 +48,7 @@ struct State {
   int cost;
 };
 
-// create default constructor
+// create default hash constructor
 namespace std {
 template <>
 struct hash<State> {
@@ -62,6 +62,3 @@ struct hash<State> {
   }
 };
 }  // namespace std
-
-
-

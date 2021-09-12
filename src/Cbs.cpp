@@ -1,4 +1,6 @@
+// my includes
 #include "../includes/Cbs.h"
+// standard includes
 #include <chrono>
 
 
@@ -101,10 +103,6 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 				}
 			}
 		}
-		
-		// std::cout << "exited planner" << std::endl;
-		// if sol found, add it --- else, return no solution
-		
 		m_planner->getEnv()->updateAgent();
 	}
 	// wrap environment idx back to first agent
@@ -336,8 +334,6 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	else
 		rootNode = new conflictNode(rootSol);
 
-	// std::cout << "Root Node Cost: " << rootNode->m_cost << std::endl;
-
 	open_heap.emplace(rootNode);
 	int tree_sz = 1;
 
@@ -353,7 +349,6 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 		if (c == nullptr)
 		{
 			int expCost = segmentSolution(current->m_solution);
-  			// std::cout << "Solution is Satisfiable!" << std::endl;
   			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
   			std::cout << "Successful planning using CBS" << std::endl;
@@ -370,7 +365,6 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 			// for each agent in conflict (currently only two at a time)
 			for (int a = 0; a < 2; a++)
 			{
-				// std::cout << "found conflict. " << std::endl;
 				if (c->type == Conflict::Vertex)
 				{
 					// as per paper, new node is initialized with parent solution

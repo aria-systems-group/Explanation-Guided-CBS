@@ -1,39 +1,37 @@
 #pragma once
-#include <unordered_set>
-#include "Environment.h"
+// my conflict
 #include "../includes/Astar.h"
 #include "../includes/Conflict.h"
+#include "Environment.h"
+// standard includes
+#include <unordered_set>
 
+// shorthand for a Plan 
 typedef std::vector<std::vector<State*>> Solution;
 
-
+// CBS
 class CBS
 {
 public:
+	// constructor
 	CBS(Environment *env);
-
+	// main planning function -- returns plan
 	bool plan(const std::vector<State*>& startStates, Solution& solution);
-
+	
+	// High-level node of Conflict Tree
 	struct conflictNode
 	{
 	public:
 
 		conflictNode(Solution solution): m_solution(solution)
 		{
+			// constructor
 			m_cost = calcCost();
-			// m_constraints = new Constraints();
-
 		};
 
-		// bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
-
-		// int segmentSolution(Solution &sol);
-
-		// int segmentSolution();
-
+		// Calculates the SoC value of a conflict Node
 		int calcCost()
 		{
-			// return segmentSolution();
 			int cost  = 0;
 			for (std::vector<State*> sol: m_solution)
 			{
@@ -42,24 +40,29 @@ public:
 			return cost;
 		};
 
-		Solution m_solution;
-		Constraint m_constraint;
-		int m_cost{std::numeric_limits<int>::infinity()};
-		conflictNode *parent{nullptr};
+		Solution m_solution;  // saves the plan
+		Constraint m_constraint;  // saves the constraint of a conflict Node
+		int m_cost{std::numeric_limits<int>::infinity()};  // saves the cost of a conflict Node
+		conflictNode *parent{nullptr};  // saves parent of a conflict Node
 	};
 
+	// main low-level graph search function
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
 		std::vector<Constraint*> constriants, Solution& parent);
-
+	
+	// Minimal Disjoint Segmentation Alg.
 	Conflict* validateSolution(conflictNode *n);
 
+	// Minimal Disjoint Segmentation Alg. -- run only at end of planning loop
 	int segmentSolution(Solution sol);
 
+	// Check if to path segments are disjoint
 	bool is_disjoint(const std::vector<State*> v1, const std::vector<State*> v2) const;
 
+	// get the total number of agents in the problem
 	int getAgents() {return m_numAgents;};
 
-	// for open heap
+	// priority queue -- compare two conflict nodes
 	class myconflictComparator
 	{
 	public:
@@ -70,7 +73,7 @@ public:
 	};
 
 protected:
-	Environment *m_env;
-	int m_numAgents;
-	A_star *m_planner{nullptr};
+	Environment *m_env;  // saves the environment object
+	int m_numAgents;  // saves the total number of agents
+	A_star *m_planner{nullptr};  // saves the A^* planner
 };

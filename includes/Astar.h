@@ -1,20 +1,28 @@
 #pragma once
+//  my includes
+#include "../includes/Conflict.h"
+#include "../includes/Environment.h"
+// standard includes
 #include <vector>
 #include <queue>
 #include <unordered_set>
-#include "../includes/Conflict.h"
+
 
 // A* Planner
 class A_star
 {
 public:
+	// constructor
 	A_star(Environment *env);
 
+	// main planning function  -- returns path
 	bool plan(State *startState, std::vector<State*> &solution, 
         std::vector<Constraint*> relevantConstraints);
 
+	// a node in planner saves relevent information in a nice object
 	struct Node
 	{
+		// constructor
     	Node(State *state, double hScore, 
     		double gScore = std::numeric_limits<double>::infinity())
         	: state(state), gScore(gScore), hScore(hScore), parent{nullptr} {}
@@ -24,15 +32,16 @@ public:
     	  os << "state: " << node.state << " fScore: " << (node.gScore + node.hScore);
     	  return os;
     	}
-    	// gScore = is the cost of the path from the start node
-    	// hScore = heuristic cot function (Equclidean dist from node to goal)
-    	State *state;
-    	Node *parent;
+    	// current state
+        State *state;
+    	// parent (to go back to s_i)
+        Node *parent;
+        // gScore = is the cost of the path from the start node
     	double gScore;
+        // hScore = heuristic cost function (Equclidean dist from node to goal)
     	double hScore;
 	};
 
-	// To compare two Nodes -- f(n) = g(n) + h(n)
 	// calculate the best next-node from open heap
 	class myComparator
 	{
@@ -44,8 +53,8 @@ public:
         	return fScore1 > fScore2;
     	}
 	};
-
+	// get the environment object
 	Environment* getEnv() {return m_env;};
 private:
-	Environment *m_env;
+	Environment *m_env;  // saves the object
 };

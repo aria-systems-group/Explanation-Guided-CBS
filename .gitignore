@@ -7,4 +7,5 @@
 Planner
 Makefile
 *.xlsx
+*.py
 .DS_Store

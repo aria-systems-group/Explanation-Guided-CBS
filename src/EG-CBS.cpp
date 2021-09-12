@@ -1,5 +1,8 @@
+// my includes
 #include "../includes/EG-CBS.h"
+// std includes
 #include <filesystem>
+
 
 // Constructor
 EG_CBS::EG_CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
@@ -18,7 +21,7 @@ bool EG_CBS::is_disjoint(const std::vector<State*> v1,
     typename std::vector<State*>::const_iterator 
         it1 = v1.begin(), 
         it1End = v1.end();
-    while(it1 != it1End)  //  && it2 != it2End
+    while(it1 != it1End)
     {
     	typename std::vector<State*>::const_iterator 
         it2 = v2.begin(), 
@@ -37,6 +40,7 @@ bool EG_CBS::is_disjoint(const std::vector<State*> v1,
 
 int EG_CBS::segmentSolution(Solution sol)
 {
+	// get longest time of the plan
 	int longTime = 0;
 	for (int a = 0; a < sol.size(); a++)
 	{
@@ -44,11 +48,12 @@ int EG_CBS::segmentSolution(Solution sol)
 		if (tmp > longTime)
 			longTime = tmp;
 	}
-	// 3. init a visited list for all agents and an indexing variable
+	// init a visited list for all agents and an indexing variable
 	std::vector<std::vector<State*>> agentVisited(m_env->getGoals().size());
 	int lastSegmentTime = 0;
 	int currCost = 1;
 
+	// for the entire length of the plan
 	for (int currTime = 0; currTime <= longTime; currTime++)
 	{
 		// add visited state for currTime
@@ -56,19 +61,19 @@ int EG_CBS::segmentSolution(Solution sol)
 			if (sol[a].back()->time >= currTime)
 				agentVisited[a].push_back(sol[a][currTime]);
 
-		// 4b. see if agent visited is disjoint
+		// see if agent visited is disjoint
 		for (int a1 = 0; a1 < sol.size(); a1++)
 		{
 			for (int a2 = 0; a2 < sol.size(); a2++)
 			{
-				// if these are not the same agent
+				// only check agents that are not the same
 				if (a1 != a2)
 				{
-					// 4c. check disjoint
+					// check disjoint
 					bool disjoint = is_disjoint(agentVisited[a1], agentVisited[a2]);
 					if (!disjoint)
 					{
-						// 4d. add cost for all states prior to currTime
+						// add cost for all states prior to currTime
 						for (int a = 0; a < sol.size(); a++)
 						{
 							for (int t = lastSegmentTime; t < currTime; t++)
@@ -109,21 +114,19 @@ int EG_CBS::segmentSolution(Solution sol)
 Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates, 
 		std::vector<Constraint*> constraints, Solution& parent, const bool useEG, const bool useHeuristic)
 {
-	// we have a list of constraints for all agents from current node
-	// to root node.
+	// we have a list of constraints for entire CBS branch
 	if (useEG && !useHeuristic)
 	{
 		// use EG-A* object in m_planner
-		// low level planner should only be provided with the constraints
-		// it needs to worry about.
+		// make sure we reset the agent index for good book keeping
 		while (m_planner->getEnv()->getAgent() != 0)
 		{
 			m_planner->getEnv()->updateAgent();
 		}
-
-		Solution sol(getAgents());
-		std::vector<State*> singleSol;
-		std::vector<Constraint*> agentRelevantCs;
+		// init things we need
+		Solution sol(getAgents());  // soon-to-be plan
+		std::vector<State*> singleSol;  // soon-to-be path 
+		std::vector<Constraint*> agentRelevantCs;  // soon-to-be agent relevent constraints
 		bool cont = true;
 
 		if (parent.size() == 0)
@@ -259,6 +262,7 @@ Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			}
 		}
 		// update agent to the correct one
+		// reset the agent index
 		while (m_planner->getEnv()->getAgent() != 0)
 		{
 			m_planner->getEnv()->updateAgent();
@@ -268,8 +272,6 @@ Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 	else if (useEG && useHeuristic)
 	{
 		// use EG-A*-H object in m_planner_H
-		// low level planner should only be provided with the constraints
-		// it needs to worry about.
 		while (m_planner_H->getEnv()->getAgent() != 0)
 		{
 			m_planner_H->getEnv()->updateAgent();
@@ -422,8 +424,7 @@ Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 	else if (!useEG && !useHeuristic)
 	{
 		// use A* object in m_planner_A
-		// low level planner should only be provided with the constraints
-		// it needs to worry about.
+		// reset agent idx 
 		while (m_planner_A->getEnv()->getAgent() != 0)
 		{
 			m_planner_A->getEnv()->updateAgent();
@@ -566,7 +567,7 @@ Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 				m_planner_A->getEnv()->updateAgent();
 			}
 		}
-		// update agent to the correct one
+		// reset
 		while (m_planner_A->getEnv()->getAgent() != 0)
 		{
 			m_planner_A->getEnv()->updateAgent();
@@ -767,7 +768,6 @@ std::vector<Conflict*> EG_CBS::validateSolution(conflictNode *n)
 										c->x2 = agentVisited[a2][k2]->x ; c->y2 = agentVisited[a2][k2]->y;
 										if (!isConflictRepeat(c, expCs))
 											expCs.push_back(c);
-										// return c;
 										currCost++;
 									}
 								}
@@ -815,22 +815,7 @@ bool EG_CBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
 	return false;
 }
 
-// wrapper function that prints tree structure & all node information
-void EG_CBS::showTree(const conflictNode *curr, std::vector<Conflict*> cnf)
-{
-	// delete previous tree information
-	std::filesystem::remove_all("txt/nodes"); // Deletes one or more files recursively.
-	// make directory for nodes
-	std::string dirName = "txt/nodes";
-	int check = mkdir(dirName.c_str(), 0777);
-	// print tree structure in txt file
-	std::string textFile = ("txt/tree.txt");
-	std::ofstream file(textFile);
-	m_root->print(file, 1, curr, cnf);
-
-} 
-
-bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useEG, bool useHeuristic, bool verbose)
+bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useEG, bool useHeuristic)
 {
 	std::cout << "Now Planning with ExpCBS" << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
@@ -895,12 +880,6 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 		// validate it for conflicts
 		std::vector<Conflict*> cnf = validateSolution(current);
 
-		// showTree(current, cnf);
-
-		// for (Conflict* c: cnf)
-		// 	std::cout << *c << std::endl;
-		// exit(1);
-
 		if (cnf.empty())
 		{
 			// if no conflicts occur, then we found a solution
@@ -922,8 +901,6 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
   			std::cout << "Time Spent in A*: " << timeAstar << " microseconds" << 
   				" or approx. " << (timeAstar / 1000000.0) << " seconds" << std::endl;
   			std::cout << "Size of Conflict Tree: " << treeSize << std::endl;
-
-  			showTree(current, cnf);
 			return true;
 		}
 		else
@@ -1054,39 +1031,6 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 					}
 					else if (c->type == Conflict::Explanation)
 					{
-						if (a == 0 && verbose)
-						{
-							std::cout << "Found explanation constraint" << std::endl;
-							dirName = "txt/exp" + std::to_string(numExps);
-							int check = mkdir(dirName.c_str(), 0777);
-							// print constraint found
-							std::string fileName0 = (dirName + "/conflict.txt");
-							std::ofstream out0(fileName0);
-							conflictNode* currNode = current;
-							out0 << *c << std::endl;
-							// while (currNode != nullptr)
-							// {
-							// 	if (current->m_constraint.getVertexConstraint() != nullptr)
-							// 		out0 << *(current->m_constraint.getVertexConstraint()) << std::endl;
-							// 	// else
-							// 	// 	out0 << *(current->m_constraint.getEdgeConstraint()) << std::endl;
-							// 	currNode = current->parent;
-							// }
-							// print solution that found exp constriant
-							std::string fileName1 = (dirName + "/tmpSol_prior.txt");
-							std::ofstream out1(fileName1);
-							for (std::vector<State*> agentSol: current->m_solution)
-							{
-								int it = std::distance(current->m_solution.begin(), 
-									std::find(current->m_solution.begin(), 
-										current->m_solution.end(), agentSol));
-								out1 << m_env->getAgentNames()[it] << std::endl;
-								for (State *st: agentSol)
-								{
-									out1 << *st << std::endl;
-								}
-							}
-						}
 						// for each explanation bound, we need to make a child node
 						// and give it a vertex constraint and solve again
 						conflictNode *n = new conflictNode(empty);
@@ -1151,40 +1095,15 @@ bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 								break;
 							}
 						}
-			
 						// update cost of solution if it is a valid one
 						if (valid)
 						{
-							if (verbose)
-							{
-								// print solution that found exp constriant
-								std::string fileName2 = (dirName + "/tmpSol_post_" + 
-									"_agent_" + std::to_string(a) + ".txt");
-								std::ofstream out2(fileName2);
-								for (std::vector<State*> agentSol: n->m_solution)
-								{
-									int it = std::distance(n->m_solution.begin(), 
-										std::find(n->m_solution.begin(), 
-											n->m_solution.end(), agentSol));
-									out2 << m_env->getAgentNames()[it] << std::endl;
-									for (State *st: agentSol)
-									{
-										out2 << *st << std::endl;
-									}
-								}
-							}
 							n->m_cost = n->calcCost();
 							open_heap.emplace(n);
 							n->updateIdx(nodeIdx);
 							nodeIdx++;
 							current->children.push_back(n);
 							treeSize ++;
-						}
-						if (a == 1 && verbose)
-						{
-							numExps++;
-							std::cout << "Enter anything to continue: ";
-							std::cin >> test;
 						}
 					}
 				}

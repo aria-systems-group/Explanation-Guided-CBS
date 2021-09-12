@@ -1,10 +1,13 @@
 
-#include <unordered_set>
-#include <queue>
+// my includes
 #include "../includes/State.h"
 #include "../includes/Environment.h"
 #include "../includes/EG-Astar.h"
+// standard includes
+#include <unordered_set>
+#include <queue>
 #include <chrono>
+
 
 EG_Astar::EG_Astar(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
 
@@ -17,18 +20,13 @@ bool EG_Astar::is_disjoint(const std::vector<State*> v1,
         it1 = v1.begin(), 
         it1End = v1.end();
 
-    // if(*it1 > *v2.rbegin() || *it2 > *v1.rbegin()) return true;
-
-    while(it1 != it1End)  //  && it2 != it2End
+    while(it1 != it1End)
     {
     	typename std::vector<State*>::const_iterator 
         it2 = v2.begin(), 
         it2End = v2.end();
     	while (it2 != it2End)
     	{
-    		// std::cout << **it1 << std::endl;
-    		// std::cout << *it2 << std::endl;
-    		// std::cout << (*it1)->isSameLocation(*it2) << std::endl;
     		if((*it1)->isSameLocation(*it2))
     			return false;
     		else
@@ -36,9 +34,9 @@ bool EG_Astar::is_disjoint(const std::vector<State*> v1,
     	}
         it1++;
     }
-
     return true;
 }
+
 
 int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
@@ -60,14 +58,11 @@ int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 	{
 		// 2. find out how many steps we can go. 
 		// i.e. what is this nodes state time point. 
-		// int longTime = currPathSeg.back()->time;
-		// std::cout << "here" << std::endl;
 		int longTime = 0;
 		for (int a = 0; a < otherSols.size(); a++)
 		{
 			if (a == m_env->getAgent())
 			{
-				// std::cout << "in here" << std::endl;
 				int tmp = currPathSeg.back()->time;
 				if (tmp > longTime)
 					longTime = tmp;
@@ -82,7 +77,6 @@ int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 				}
 			}
 		}
-
 		// Clear all costs 
 		for (int a = 0; a < otherSols.size(); a++)
 		{
@@ -190,7 +184,6 @@ int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 		}
 		for (int a = 0; a < otherSols.size(); a++)
 		{
-			// std::cout << "Agent: " << a << std::endl;
 			for (int t = lastSegmentTime; t <= longTime; t++)
 			{
 				if (a == m_env->getAgent())
@@ -214,9 +207,6 @@ int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 	else
 	{
 		// 2. find out how many steps we can go. 
-		// i.e. what is this nodes state time point. 
-		// int longTime = currPathSeg.back()->time;
-		// std::cout << "here" << std::endl;
 		int longTime = 0;
 		for (int a = 0; a <= otherSols.size(); a++)
 		{
@@ -345,7 +335,6 @@ int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 		}
 		for (int a = 0; a <= otherSols.size(); a++)
 		{
-			// std::cout << "Agent: " << a << std::endl;
 			for (int t = lastSegmentTime; t <= longTime; t++)
 			{
 				if (a == m_env->getAgent())
@@ -402,245 +391,17 @@ bool EG_Astar::crossCheck(const Node *n, const int longTime) const
 		{
 			if (currState->isSameLocation((cpy->state)))
 			{
-				// if (m_env->getAgent() == 1)
-				// {
-				// 	std::cout << "returning cross: " << std::endl;
-				// 	std::cin >> test;
-				// }
 				return true;
 			}
 			cpy = cpy->parent;
 		}
-		// if (m_env->getAgent() == 1)
-		// {
-		// 	std::cout << "returning NO cross: " << std::endl;
-		// 	std::cin >> test;
-		// }
 	}
 	return false;
 }
 
-// void ExpA_star::canonicalPath(Node *curr)
-// {
-// 	// input: path with possibly repeated switching
-// 	// return: path without switching and waits at beginning of each segment
-// 	Node *currCopy = curr;
-// 	std::string test;
-// 	int currCost = curr->segCost;
-// 	std::vector<State*> currSeg;
-// 	while (currCopy != nullptr)
-// 	{
-// 		if (currCopy->segCost == currCost)
-// 		{
-// 			currSeg.push_back(currCopy->state);
-// 			// check for revisitation
-// 			State *init = currSeg[0];
-// 			for (int i=0; i < currSeg.size(); i++)
-// 			{
-// 				if (i == 0)
-// 					continue;
-// 				else
-// 				{
-// 					// check for same location 
-// 					if (init->isSameLocation(currSeg[i]))
-// 					{
-// 						// make all states up to currSeg[i] == init
-// 						for (int j = 0; j < currSeg[i]; j++)
-// 						{
-// 							currSeg[j]->x = init->x;
-// 							currSeg[j]->y = init->y;
-// 						}
-// 					}
-// 				}
-// 		}
-// 		else
-// 		{
-// 			currSeg.clear();
-// 			currSeg.push_back(currCopy->state);
-// 			currCost = currCost - 1;
-// 		}
-// 		currCopy = currCopy->parent;
-// 	}
-// }
-
-// bool EG_Astar::checkPathValidity(Node *curr)
-// {
-// 	// given a new node (and consequentially a path)
-// 	// make sure it fits into canonical form
-// 	std::string test;
-
-// 	// make 2 copies of path
-// 	Node *currCopy = curr;
-// 	Node *cpy = curr;
-
-// 	// make an empty segment -- make this vector of vectors
-// 	std::vector<Node*> currSeg;
-
-// 	// get current segment
-// 	if (cpy->parent == nullptr)
-// 		return true;
-	
-// 	while (cpy->parent != nullptr && cpy->segCost == curr->segCost)  // state->cost
-// 	{
-// 		cpy = cpy->parent;
-// 		currSeg.push_back(cpy);
-		
-// 	}
-	
-// 	// for (Node *n: currSeg)
-// 		// std::cout << *n << " " << n->isWaiting << std::endl;
-
-
-// 	// while not at root node
-// 	// std::cout << "entering loop" << std::endl;
-// 	// while (currCopy->parent != nullptr)
-// 	// {
-		
-// 	// std::cout << "here: " << *currCopy << " " << currCopy->isWaiting << std::endl; 
-// 	// std::cin >> test;
-// 	// std::cout << "now here: " << std::endl;
-// 	if (currCopy->segCost == currCopy->parent->segCost)
-// 	{
-// 		// std::cout << "in this loop " << std::endl;
-// 		// currCopy and parent the part of same segment
-// 		if (currCopy->parent->isWaiting && (currCopy->state)->isSameLocation(currCopy->parent->state))
-// 		{
-// 			// waiting -- return true
-// 			// std::cout << "in here: " << *(currCopy->parent) << std::endl;
-// 			// std::cout << "return true here" << std::endl;
-// 			// std::cin >> test;
-// 			return true;
-// 		}
-// 		else
-// 		{
-// 			// std::cout << "i am here now" << std::endl;
-// 			// two cases possible
-// 			// n->parent was not waiting OR currCopy was not same location as parent
-// 			// either way, need to make sure that currCopy did not revisit any state
-// 			for (Node *n: currSeg)
-// 			{
-// 				if ((n->state)->isSameLocation(currCopy->state))
-// 				{
-// 					// n is not waiting but has revisited a state
-// 					// std::cout << "returning false here" << std::endl;
-// 					// std::cin >> test;
-// 					return false;
-// 				}
-// 			}
-// 			// std::cout << "checked segment without fail" << std::endl; 
-// 		}
-// 		// std::cout << "adding..." << std::endl;
-// 		// currSeg.push_back(currCopy);
-// 	}
-// 	else
-// 	{
-// 		// no need for this
-// 		// std::cout << "return true here" << std::endl;
-// 		// std::cin >> test;
-// 		return true;
-// 		// no restrictions on actions
-// 		// clear current segment and add currCopy to new segment
-// 		// currSeg.clear();
-// 		// currSeg.push_back(currCopy);
-// 	}
-// 		// std::cout << "i am here now" << std::endl;
-// 		// currCopy = currCopy->parent;
-// 		// std::cout << "out of logic -- going to parent" << std::endl;
-// 		// std::cout << *currCopy << std::endl;
-// 		// std::cout << "printing segment" << std::endl;
-	
-		
-// 		// std::cin >> test;
-// 	// }
-
-// 	// std::cin >> test;
-// 	// check initial state with current segment
-// 	// for (Node *n: currSeg)
-// 	// {
-// 	// 	if ((n->state)->isSameLocation(currCopy->state))
-// 	// 	{
-// 	// 		// n is not waiting but has revisited a state
-// 	// 		std::cout << "return false" << std::endl;
-// 	// 		std::cin >> test;
-// 	// 		return false;
-// 	// 	}
-// 	// }
-// 	// std::cout << "exiting true" << std::endl;
-// 	// std::cin >> test;
-// 	return true;
-// }
-
-// int EG_Astar::getMaxCost(std::vector<std::vector<State*>> existSol)
-// {
-// 	int max_seg = 0;
-// 	int missing  = 0;
-
-// 	if (existSol.size() == 0)
-// 		return std::numeric_limits<int>::infinity();
-// 	else
-// 	{
-// 		// check for a full existing solution
-// 		for (std::vector<State*> a: existSol)
-// 		{
-// 			if (a.size() == 0)
-// 			{
-// 				missing++;
-// 				if (missing > 1)
-// 					return std::numeric_limits<int>::infinity();
-// 			}
-// 			else
-// 			{
-// 				if (a.back()->cost > max_seg)
-// 					max_seg = a.back()->cost;
-// 			}
-// 		}
-// 	}
-// 	return max_seg;
-// }
-
-// int EG_Astar::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol)
-// {
-// 	// path is on the latest segment
-// 	// any current intersection is a segment
-
-// 	// get current segment for all agents.
-// 	std::vector<std::vector<State*>>  currentSegment(m_env->getAgentNames().size());
-// 	// std::cout << "here" << std::endl;
-// 	for (int a = 0; a < existingSol.size(); a++) 
-// 	{
-// 		// std::cout << existingSol[a].size() << std::endl;
-// 		for (State* st: existingSol[a])
-// 		{
-// 			// std::cout << *st << std::endl;
-// 			// std::cout << "entering check" << std::endl;
-// 			if (st->cost == curr->parent->segCost)
-// 			{
-// 				// std::cout << "checking" <<std::endl;
-// 				currentSegment[a].push_back(st);
-// 			}
-				
-// 			// std::cout << "done check" << std::endl;
-// 		}
-// 	}
-// 	// std::cout << "made it here" << std::endl;
-// 	// check current state against current segment
-// 	for (std::vector<State*> a: currentSegment)
-// 	{
-// 		for (State* st: a)
-// 		{
-// 			if (st->isSameLocation(curr->state))
-// 				return (curr->parent->segCost) + 1;
-// 		}
-// 	}
-// 	// std::cout << "now here" << std::endl;
-// 	return (curr->parent->segCost);
-// }
-
 bool EG_Astar::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
 {
-	std::string test;
-	// int maxCost = getMaxCost(parentSol);
 	auto start = std::chrono::high_resolution_clock::now();
 	// clear all previous information
 	solution.clear();
@@ -675,7 +436,6 @@ bool EG_Astar::plan(State *startState, std::vector<State*> &solution,
 	while (!open_heap.empty())
 	{
 		Node *current = open_heap.top();
-		// std::cout << *(current->state) << std::endl;
 		auto currStop = std::chrono::high_resolution_clock::now();
 		auto currDuration = std::chrono::duration_cast<std::chrono::microseconds>(currStop - start);
 		if ((currDuration.count() / 1000000.0) > (100 * time))
@@ -714,12 +474,9 @@ bool EG_Astar::plan(State *startState, std::vector<State*> &solution,
 
           	while (solNode != nullptr)
           	{
-          		// std::cout << *solNode->state << " " << solNode->isWaiting << std::endl;
           		solution.insert(solution.begin(), solNode->state);
           		solNode = solNode->parent;
           	}
-          	// std::cin >> test;
-          	// std::cout << "found goal for agent: " << m_env->getAgent() << std::endl;
 			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 			if (useCBS == false)
@@ -755,8 +512,6 @@ bool EG_Astar::plan(State *startState, std::vector<State*> &solution,
 			n->segCost = SegHeuristic(n, parentSol);  // updates all state costs
 			
 			// we have updated segmentation information 
-			
-			
 			// plan as normal 
 			if (!crossCheck(n, longTime)) 
 			// either longTime not reached

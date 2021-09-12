@@ -9,22 +9,6 @@ A_star::A_star(Environment *env): m_env(env) {};
 bool A_star::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints)
 {
-
-	// std::cout << "A* planning for agent: " << m_env->getAgent() << std::endl;
-	// if (relevantConstraints.size() == 0)
-	// {
-	// 	std::cout << "No Constraints." << std::endl;
-	// }
-	// else
-	// {
-	// 	std::cout << "Current Constraint List: " << std::endl;
-	// 	for (Constraint *c: relevantConstraints)
-	// 	{
-	// 		std::cout << "Agent: " << c->getVertexConstraint()->m_agent << " " <<
-	// 		"State: " << c->getVertexConstraint()->m_state << std::endl;
-	// 	}
-	// }
-
 	// clear all previous information
 	solution.clear();
 
@@ -36,8 +20,6 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	// init start node
 	Node *startNode = new Node(startState, m_env->heuristicFunc(startState), 0);
 	
-	// std::cout << *startState << std::endl;
-
 	open_heap.emplace(startNode);
 	open_list.insert(*startState);
 
@@ -50,7 +32,6 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 
 		if (m_env->isStateGoal(current->state))
 		{
-			// std::cout << "found goal!" << std::endl;
 			Node *solNode = current;
 
           	while (solNode != nullptr)
@@ -68,10 +49,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		// with this list of constraints, we provide it to expandNode()
 		// which consquentially uses it for isStateValide()
 		// see Environment.h for details
-		// std::cout << "entering expand" << std::endl;
 		m_env->expandState(current->state, neighbors, relevantConstraints, true);
-		// std::cout << "exited expand" << std::endl;
-
 
 		// for all neighbors...
 		for (State *st: neighbors)

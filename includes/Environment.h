@@ -1,11 +1,14 @@
 #pragma once
+// my includes
+#include "../includes/State.h"
+#include "../includes/Conflict.h"
+// standard includes
 #include <unordered_set>
 #include <boost/functional/hash.hpp>
 #include <boost/program_options.hpp>
-#include "../includes/State.h"
-#include "../includes/Conflict.h"
 
 
+// Lowest-level Datatype used by evnironment
 struct Location 
 {
   Location(int x, int y) : x(x), y(y) {}
@@ -21,7 +24,7 @@ struct Location
   }
 };
 
-// default constructor
+// default hash constructor
 namespace std {
 template <>
 struct hash<Location> {
@@ -34,6 +37,7 @@ struct hash<Location> {
 };
 }  // namespace std
 
+// Main Env class -- contains useful info regarding the graph
 class Environment {
     public:
         Environment(const int dimx, const int dimy, std::unordered_set<Location*> obstacles,
@@ -46,6 +50,7 @@ class Environment {
             m_agentNames(names)
             {}
 
+        // typical heuristic score when given a state
         double heuristicFunc(const State *st) const
         {
             // manhattan dist. from state to goal
@@ -53,6 +58,7 @@ class Environment {
             return abs(st->x - (m_goals[m_agentIdx])->x) + abs(st->y - (m_goals[m_agentIdx])->y);
         }
 
+        // find valid neighbors of a state
         void expandState(const State *st, std::vector<State*>& neighbors, 
             std::vector<Constraint*> constraints, bool isNodeWaiting)
         {
@@ -92,6 +98,7 @@ class Environment {
             }
         }
 
+        // Find if state is valid, given constraints
         bool isStateValid(const State *curr, const State *nxt, const std::vector<Constraint*> constraints) const
         {
             // is in env bounds
@@ -149,17 +156,20 @@ class Environment {
             return true;
         }
 
+        // macros function -- if using only low-level planner, can include collision checks
         void includeCollisionChecks(const std::vector<std::vector<State*>> parentSol)
         {
             useCollisionChecking = true;
             m_existingSol = parentSol;
         }
 
+        // check if a node is goal 
         bool isStateGoal(const State *st) const
         {
             return (st->x == m_goals[m_agentIdx]->x && st->y == m_goals[m_agentIdx]->y);
         }
 
+        // CBS usually plans for agents out of order -- this makes sure we plan for correct one
         void updateAgent()
         {
             if (m_agentIdx < m_goals.size())
@@ -168,21 +178,23 @@ class Environment {
                 m_agentIdx = 0;
         }
 
-        int getAgent() {return m_agentIdx;}
-
+        // returns agent number
+        int getAgent() {return m_agentIdx;};
+        // returns list of goals
         const std::vector<Location*> getGoals() {return m_goals;};
-
+        // get size of space
         const int getXdim() {return m_dimx;};
         const int getYdim() {return m_dimy;};
+        // get agent names
         const std::vector<std::string> getAgentNames() {return m_agentNames;};
 
     private:
-        bool useCollisionChecking = false;
-        const int m_dimx;
-        const int m_dimy;
-        const std::unordered_set<Location*> m_obstacles;
-        const std::vector<Location*> m_goals;
-        std::vector<std::vector<State*>> m_existingSol;
-        int m_agentIdx;  // this cycles through the agents so that A* does not need to worry about it
-        std::vector<std::string> m_agentNames;
+        bool useCollisionChecking = false;  // saves boolean for using collision checks
+        const int m_dimx;  // saves x-value of space
+        const int m_dimy;  // saves y-value of space
+        const std::unordered_set<Location*> m_obstacles;  // saves list of obstacles
+        const std::vector<Location*> m_goals;  // saves list of goals
+        std::vector<std::vector<State*>> m_existingSol;  // saves the parent solution
+        int m_agentIdx; // agent index that tracks which agent we plan for
+        std::vector<std::string> m_agentNames; // saves names of agents
 };

@@ -1,8 +1,4 @@
-#include <iostream>
-#include <unordered_set>
-#include <fstream>
-#include <string>
-#include "yaml.h"
+// my includes
 #include "../includes/State.h"
 #include "../includes/Environment.h"
 #include "../includes/Astar.h"
@@ -10,7 +6,12 @@
 #include "../includes/EG-Astar-H.h"
 #include "../includes/EG-Astar.h"
 #include "../includes/EG-CBS.h"
-
+// standard includes
+#include <iostream>
+#include <unordered_set>
+#include <fstream>
+#include <string>
+#include "yaml.h"
 
 
 int main(int argc, char** argv) { 
@@ -350,7 +351,7 @@ int main(int argc, char** argv) {
 			}
 
 			// plan
-			bool success = planner->plan(startStates, solution, useEG, useHeuristics, verbose);
+			bool success = planner->plan(startStates, solution, useEG, useHeuristics);
 			if (success)
 			{
 				std::cout << "Successful planning using EG-CBS" << std::endl;
@@ -373,7 +374,7 @@ int main(int argc, char** argv) {
 			useEG = false;
 			useHeuristics = false;
 			// plan
-			bool success = planner->plan(startStates, solution, useEG, useHeuristics, verbose);
+			bool success = planner->plan(startStates, solution, useEG, useHeuristics);
 			if (success)
 			{
 				std::cout << "Successful planning using EG-CBS" << std::endl;

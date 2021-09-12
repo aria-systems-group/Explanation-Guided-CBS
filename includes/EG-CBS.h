@@ -1,9 +1,11 @@
 #pragma once
+// my includes
 #include "Environment.h"
 #include "../includes/EG-Astar-H.h"
 #include "../includes/EG-Astar.h"
 #include "../includes/Astar.h"
 #include "../includes/Conflict.h"
+// standard includes
 #include <chrono>
 #include <unordered_set>
 #include <iostream>
@@ -11,30 +13,33 @@
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sstream> //for std::stringstream 
+#include <sstream>
 
 
+// shorthand for a Plan 
 typedef std::vector<std::vector<State*>> Solution;
 
 // EG - CBS
 class EG_CBS
 {
 public:
+	// constructor
 	EG_CBS(Environment *env, const int bound);
 
-	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic, bool verbose);
+	// main plan function -- returns plan
+	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic);
 
+	// High-level node of Conflict Tree
 	struct conflictNode
 	{
 	public:
-
+		// constructor
 		conflictNode(Solution solution): m_solution(solution)
 		{
 			m_cost = calcCost();
-			// m_constraints = new Constraints();
-
 		};
 
+		// Calculates the SoC value of a conflict Node
 		int calcCost()
 		{
 			int cost = 0;
@@ -45,6 +50,7 @@ public:
 			return cost;
 		};
 
+		// Calculates the Segmentation Cost of a conflict Node
 		int getSegCost() const
 		{
 			int cost = 0;
@@ -56,6 +62,7 @@ public:
 			return cost;
 		};
 
+		// print function for debugging purposes ONLY
 		void print(std::ostream& os, int level, const conflictNode *curr, std::vector<Conflict*> cnf) 
 		{
 
@@ -63,12 +70,6 @@ public:
     		{
     	   		os << "\t\t ";
     		}
-
-    		// include address in tree
-   			// const void * address = static_cast<const void*>(this);
-			// std::stringstream ss;
-			// ss << address;  
-			// std::string name = ss.str();
 
     		std::string text = std::to_string(this->m_idx) + "_" + std::to_string((this->children).size());
 
@@ -92,7 +93,7 @@ public:
     	   	// print node information to different file
     	   	this->printInformation();
     	};
-
+    	// print function for debugging purposes ONLY
     	void printConflict(std::vector<Conflict*> cnf)
     	{
     		std::string dirName = ("txt/nodes/" + std::to_string(this->m_idx));
@@ -106,7 +107,7 @@ public:
 				os << *c << std::endl;
 			}
     	}
-
+    	// print function for debugging purposes ONLY
     	void printInformation()
     	{
     		// set up node directory
@@ -143,57 +144,56 @@ public:
 				{
 					if (c.getVertexConstraint() == nullptr)
 					{
-						// std::cout << *(c.getEdgeConstraint()) << std::endl;
-						// exit(1);
 						os2 << *(c.getEdgeConstraint()) << std::endl;
 					}
 					else
 					{
-						// std::cout << *(c.getVertexConstraint()) << std::endl;
-					// exit(1);
 						os2 << *(c.getVertexConstraint()) << std::endl;
 					}
 				}
 			}
     	}
 
-
-
+    	// updates index to match that of lower planner
     	void updateIdx(const int num)
     	{
     		m_idx = num;
     	}
 
-		Solution m_solution;
-		Constraint m_constraint;
-		int m_cost{std::numeric_limits<int>::infinity()};
-		conflictNode *parent{nullptr};
-		std::vector<conflictNode*> children;
-		int m_idx = 0;
-		bool m_solFlag = false;
-		bool m_eval = false;
-		// bool m_isWaiting = true;
+		Solution m_solution;  // saves the plan
+		Constraint m_constraint;  // saves the constraint of a conflict Node
+		int m_cost{std::numeric_limits<int>::infinity()};  // saves the cost of a conflict Node
+		conflictNode *parent{nullptr};  // saves parent of a conflict Node
+		std::vector<conflictNode*> children;  // saves the childeren of a conflict Nodes (only used for debugging)
+		int m_idx = 0;  // index of a conflict Node
+		bool m_solFlag = false;  // true if node is solution
+		bool m_eval = false;  // true if node has been checked for conflicts
 	};
-
-	void showTree(const conflictNode *curr, std::vector<Conflict*> cnf);
-
+	
+	// check to make sure no explanation conflict is added twice
 	bool isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec);
 
+	// Minimal Disjoint Segmentation Alg.
 	int segmentSolution(Solution sol);
 
+	// Check if to path segments are disjoint
 	bool is_disjoint(const std::vector<State*> v1, 
 	const std::vector<State*> v2) const;
 
+	// main low-level graph search function
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
 		std::vector<Constraint*> constriants, Solution& parent, const bool useEG, const bool useHeuristic);
 
+	// evaluate a conflict node for conflicts
 	std::vector<Conflict*> validateSolution(conflictNode *n);
 
+	// get the total number of agents in the problem
 	int getAgents() {return m_numAgents;};
 
+	// get the explanation bound (r)
 	int getBound() {return m_bound;};
 
-	// for open heap
+	// priority queue -- compare two conflict nodes
 	class myconflictComparator
 	{
 	public:
@@ -213,11 +213,11 @@ public:
 	};
 
 protected:
-	Environment *m_env;
-	const int m_bound;
-	int m_numAgents;
-	conflictNode* m_root = nullptr;
-	EG_Astar_H *m_planner_H{nullptr};
-	EG_Astar *m_planner{nullptr};
-	A_star *m_planner_A{nullptr};
+	Environment *m_env;  // saves the environment object
+	const int m_bound;  // saves the explanation bound (r)
+	int m_numAgents;  // saves the total number of agents
+	conflictNode* m_root = nullptr;  // saves the root node
+	EG_Astar_H *m_planner_H{nullptr};  // saves the XG-A^* planner w/ heuristics
+	EG_Astar *m_planner{nullptr};  // saves the XG-A^* planner w/o heuristics
+	A_star *m_planner_A{nullptr};  // saves the A^* planner
 };
