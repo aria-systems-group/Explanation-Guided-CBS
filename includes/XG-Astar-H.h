@@ -6,11 +6,11 @@
 #include "../includes/Conflict.h"
 
 // EG - A* with heuristics
-class EG_Astar_H
+class XG_Astar_H
 {
 public:
     // constructor
-	EG_Astar_H(Environment *env, const bool useCBS = true);
+	XG_Astar_H(Environment *env, const bool useCBS = true);
 
 	// main planning function
     bool plan(State *startState, std::vector<State*> &solution, 

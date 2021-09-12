@@ -9,11 +9,11 @@
 
 
 // XG - A* w/o heuristics
-class EG_Astar
+class XG_Astar
 {
 public:
     // constructor
-	EG_Astar(Environment *env, const bool useCBS = true);
+	XG_Astar(Environment *env, const bool useCBS = true);
 
 	bool plan(State *startState, std::vector<State*> &solution, 
         std::vector<Constraint*> relevantConstraints, 

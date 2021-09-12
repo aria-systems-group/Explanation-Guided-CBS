@@ -3,12 +3,12 @@
 #include <queue>
 #include "../includes/State.h"
 #include "../includes/Environment.h"
-#include "../includes/EG-Astar-H.h"
+#include "../includes/XG-Astar-H.h"
 #include <chrono>
 
-EG_Astar_H::EG_Astar_H(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
+XG_Astar_H::XG_Astar_H(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
 
-bool EG_Astar_H::is_disjoint(const std::vector<State*> v1, 
+bool XG_Astar_H::is_disjoint(const std::vector<State*> v1, 
 	const std::vector<State*> v2) const
 {
     if(v1.empty() || v2.empty()) return true;
@@ -35,7 +35,7 @@ bool EG_Astar_H::is_disjoint(const std::vector<State*> v1,
     return true;
 }
 
-int EG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
+int XG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
 	if (otherSols.size() == 0)
 		return 1;
@@ -356,7 +356,7 @@ int EG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSol
 	}
 }
 
-int EG_Astar_H::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
+int XG_Astar_H::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
 {
 	int longTime = 0;
 	for (std::vector<State*> sol: parSol)
@@ -372,7 +372,7 @@ int EG_Astar_H::getLongestPath(const std::vector<std::vector<State*>>& parSol) c
 	return longTime;
 }
 
-bool EG_Astar_H::crossCheck(const Node *n, const int longTime) const
+bool XG_Astar_H::crossCheck(const Node *n, const int longTime) const
 {
 	std::string test;
 	//see if currState is same location as any other on path back to root
@@ -398,7 +398,7 @@ bool EG_Astar_H::crossCheck(const Node *n, const int longTime) const
 	return false;
 }
 
-bool EG_Astar_H::checkPathValidity(Node *curr)
+bool XG_Astar_H::checkPathValidity(Node *curr)
 {
 	// given a new node (and consequentially a path)
 	// make sure it fits into canonical form
@@ -452,7 +452,7 @@ bool EG_Astar_H::checkPathValidity(Node *curr)
 	return true;
 }
 
-int EG_Astar_H::getMaxCost(std::vector<std::vector<State*>> existSol)
+int XG_Astar_H::getMaxCost(std::vector<std::vector<State*>> existSol)
 {
 	int max_seg = 0;
 	int missing  = 0;
@@ -480,7 +480,7 @@ int EG_Astar_H::getMaxCost(std::vector<std::vector<State*>> existSol)
 	return max_seg;
 }
 
-int EG_Astar_H::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol)
+int XG_Astar_H::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> existingSol)
 {
 	// path is on the latest segment
 	// any current intersection is a segment
@@ -509,7 +509,7 @@ int EG_Astar_H::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> ex
 	return (curr->parent->segCost);
 }
 
-bool EG_Astar_H::plan(State *startState, std::vector<State*> &solution, 
+bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
 {
 	std::string test;

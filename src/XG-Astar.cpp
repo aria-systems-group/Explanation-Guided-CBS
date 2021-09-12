@@ -2,16 +2,16 @@
 // my includes
 #include "../includes/State.h"
 #include "../includes/Environment.h"
-#include "../includes/EG-Astar.h"
+#include "../includes/XG-Astar.h"
 // standard includes
 #include <unordered_set>
 #include <queue>
 #include <chrono>
 
 
-EG_Astar::EG_Astar(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
+XG_Astar::XG_Astar(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
 
-bool EG_Astar::is_disjoint(const std::vector<State*> v1, 
+bool XG_Astar::is_disjoint(const std::vector<State*> v1, 
 	const std::vector<State*> v2) const
 {
     if(v1.empty() || v2.empty()) return true;
@@ -38,7 +38,7 @@ bool EG_Astar::is_disjoint(const std::vector<State*> v1,
 }
 
 
-int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
+int XG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
 	if (otherSols.size() == 0)
 		return 1;
@@ -357,7 +357,7 @@ int EG_Astar::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 	}
 }
 
-int EG_Astar::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
+int XG_Astar::getLongestPath(const std::vector<std::vector<State*>>& parSol) const
 {
 	int longTime = 0;
 	for (std::vector<State*> sol: parSol)
@@ -373,7 +373,7 @@ int EG_Astar::getLongestPath(const std::vector<std::vector<State*>>& parSol) con
 	return longTime;
 }
 
-bool EG_Astar::crossCheck(const Node *n, const int longTime) const
+bool XG_Astar::crossCheck(const Node *n, const int longTime) const
 {
 	std::string test;
 	//see if currState is same location as any other on path back to root
@@ -399,7 +399,7 @@ bool EG_Astar::crossCheck(const Node *n, const int longTime) const
 	return false;
 }
 
-bool EG_Astar::plan(State *startState, std::vector<State*> &solution, 
+bool XG_Astar::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
 {
 	auto start = std::chrono::high_resolution_clock::now();

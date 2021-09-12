@@ -1,8 +1,8 @@
 #pragma once
 // my includes
 #include "Environment.h"
-#include "../includes/EG-Astar-H.h"
-#include "../includes/EG-Astar.h"
+#include "../includes/XG-Astar-H.h"
+#include "../includes/XG-Astar.h"
 #include "../includes/Astar.h"
 #include "../includes/Conflict.h"
 // standard includes
@@ -20,11 +20,11 @@
 typedef std::vector<std::vector<State*>> Solution;
 
 // EG - CBS
-class EG_CBS
+class XG_CBS
 {
 public:
 	// constructor
-	EG_CBS(Environment *env, const int bound);
+	XG_CBS(Environment *env, const int bound);
 
 	// main plan function -- returns plan
 	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic);
@@ -217,7 +217,7 @@ protected:
 	const int m_bound;  // saves the explanation bound (r)
 	int m_numAgents;  // saves the total number of agents
 	conflictNode* m_root = nullptr;  // saves the root node
-	EG_Astar_H *m_planner_H{nullptr};  // saves the XG-A^* planner w/ heuristics
-	EG_Astar *m_planner{nullptr};  // saves the XG-A^* planner w/o heuristics
+	XG_Astar_H *m_planner_H{nullptr};  // saves the XG-A^* planner w/ heuristics
+	XG_Astar *m_planner{nullptr};  // saves the XG-A^* planner w/o heuristics
 	A_star *m_planner_A{nullptr};  // saves the A^* planner
 };

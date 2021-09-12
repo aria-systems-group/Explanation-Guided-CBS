@@ -1,20 +1,20 @@
 // my includes
-#include "../includes/EG-CBS.h"
+#include "../includes/XG-CBS.h"
 // std includes
 #include <filesystem>
 
 
 // Constructor
-EG_CBS::EG_CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
+XG_CBS::XG_CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
 {
 	m_planner_A = new A_star(m_env);
-	m_planner_H = new EG_Astar_H(m_env);
-	m_planner = new EG_Astar(m_env);
+	m_planner_H = new XG_Astar_H(m_env);
+	m_planner = new XG_Astar(m_env);
 	m_numAgents = m_env->getGoals().size();
 	Constraint m_constraint{Constraint()};
 };
 
-bool EG_CBS::is_disjoint(const std::vector<State*> v1, 
+bool XG_CBS::is_disjoint(const std::vector<State*> v1, 
 	const std::vector<State*> v2) const
 {
     if(v1.empty() || v2.empty()) return true;
@@ -38,7 +38,7 @@ bool EG_CBS::is_disjoint(const std::vector<State*> v1,
     return true;
 }
 
-int EG_CBS::segmentSolution(Solution sol)
+int XG_CBS::segmentSolution(Solution sol)
 {
 	// get longest time of the plan
 	int longTime = 0;
@@ -111,7 +111,7 @@ int EG_CBS::segmentSolution(Solution sol)
 }
 
 // calculate constraint specific solution
-Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates, 
+Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates, 
 		std::vector<Constraint*> constraints, Solution& parent, const bool useEG, const bool useHeuristic)
 {
 	// we have a list of constraints for entire CBS branch
@@ -584,7 +584,7 @@ Solution EG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 
 // given a solution, find conflicts
 // this is where we add explainability conflicts
-std::vector<Conflict*> EG_CBS::validateSolution(conflictNode *n)
+std::vector<Conflict*> XG_CBS::validateSolution(conflictNode *n)
 {
 	// this function will step through all solution and look for conflicts
 	// if conflict is found, then we add it to the node
@@ -800,7 +800,7 @@ std::vector<Conflict*> EG_CBS::validateSolution(conflictNode *n)
 	return cnf;
 }
 
-bool EG_CBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
+bool XG_CBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
 {
 	for (Conflict *prev: vec)
 	{
@@ -815,7 +815,7 @@ bool EG_CBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
 	return false;
 }
 
-bool EG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useEG, bool useHeuristic)
+bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useEG, bool useHeuristic)
 {
 	std::cout << "Now Planning with ExpCBS" << std::endl;
 	auto start = std::chrono::high_resolution_clock::now();
