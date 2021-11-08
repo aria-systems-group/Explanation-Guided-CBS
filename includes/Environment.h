@@ -41,10 +41,11 @@ struct hash<Location> {
 class Environment {
     public:
         Environment(const int dimx, const int dimy, std::unordered_set<Location*> obstacles,
-                std::vector<Location*> goals, std::vector<std::string> names):
+                std::vector<State*> starts, std::vector<Location*> goals, std::vector<std::string> names):
             m_dimx(dimx),
             m_dimy(dimy),
             m_obstacles(std::move(obstacles)),
+            m_starts(std::move(starts)),
             m_goals(std::move(goals)),
             m_agentIdx(0),
             m_agentNames(names)
@@ -180,6 +181,8 @@ class Environment {
 
         // returns agent number
         int getAgent() {return m_agentIdx;};
+        // returns list of starts
+        const std::vector<State*> getStarts() {return m_starts;};
         // returns list of goals
         const std::vector<Location*> getGoals() {return m_goals;};
         // get size of space
@@ -193,6 +196,7 @@ class Environment {
         const int m_dimx;  // saves x-value of space
         const int m_dimy;  // saves y-value of space
         const std::unordered_set<Location*> m_obstacles;  // saves list of obstacles
+        const std::vector<State*> m_starts;  // saves list of goals
         const std::vector<Location*> m_goals;  // saves list of goals
         std::vector<std::vector<State*>> m_existingSol;  // saves the parent solution
         int m_agentIdx; // agent index that tracks which agent we plan for

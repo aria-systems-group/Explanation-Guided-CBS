@@ -871,6 +871,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 	else
 	{
 		printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
+		timeThread.join();
 		return false;
 	}
 
