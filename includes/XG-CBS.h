@@ -5,6 +5,7 @@
 #include "../includes/XG-Astar.h"
 #include "../includes/Astar.h"
 #include "../includes/Conflict.h"
+#include "../includes/Timer.h"
 // standard includes
 #include <chrono>
 #include <unordered_set>
@@ -14,6 +15,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sstream>
+#include <functional>
+#include <thread>
 
 
 // shorthand for a Plan 
@@ -28,6 +31,9 @@ public:
 
 	// main plan function -- returns plan
 	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic);
+
+	// set the solve time
+    void setSolveTime(const double t) {solveTime_ = t;};
 
 	// High-level node of Conflict Tree
 	struct conflictNode
@@ -107,6 +113,7 @@ public:
 				os << *c << std::endl;
 			}
     	}
+
     	// print function for debugging purposes ONLY
     	void printInformation()
     	{
@@ -182,7 +189,7 @@ public:
 
 	// main low-level graph search function
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constriants, Solution& parent, const bool useEG, const bool useHeuristic);
+		std::vector<Constraint*> constriants, Solution& parent, const bool useEG, const bool useHeuristic, bool &isDone);
 
 	// evaluate a conflict node for conflicts
 	std::vector<Conflict*> validateSolution(conflictNode *n);
@@ -220,4 +227,5 @@ protected:
 	XG_Astar_H *m_planner_H{nullptr};  // saves the XG-A^* planner w/ heuristics
 	XG_Astar *m_planner{nullptr};  // saves the XG-A^* planner w/o heuristics
 	A_star *m_planner_A{nullptr};  // saves the A^* planner
+	double solveTime_{std::numeric_limits<double>::infinity()};
 };

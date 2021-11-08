@@ -15,7 +15,7 @@ public:
 	// main planning function
     bool plan(State *startState, std::vector<State*> &solution, 
         std::vector<Constraint*> relevantConstraints, 
-        std::vector<std::vector<State*>>& parent);
+        std::vector<std::vector<State*>>& parent, bool &done);
 
 	// a node in planner saves relevent information in a nice object
     struct Node
@@ -67,18 +67,28 @@ public:
 	public:
     	int operator() (const Node *n1, const Node *n2)
     	{
-    		if (n1->segCost == n2->segCost)
-            {
-                // which is smaller cost
-                double fScore1 = n1->gScore + n1->hScore;
-                double fScore2 = n2->gScore + n2->hScore;
-                return fScore1 > fScore2;
-            }
-            else
-            {
-                // which index is smaller
+            const double a1 = 0.95;
+            const double a2 = 1 - a1;
+            double fScore1 = ( (a1) * (n1->gScore + n1->hScore) )
+                 + (a2) * (n1->segCost);
+            double fScore2 = ( (a1) * (n2->gScore + n2->hScore) )
+                 + (a2) * (n2->segCost);
+            if (fScore1 == fScore2)
                 return n1->segCost > n2->segCost;
-            }  
+            else
+                return fScore1 > fScore2;
+    		// if (n1->segCost == n2->segCost)
+      //       {
+      //           // which is smaller cost
+      //           double fScore1 = n1->gScore + n1->hScore;
+      //           double fScore2 = n2->gScore + n2->hScore;
+      //           return fScore1 > fScore2;
+      //       }
+      //       else
+      //       {
+      //           // which index is smaller
+      //           return n1->segCost > n2->segCost;
+      //       }  
     	}
 	};
     // get the environment object

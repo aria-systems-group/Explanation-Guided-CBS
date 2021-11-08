@@ -2,9 +2,12 @@
 // my conflict
 #include "../includes/Astar.h"
 #include "../includes/Conflict.h"
+#include "../includes/Timer.h"
 #include "Environment.h"
 // standard includes
 #include <unordered_set>
+#include <thread>
+
 
 // shorthand for a Plan 
 typedef std::vector<std::vector<State*>> Solution;
@@ -17,6 +20,9 @@ public:
 	CBS(Environment *env);
 	// main planning function -- returns plan
 	bool plan(const std::vector<State*>& startStates, Solution& solution);
+
+	// set the solve time
+    void setSolveTime(const double t) {solveTime_ = t;};
 	
 	// High-level node of Conflict Tree
 	struct conflictNode
@@ -48,7 +54,7 @@ public:
 
 	// main low-level graph search function
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constriants, Solution& parent);
+		std::vector<Constraint*> constriants, Solution& parent, bool &isDone);
 	
 	// Minimal Disjoint Segmentation Alg.
 	Conflict* validateSolution(conflictNode *n);
@@ -76,4 +82,5 @@ protected:
 	Environment *m_env;  // saves the environment object
 	int m_numAgents;  // saves the total number of agents
 	A_star *m_planner{nullptr};  // saves the A^* planner
+	double solveTime_{std::numeric_limits<double>::infinity()};
 };

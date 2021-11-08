@@ -6,18 +6,17 @@
 #include "../includes/XG-Astar-H.h"
 #include "../includes/XG-Astar.h"
 #include "../includes/XG-CBS.h"
-// standard includes
 #include <iostream>
+// standard includes
 #include <unordered_set>
 #include <fstream>
 #include <string>
-#include "yaml.h"
+#include <yaml.h>
 
 
 int main(int argc, char** argv) { 
 	
 	std::string p = argv[1];
-
 	std::string inputYaml = argv[2];
 	std::string dir2file = inputYaml.substr(inputYaml.rfind("/")+1);
 	std::string fileType = ".yaml";
@@ -91,13 +90,18 @@ int main(int argc, char** argv) {
 		int costBound;
 		bool useXG;
 		bool useHeuristics;
+		double planningTime;
 		std::string ans2;
 		std::string ans3;
 		std::cout << "Please enter an Explainability Bound: "; 
 		std::cin >> costBound;
+		std::cout << "Please enter Planning Time (s): "; 
+		std::cin >> planningTime;
+		std::cout << planningTime << std::endl;
 
 		// init planner and solution
 		XG_CBS *planner = new XG_CBS(mapf, costBound);
+		planner->setSolveTime(planningTime);
 		Solution solution;
 
 		// get desired behavior set up and plan

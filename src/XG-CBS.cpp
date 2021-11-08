@@ -112,7 +112,7 @@ int XG_CBS::segmentSolution(Solution sol)
 
 // calculate constraint specific solution
 Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constraints, Solution& parent, const bool useEG, const bool useHeuristic)
+		std::vector<Constraint*> constraints, Solution& parent, const bool useEG, const bool useHeuristic, bool &isDone)
 {
 	// we have a list of constraints for entire CBS branch
 	if (useEG && !useHeuristic)
@@ -134,7 +134,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			// at root node
 			// plan for initial agent first
 			bool success = m_planner->plan(startStates[0], singleSol, 
-				agentRelevantCs, parent);
+				agentRelevantCs, parent, isDone);
 
 			if (success)
 			{
@@ -146,7 +146,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					if (cont)
 					{
 						bool success = m_planner->plan(startStates[a], singleSol, 
-							agentRelevantCs, sol);
+							agentRelevantCs, sol, isDone);
 						if (success)
 							sol[a] = singleSol;
 						else
@@ -205,7 +205,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 				}
 
 				bool success = m_planner->plan(startStates[currVC->agent], singleSol, 
-					agentRelevantCs, sol);
+					agentRelevantCs, sol, isDone);
 				if (success)
 				{
 					sol[currVC->agent] = singleSol;
@@ -250,7 +250,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					m_planner->getEnv()->updateAgent();
 				}
 					bool success = m_planner->plan(startStates[currEC->agent], singleSol, 
-						agentRelevantCs, sol);
+						agentRelevantCs, sol, isDone);
 					if (success)
 					{
 						// sol[currEC->agent].clear();
@@ -287,7 +287,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			// at root node
 			// plan for initial agent first
 			bool success = m_planner_H->plan(startStates[0], singleSol, 
-				agentRelevantCs, parent);
+				agentRelevantCs, parent, isDone);
 
 			if (success)
 			{
@@ -299,7 +299,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					if (cont)
 					{
 						bool success = m_planner_H->plan(startStates[a], singleSol, 
-							agentRelevantCs, sol);
+							agentRelevantCs, sol, isDone);
 						if (success)
 							sol[a] = singleSol;
 						else
@@ -358,7 +358,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 				}
 
 				bool success = m_planner_H->plan(startStates[currVC->agent], singleSol, 
-					agentRelevantCs, sol);
+					agentRelevantCs, sol, isDone);
 				if (success)
 				{
 					sol[currVC->agent] = singleSol;
@@ -403,7 +403,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					m_planner_H->getEnv()->updateAgent();
 				}
 					bool success = m_planner_H->plan(startStates[currEC->agent], singleSol, 
-						agentRelevantCs, sol);
+						agentRelevantCs, sol, isDone);
 					if (success)
 					{
 						// sol[currEC->agent].clear();
@@ -440,7 +440,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			// at root node
 			// plan for initial agent first
 			bool success = m_planner_A->plan(startStates[0], singleSol, 
-				agentRelevantCs);
+				agentRelevantCs, isDone);
 
 			if (success)
 			{
@@ -452,7 +452,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					if (cont)
 					{
 						bool success = m_planner_A->plan(startStates[a], singleSol, 
-							agentRelevantCs);
+							agentRelevantCs, isDone);
 						if (success)
 							sol[a] = singleSol;
 						else
@@ -511,7 +511,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 				}
 
 				bool success = m_planner_A->plan(startStates[currVC->agent], singleSol, 
-					agentRelevantCs);
+					agentRelevantCs, isDone);
 				if (success)
 				{
 					sol[currVC->agent] = singleSol;
@@ -556,7 +556,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					m_planner_A->getEnv()->updateAgent();
 				}
 					bool success = m_planner_A->plan(startStates[currEC->agent], singleSol, 
-						agentRelevantCs);
+						agentRelevantCs, isDone);
 					if (success)
 					{
 						// sol[currEC->agent].clear();
@@ -817,10 +817,18 @@ bool XG_CBS::isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec)
 
 bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bool useEG, bool useHeuristic)
 {
+	bool isOverTime = false;
+	bool isSolved = false;
 	std::cout << "Now Planning with ExpCBS" << std::endl;
-	auto start = std::chrono::high_resolution_clock::now();
-	int timeAstar = 0;
+	
+	// set timer
+	const std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
+	std::thread timeThread (Timer(), start, solveTime_, std::ref(isOverTime), std::ref(isSolved));
+	
+	// flags to store debug data
+	double timeAstar = 0;
 	int numExps = 0;
+	int treeSize = 0;
 	int nodeIdx = 1;
 	std::string test;
 	std::string dirName;
@@ -830,21 +838,19 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 	// init open min-heap
 	std::priority_queue < conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap;
-	// used for seeing if a node is in the heap
 	
-	// find solution with no constraints
+	// find root solution using low-level search
 	std::vector<Constraint*> constriants;
 	Solution par;
-
+	Solution rootSol;
 	auto t1 = std::chrono::high_resolution_clock::now();
-	Solution rootSol = lowLevelSearch(startStates, constriants, par, useEG, useHeuristic);
+	rootSol = lowLevelSearch(startStates, constriants, par, useEG, useHeuristic, isOverTime);
 	auto t2 = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 	timeAstar = timeAstar + duration.count();
 
+	// turn root solution into root node of tree (if valid)
 	conflictNode *rootNode;
-	int treeSize = 0;
-	
 	bool valid = true;
 	for (std::vector<State*> sol: rootSol)
 	{
@@ -854,7 +860,6 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 			break;
 		}
 	}
-
 	if (valid)
 	{
 		rootNode = new conflictNode(rootSol);
@@ -865,13 +870,15 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 	}
 	else
 	{
-		std::cout << "No solution to problem founr using ExpCBS. " << std::endl;
+		printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
 		return false;
 	}
 
+	// save the root solution
 	m_root = rootNode;
 
-	while (!open_heap.empty())
+	// plan until time limit or empty queue
+	while (!open_heap.empty() && !isOverTime)
 	{
 		// get best node
 		conflictNode *current = open_heap.top();
@@ -895,22 +902,21 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
   					cost = a.back()->cost;
   			}
   			// output results nicely
-  			std::cout << "Solution found with " << cost << " segments!" << std::endl;
-  			std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
-  				(duration.count() / 1000000.0) << " seconds" << std::endl;
-  			std::cout << "Time Spent in A*: " << timeAstar << " microseconds" << 
-  				" or approx. " << (timeAstar / 1000000.0) << " seconds" << std::endl;
-  			std::cout << "Size of Conflict Tree: " << treeSize << std::endl;
+  			printf("%s: Solution found with cost %i.\n", "XG-CBS", cost);
+  			printf("%s: Solution found in %0.4f seconds.\n", "XG-CBS", (duration.count() / 1000000.0));
+  			printf("%s: Spent approximately %0.4f seconds in low-level search.\n", "XG-CBS", (timeAstar / 1000000.0));
+  			printf("%s: Evaluated %i conflict nodes.\n", "XG-CBS", treeSize);
+			isSolved = true;
+			timeThread.join();
 			return true;
 		}
 		else
 		{
-			// remove from list
+			// remove from heap
 			open_heap.pop();
 			// for each agent in conflict (currently only two at a time)
 			for (Conflict* c: cnf)
 			{
-				// showTree(current, cnf);
 				for (int a = 0; a < 2; a++)
 				{
 					if (c->type == Conflict::Vertex)
@@ -946,7 +952,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 						auto t1 = std::chrono::high_resolution_clock::now();
 						n->m_solution = lowLevelSearch(startStates, constriants, 
-							n->parent->m_solution, useEG, useHeuristic);
+							n->parent->m_solution, useEG, useHeuristic, isOverTime);
 						auto t2 = std::chrono::high_resolution_clock::now();
 						auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 						timeAstar = timeAstar + duration.count();
@@ -1004,7 +1010,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 						auto t1 = std::chrono::high_resolution_clock::now();
 						n->m_solution = lowLevelSearch(startStates, constriants, 
-							n->parent->m_solution, useEG, useHeuristic);
+							n->parent->m_solution, useEG, useHeuristic, isOverTime);
 						auto t2 = std::chrono::high_resolution_clock::now();
 						auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 						timeAstar = timeAstar + duration.count();
@@ -1080,7 +1086,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 
 							auto t1 = std::chrono::high_resolution_clock::now();
 							n->m_solution = lowLevelSearch(startStates, constriants, 
-								n->parent->m_solution, useEG, useHeuristic);
+								n->parent->m_solution, useEG, useHeuristic, isOverTime);
 							auto t2 = std::chrono::high_resolution_clock::now();
 							auto duration = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 							timeAstar = timeAstar + duration.count();
@@ -1110,7 +1116,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 			}
 		}
 	}
-	std::cout << "No solution found with given explanation bound." << std::endl;
-	std::cout << "Number of Solutions Searched: " << treeSize;
-	return 0;
+	printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
+	timeThread.join();
+	return false;
 }

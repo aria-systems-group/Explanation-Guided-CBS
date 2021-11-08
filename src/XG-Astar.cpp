@@ -400,7 +400,7 @@ bool XG_Astar::crossCheck(const Node *n, const int longTime) const
 }
 
 bool XG_Astar::plan(State *startState, std::vector<State*> &solution, 
-	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
+	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol, bool &done)
 {
 	auto start = std::chrono::high_resolution_clock::now();
 	// clear all previous information
@@ -433,8 +433,10 @@ bool XG_Astar::plan(State *startState, std::vector<State*> &solution,
 	int total  = 1;
 	int time = 1;
 	int missing = 0;
-	while (!open_heap.empty())
+	while (!open_heap.empty() && !done)
 	{
+		if (done)
+			std::cout << "updated done" << std::endl;
 		Node *current = open_heap.top();
 		auto currStop = std::chrono::high_resolution_clock::now();
 		auto currDuration = std::chrono::duration_cast<std::chrono::microseconds>(currStop - start);

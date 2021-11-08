@@ -17,7 +17,7 @@ public:
 
 	bool plan(State *startState, std::vector<State*> &solution, 
         std::vector<Constraint*> relevantConstraints, 
-        std::vector<std::vector<State*>>& parent);
+        std::vector<std::vector<State*>>& parent, bool &done);
 
 	// a node in planner saves relevent information in a nice object
     struct Node

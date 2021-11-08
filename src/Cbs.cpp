@@ -12,7 +12,7 @@ CBS::CBS(Environment *env): m_env(env)
 };
 
 Solution CBS::lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constraints, Solution& parent)
+		std::vector<Constraint*> constraints, Solution& parent, bool &isDone)
 {
 	// we have a list of constraints for all agents from current node
 	// to root node. 
@@ -48,7 +48,7 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 			
 			if (parent.size() == 0)
 			{
-				bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+				bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs, isDone);
 				if (success)
 					sol.push_back(singleSol);
 				else
@@ -75,7 +75,7 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					// need to replan
 					else
 					{
-						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs, isDone);
 						if (success)
 							sol.push_back(singleSol);
 						else
@@ -94,7 +94,7 @@ Solution CBS::lowLevelSearch(const std::vector<State*>& startStates,
 					// need to replan
 					else
 					{
-						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs);
+						bool success = m_planner->plan(startStates[a], singleSol, agentRelevantCs, isDone);
 						if (success)
 							sol.push_back(singleSol);
 						else
@@ -315,7 +315,11 @@ int CBS::segmentSolution(Solution sol)
 bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 {
 	std::cout << "Planning with CBS... " << std::endl;
-	auto start = std::chrono::high_resolution_clock::now();
+	bool isOverTime = false;
+	bool isSolved = false;
+	const auto start = std::chrono::high_resolution_clock::now();
+
+	std::thread timeThread (Timer(), start, solveTime_, std::ref(isOverTime), std::ref(isSolved));
 
 	solution.clear();
 
@@ -325,7 +329,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	// find solution with no constraints
 	std::vector<Constraint*> constriants;
 	Solution par;
-	Solution rootSol = lowLevelSearch(startStates, constriants, par);
+	Solution rootSol = lowLevelSearch(startStates, constriants, par, isOverTime);
 
 	conflictNode *rootNode;
 	
@@ -337,7 +341,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	open_heap.emplace(rootNode);
 	int tree_sz = 1;
 
-	while (!open_heap.empty())
+	while (!open_heap.empty() && !isOverTime)
 	{
 
 		// get best node
@@ -356,6 +360,8 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
   			std::cout << "Size of Conflict Tree: " << tree_sz << std::endl;
   			std::cout << "Solution Explanation Cost: " << expCost << std::endl;
   			solution = current->m_solution;
+			isSolved = true;
+			timeThread.join();
 			return true;
 		}
 		else
@@ -394,7 +400,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					}
 
 					n->m_solution = lowLevelSearch(startStates, constriants, 
-						n->parent->m_solution);
+						n->parent->m_solution, isOverTime);
 					// update cost of solution if it is a valid one
 					if (n->m_solution.size() == m_numAgents)
 					{
@@ -432,7 +438,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					}
 
 					n->m_solution = lowLevelSearch(startStates, constriants, 
-						n->parent->m_solution);
+						n->parent->m_solution, isOverTime);
 					// update cost of solution if it is a valid one
 					if (n->m_solution.size() == m_numAgents)
 					{
@@ -445,5 +451,6 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 		}
 	}
 	std::cout << "No solution" << std::endl;
-	return 0;
+	timeThread.join();
+	return false;
 }

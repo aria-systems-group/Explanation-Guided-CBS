@@ -7,7 +7,7 @@
 A_star::A_star(Environment *env): m_env(env) {};
 
 bool A_star::plan(State *startState, std::vector<State*> &solution, 
-	std::vector<Constraint*> relevantConstraints)
+	std::vector<Constraint*> relevantConstraints, bool &done)
 {
 	// clear all previous information
 	solution.clear();
@@ -26,7 +26,7 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	// init neighbors
 	std::vector<State*> neighbors;
 
-	while (!open_heap.empty())
+	while (!open_heap.empty() && !done)
 	{
 		Node *current = open_heap.top();
 

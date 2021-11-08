@@ -510,7 +510,7 @@ int XG_Astar_H::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> ex
 }
 
 bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution, 
-	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol)
+	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol, bool &done)
 {
 	std::string test;
 	int maxCost = getMaxCost(parentSol);
@@ -545,7 +545,7 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 	int total  = 1;
 	int time = 1;
 	int missing = 0;
-	while (!open_heap.empty())
+	while (!open_heap.empty() && !done)
 	{
 		Node *current = open_heap.top();
 		auto currStop = std::chrono::high_resolution_clock::now();

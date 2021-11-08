@@ -17,7 +17,7 @@ public:
 
 	// main planning function  -- returns path
 	bool plan(State *startState, std::vector<State*> &solution, 
-        std::vector<Constraint*> relevantConstraints);
+        std::vector<Constraint*> relevantConstraints, bool &done);
 
 	// a node in planner saves relevent information in a nice object
 	struct Node
