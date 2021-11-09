@@ -191,6 +191,9 @@ class Environment {
         // get agent names
         const std::vector<std::string> getAgentNames() {return m_agentNames;};
 
+        void setMapName(const std::string str) {m_mapName = str;};
+        const std::string getMapName() {return m_mapName;};
+
     private:
         bool useCollisionChecking = false;  // saves boolean for using collision checks
         const int m_dimx;  // saves x-value of space
@@ -201,4 +204,5 @@ class Environment {
         std::vector<std::vector<State*>> m_existingSol;  // saves the parent solution
         int m_agentIdx; // agent index that tracks which agent we plan for
         std::vector<std::string> m_agentNames; // saves names of agents
+        std::string m_mapName;
 };
