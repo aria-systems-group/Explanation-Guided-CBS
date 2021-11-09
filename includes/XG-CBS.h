@@ -38,6 +38,8 @@ public:
 	// set the solve time
     void setSolveTime(const double t) {solveTime_ = t;};
 
+    Environment* getEnv() {return m_env;};
+
 	// High-level node of Conflict Tree
 	struct conflictNode
 	{
@@ -179,6 +181,10 @@ public:
 		bool m_solFlag = false;  // true if node is solution
 		bool m_eval = false;  // true if node has been checked for conflicts
 	};
+
+	// save/get CompTime
+	void updateCompTime(const double t) {compTime_=  t;};
+	const double getCompTime() {return compTime_;};
 	
 	// check to make sure no explanation conflict is added twice
 	bool isConflictRepeat(Conflict *curr, std::vector<Conflict*> vec);
@@ -222,19 +228,23 @@ public:
     	}
 	};
 
+	// get solution node
+	conflictNode* getSolutionNode() {return m_solution;};
+
 	// open min-heap (must be public)
 	std::priority_queue < conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap_;
 	// closed set
 	std::unordered_set <conflictNode*> closed_set_;
 
-
 protected:
 	Environment *m_env;  // saves the environment object
 	const int m_bound;  // saves the explanation bound (r)
 	int m_numAgents;  // saves the total number of agents
+	conflictNode* m_solution = nullptr;  // saves the solution node
 	conflictNode* m_root = nullptr;  // saves the root node
 	XG_Astar_H *m_planner_H{nullptr};  // saves the XG-A^* planner w/ heuristics
 	XG_Astar *m_planner{nullptr};  // saves the XG-A^* planner w/o heuristics
 	A_star *m_planner_A{nullptr};  // saves the A^* planner
 	double solveTime_{std::numeric_limits<double>::infinity()};  // total solving time
+	double compTime_{std::numeric_limits<double>::infinity()}; //
 };

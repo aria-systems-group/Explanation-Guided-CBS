@@ -74,6 +74,7 @@ void XG_CBS::clear()
 		delete n;
     }
     closed_set_.erase(closed_set_.begin(), closed_set_.end());
+    // clear other saved data
 }
 
 int XG_CBS::segmentSolution(Solution sol)
@@ -927,9 +928,11 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 		{
 			// if no conflicts occur, then we found a solution
   			current->m_solFlag = true;
+  			m_solution = current;
   			solution = current->m_solution;
   			auto stop = std::chrono::high_resolution_clock::now();
   			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+  			updateCompTime((duration.count() / 1000000.0));
   			// get final cost
   			int cost = 0;
   			for (std::vector<State*> a: solution)
@@ -941,7 +944,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
   			printf("%s: Solution found with cost %i.\n", "XG-CBS", cost);
   			printf("%s: Solution found in %0.4f seconds.\n", "XG-CBS", (duration.count() / 1000000.0));
   			printf("%s: Spent approximately %0.4f seconds in low-level search.\n", "XG-CBS", (timeAstar / 1000000.0));
-  			printf("%s: Evaluated %i conflict nodes.\n", "XG-CBS", treeSize);
+  			printf("%s: Evaluated %lu conflict nodes.\n", "XG-CBS", (closed_set_.size() + 1));
 			isSolved = true;
 		}
 		else
