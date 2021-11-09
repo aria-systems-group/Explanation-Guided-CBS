@@ -11,14 +11,14 @@
 
 int main(int argc, char** argv) { 
 	
-	// arguments (in order) <executable> <High-Level Algorithm> <Low-Level Algorithm> <filename>.yaml <computation time>
+	// arguments (in order) <executable> <High-Level Algorithm> <Low-Level Algorithm> <filename>.yaml <computation time> <explanation cost>
 
 	if (argc >= 5)
 	{
 		const std::string cbsType(argv[1]);  // {CBS, XG-CBS}
 		const std::string aStarType(argv[2]);  // {A, XG-A, XG-A-H}
-		const std::string inputYaml(argv[3]);
-		const double planningTime = atof(argv[4]);  // computation time
+		const std::string inputYaml(argv[3]);  // {<path/fileName>.yaml}
+		const double planningTime = atof(argv[4]);  // { real number > 0 }
 
 		if ( (cbsType == "XG-CBS" && argc == 6) || (cbsType == "CBS" && argc == 5))
 		{
@@ -34,6 +34,8 @@ int main(int argc, char** argv) {
 				CBS *planner = new CBS(mapf);
 				planner->setSolveTime(planningTime);
 				success = planner->plan(mapf->getStarts(), solution);
+
+				planner->clear();
 			}
 			else if (cbsType == "XG-CBS")
 			{
@@ -49,6 +51,8 @@ int main(int argc, char** argv) {
 					success = planner->plan(mapf->getStarts(), solution, true, true);
 				else
 					printf("Terminating prematurely due to invalid arguments.\n");
+
+				planner->clear();
 			}
 			else
 				printf("Terminating prematurely due to invalid arguments.\n");
@@ -68,9 +72,7 @@ int main(int argc, char** argv) {
 						std::find(solution.begin(), solution.end(), agentSol));
 					out << mapf->getAgentNames()[it] << std::endl;
 					for (State *st: agentSol)
-					{
 						out << *st << std::endl;
-					}
 				}
 			}
 		}

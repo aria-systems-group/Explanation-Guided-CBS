@@ -11,6 +11,42 @@ CBS::CBS(Environment *env): m_env(env)
 	Constraint m_constraint{Constraint()};
 };
 
+void CBS::clear()
+{
+	// clear the open heap by deleting all data within each of its elements
+	while (!open_heap_.empty())
+	{
+		// get best node
+		conflictNode *n = open_heap_.top();
+		delete n->m_constraint.getVertexConstraint();
+		delete n->m_constraint.getEdgeConstraint();
+		// delete all states in the solution
+		for (std::vector<State*> path: n->m_solution)
+		{
+			// possible memory leak here
+			path.clear();
+		}
+		(n->m_solution).clear();
+		open_heap_.pop();
+		delete n;
+	}
+	// clear the closed heap by deleting all data within each of its elements
+	for (auto it = closed_set_.begin(); it != closed_set_.end(); it++) {
+        // get best node
+		conflictNode *n = *it;
+		delete n->m_constraint.getVertexConstraint();
+		delete n->m_constraint.getEdgeConstraint();
+		for (std::vector<State*> path: n->m_solution)
+		{
+			// possible memory leak here.
+			path.clear();
+		}
+		(n->m_solution).clear();
+		delete n;
+    }
+    closed_set_.erase(closed_set_.begin(), closed_set_.end());
+}
+
 Solution CBS::lowLevelSearch(const std::vector<State*>& startStates, 
 		std::vector<Constraint*> constraints, Solution& parent, bool &isDone)
 {
@@ -322,9 +358,6 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	std::thread timeThread (Timer(), start, solveTime_, std::ref(isOverTime), std::ref(isSolved));
 
 	solution.clear();
-
-	// init open min-heap
-	std::priority_queue <conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap;
 	
 	// find solution with no constraints
 	std::vector<Constraint*> constriants;
@@ -338,14 +371,14 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	else
 		rootNode = new conflictNode(rootSol);
 
-	open_heap.emplace(rootNode);
+	open_heap_.emplace(rootNode);
 	int tree_sz = 1;
 
-	while (!open_heap.empty() && !isOverTime)
+	while (!open_heap_.empty() && !isOverTime)
 	{
 
 		// get best node
-		conflictNode *current = open_heap.top();
+		conflictNode *current = open_heap_.top();
 
 		// validate for conflicts
 		Conflict *c = validateSolution(current);
@@ -366,8 +399,10 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 		}
 		else
 		{
+			// add current to closed set
+			closed_set_.insert(current);
 			// remove from list
-			open_heap.pop();
+			open_heap_.pop();
 			// for each agent in conflict (currently only two at a time)
 			for (int a = 0; a < 2; a++)
 			{
@@ -405,7 +440,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					if (n->m_solution.size() == m_numAgents)
 					{
 						n->m_cost = n->calcCost();
-						open_heap.emplace(n);
+						open_heap_.emplace(n);
 						tree_sz ++;
 					}
 				}
@@ -443,7 +478,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 					if (n->m_solution.size() == m_numAgents)
 					{
 						n->m_cost = n->calcCost();
-						open_heap.emplace(n);
+						open_heap_.emplace(n);
 						tree_sz ++;
 					}
 				}

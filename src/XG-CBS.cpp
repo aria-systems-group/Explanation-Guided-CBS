@@ -38,6 +38,44 @@ bool XG_CBS::is_disjoint(const std::vector<State*> v1,
     return true;
 }
 
+void XG_CBS::clear()
+{
+	// clear the open heap by deleting all data within each of its elements
+	while (!open_heap_.empty())
+	{
+		// get best node
+		conflictNode *n = open_heap_.top();
+		n->children.clear();
+		delete n->m_constraint.getVertexConstraint();
+		delete n->m_constraint.getEdgeConstraint();
+		// delete all states in the solution
+		for (std::vector<State*> path: n->m_solution)
+		{
+			// possible memory leak here
+			path.clear();
+		}
+		(n->m_solution).clear();
+		open_heap_.pop();
+		delete n;
+	}
+	// clear the closed heap by deleting all data within each of its elements
+	for (auto it = closed_set_.begin(); it != closed_set_.end(); it++) {
+        // get best node
+		conflictNode *n = *it;
+		n->children.clear();
+		delete n->m_constraint.getVertexConstraint();
+		delete n->m_constraint.getEdgeConstraint();
+		for (std::vector<State*> path: n->m_solution)
+		{
+			// possible memory leak here.
+			path.clear();
+		}
+		(n->m_solution).clear();
+		delete n;
+    }
+    closed_set_.erase(closed_set_.begin(), closed_set_.end());
+}
+
 int XG_CBS::segmentSolution(Solution sol)
 {
 	// get longest time of the plan
@@ -835,9 +873,6 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 	Solution empty(getAgents());
 
 	solution.clear();
-
-	// init open min-heap
-	std::priority_queue < conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap;
 	
 	// find root solution using low-level search
 	std::vector<Constraint*> constriants;
@@ -863,7 +898,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 	if (valid)
 	{
 		rootNode = new conflictNode(rootSol);
-		open_heap.emplace(rootNode);
+		open_heap_.emplace(rootNode);
 		rootNode->updateIdx(nodeIdx);
 		nodeIdx++;
 		treeSize ++;
@@ -879,10 +914,10 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 	m_root = rootNode;
 
 	// plan until time limit or empty queue
-	while (!open_heap.empty() && !isOverTime)
+	while (!open_heap_.empty() && !isOverTime && !isSolved)
 	{
 		// get best node
-		conflictNode *current = open_heap.top();
+		conflictNode *current = open_heap_.top();
 		current->m_eval = true;
 		// update the structure of the tree and information of all nodes
 		// validate it for conflicts
@@ -908,13 +943,13 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
   			printf("%s: Spent approximately %0.4f seconds in low-level search.\n", "XG-CBS", (timeAstar / 1000000.0));
   			printf("%s: Evaluated %i conflict nodes.\n", "XG-CBS", treeSize);
 			isSolved = true;
-			timeThread.join();
-			return true;
 		}
 		else
 		{
+			// put current in closed
+			closed_set_.insert(current);
 			// remove from heap
-			open_heap.pop();
+			open_heap_.pop();
 			// for each agent in conflict (currently only two at a time)
 			for (Conflict* c: cnf)
 			{
@@ -971,7 +1006,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 						if (valid)
 						{
 							n->m_cost = n->calcCost();
-							open_heap.emplace(n);
+							open_heap_.emplace(n);
 							n->updateIdx(nodeIdx);
 							nodeIdx++;
 							current->children.push_back(n);
@@ -1029,7 +1064,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 						if (valid)
 						{
 							n->m_cost = n->calcCost();
-							open_heap.emplace(n);
+							open_heap_.emplace(n);
 							n->updateIdx(nodeIdx);
 							nodeIdx++;
 							current->children.push_back(n);
@@ -1106,7 +1141,7 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 						if (valid)
 						{
 							n->m_cost = n->calcCost();
-							open_heap.emplace(n);
+							open_heap_.emplace(n);
 							n->updateIdx(nodeIdx);
 							nodeIdx++;
 							current->children.push_back(n);
@@ -1117,7 +1152,8 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 			}
 		}
 	}
-	printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
+	if (!isSolved)
+		printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
 	timeThread.join();
-	return false;
+	return isSolved;
 }

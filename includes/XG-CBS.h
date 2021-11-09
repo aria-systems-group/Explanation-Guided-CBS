@@ -32,6 +32,9 @@ public:
 	// main plan function -- returns plan
 	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic);
 
+	// clear as much data as possible
+	void clear();
+
 	// set the solve time
     void setSolveTime(const double t) {solveTime_ = t;};
 
@@ -219,6 +222,12 @@ public:
     	}
 	};
 
+	// open min-heap (must be public)
+	std::priority_queue < conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap_;
+	// closed set
+	std::unordered_set <conflictNode*> closed_set_;
+
+
 protected:
 	Environment *m_env;  // saves the environment object
 	const int m_bound;  // saves the explanation bound (r)
@@ -227,5 +236,5 @@ protected:
 	XG_Astar_H *m_planner_H{nullptr};  // saves the XG-A^* planner w/ heuristics
 	XG_Astar *m_planner{nullptr};  // saves the XG-A^* planner w/o heuristics
 	A_star *m_planner_A{nullptr};  // saves the A^* planner
-	double solveTime_{std::numeric_limits<double>::infinity()};
+	double solveTime_{std::numeric_limits<double>::infinity()};  // total solving time
 };

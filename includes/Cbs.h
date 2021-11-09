@@ -21,6 +21,9 @@ public:
 	// main planning function -- returns plan
 	bool plan(const std::vector<State*>& startStates, Solution& solution);
 
+	// clear as much memory as possible
+	void clear();
+
 	// set the solve time
     void setSolveTime(const double t) {solveTime_ = t;};
 	
@@ -77,6 +80,11 @@ public:
         	return n1->m_cost > n2->m_cost;
     	}
 	};
+
+	// open min-heap (must be public)
+	std::priority_queue < conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap_;
+	// closed set
+	std::unordered_set <conflictNode*> closed_set_;
 
 protected:
 	Environment *m_env;  // saves the environment object
