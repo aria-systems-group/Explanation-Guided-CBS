@@ -3,9 +3,11 @@
 /vizTools
 /yaml
 /txt
+/AAAI
 /existingSolutions
 Planner
 Makefile
 *.xlsx
 *.py
+*.csv
 .DS_Store
