@@ -5,6 +5,7 @@
 /txt
 /AAAI
 /existingSolutions
+/.devcontainer
 Planner
 Makefile
 *.xlsx
