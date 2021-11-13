@@ -386,8 +386,10 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 		if (c == nullptr)
 		{
 			int expCost = segmentSolution(current->m_solution);
+			m_solution = current;
   			auto stop = std::chrono::high_resolution_clock::now();
 			auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+			updateCompTime((duration.count() / 1000000.0));
   			std::cout << "Successful planning using CBS" << std::endl;
   			std::cout << "Duration: " << duration.count() << " micro seconds" << " or approx. " << (duration.count() / 1000000.0) << " seconds" << std::endl;
   			std::cout << "Size of Conflict Tree: " << tree_sz << std::endl;

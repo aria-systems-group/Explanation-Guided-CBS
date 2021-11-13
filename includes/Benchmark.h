@@ -2,6 +2,7 @@
 #include "../includes/Environment.h"
 #include "../includes/XG-Astar-H.h"
 #include "../includes/XG-CBS.h"
+#include "../includes/Cbs.h"
 #include "../includes/parseYAML.h"
 #include <iostream>
 #include <string>
@@ -16,7 +17,7 @@ namespace fs = std::filesystem;
 void write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<std::string>>> dataset);
 
 // run a benchmark run until failure, return data
-std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchmark(Environment* env, int expCost, const double maxCompTime);
+std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchmark(Environment* env, const double maxCompTime);
 
 // run a benchmark run until failure for multiple files
-std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, int expCost, const double maxCompTime);
+std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, const double maxCompTime);
