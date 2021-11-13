@@ -8,7 +8,7 @@ void write_csv(std::string filename, std::vector<std::pair<std::string, std::vec
     //   as std::pair<std::string, std::vector<int>>
     // The dataset is represented as a vector of these columns
     // Note that all columns should be the same size
-    
+
     // Create an output filestream object
     std::ofstream myFile(filename);
     
@@ -19,18 +19,20 @@ void write_csv(std::string filename, std::vector<std::pair<std::string, std::vec
         if(j != dataset.size() - 1) myFile << ","; // No comma at end of line
     }
     myFile << "\n";
-    
-    // Send data to the stream
-    for(int i = 0; i < dataset.at(0).second.size(); ++i)
-    {
-        for(int j = 0; j < dataset.size(); ++j)
-        {
-            myFile << dataset.at(j).second.at(i);
-            if(j != dataset.size() - 1) myFile << ","; // No comma at end of line
-        }
-        myFile << "\n";
-    }
-    
+
+	if (!dataset.empty())
+	{ 
+    	// Send data to the stream
+    	for(int i = 0; i < dataset.at(0).second.size(); ++i)
+    	{
+    	    for(int j = 0; j < dataset.size(); ++j)
+    	    {
+    	        myFile << dataset.at(j).second.at(i);
+    	        if(j != dataset.size() - 1) myFile << ","; // No comma at end of line
+    	    }
+    	    myFile << "\n";
+    	}
+	}
     // Close the file
     myFile.close();
 }
@@ -47,19 +49,19 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 	cbs->setSolveTime(maxCompTime);
 	bool success = cbs->plan(cbs->getEnv()->getStarts(), solution);
 
-	// init the columns of data
-	std::vector<std::string> name{cbs->getEnv()->getMapName()};
-	std::vector<std::string> agents{std::to_string(cbs->getEnv()->getAgentNames().size())};
-	std::vector<std::string> grid{std::to_string( (cbs->getEnv()->getXdim() + 1) * (cbs->getEnv()->getYdim() + 1) )};
-	std::vector<std::string> ComputationTimes{};
-	std::vector<std::string> NumEvalNodes{};
-	std::vector<std::string> Costs{};
-	std::vector<std::string> xgComputationTimes{};
-	std::vector<std::string> xgNumEvalNodes{};
-	std::vector<std::string> xgCosts{};
-
 	if (success)
 	{
+		// init the columns of data
+		std::vector<std::string> name{cbs->getEnv()->getMapName()};
+		std::vector<std::string> agents{std::to_string(cbs->getEnv()->getAgentNames().size())};
+		std::vector<std::string> grid{std::to_string( (cbs->getEnv()->getXdim() + 1) * (cbs->getEnv()->getYdim() + 1) )};
+		std::vector<std::string> ComputationTimes{};
+		std::vector<std::string> NumEvalNodes{};
+		std::vector<std::string> Costs{};
+		std::vector<std::string> xgComputationTimes{};
+		std::vector<std::string> xgNumEvalNodes{};
+		std::vector<std::string> xgCosts{};
+
 		//cbs cost
 		ComputationTimes.push_back(std::to_string(cbs->getCompTime()));
 		// cbs number of evaluated nodes is equal to number of expanded nodes + 1 (the solution)
@@ -101,55 +103,56 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 			// plan again with lower cost
 			success = planner->plan(planner->getEnv()->getStarts(), solution, true, true);
 		}
-	}
-
-	// make map data same length as planning data
-	if (xgComputationTimes.size() > 0)
-	{
-		for (int i=1; i < xgComputationTimes.size(); i++)
+		// make map data same length as planning data
+		if (xgComputationTimes.size() > 0)
 		{
-			// map data
-			name.push_back(std::string());
-			agents.push_back(std::string());
-			grid.push_back(std::string());
-			// cbs data
-			ComputationTimes.push_back(std::string());
-			NumEvalNodes.push_back(std::string());
-			Costs.push_back(std::string());
+			for (int i=1; i < xgComputationTimes.size(); i++)
+			{
+				// map data
+				name.push_back(std::string());
+				agents.push_back(std::string());
+				grid.push_back(std::string());
+				// cbs data
+				ComputationTimes.push_back(std::string());
+				NumEvalNodes.push_back(std::string());
+				Costs.push_back(std::string());
+			}
 		}
+		else
+		{
+			xgComputationTimes.push_back("-");
+			xgNumEvalNodes.push_back("-");
+			xgCosts.push_back("-");
+		}
+		// col 1: map name
+		std::pair< std::string, std::vector<std::string> > mapName{"Map", name};
+		// col 2: number of agents
+		std::pair< std::string, std::vector<std::string> > numAgents{"# of Agents", agents};
+		// col 3: grid size
+		std::pair< std::string, std::vector<std::string> > size{"Grid Size", grid};
+		// col 4: cbs comp time
+		std::pair< std::string, std::vector<std::string> > times{"CBS Time (s)", ComputationTimes};
+		// col 5: cbs evaluated nodes
+		std::pair< std::string, std::vector<std::string> > trees{"CBS # of Evalidated Nodes", NumEvalNodes};
+		// col 6: cbs exp costs
+		std::pair< std::string, std::vector<std::string> > costs{"CBS Cost", Costs};
+		// col 7: xg-cbs computation time
+		std::pair< std::string, std::vector<std::string> > xgTimes{"XG-CBS Time (s)", xgComputationTimes};
+		// col 8: xg-cbs evaluated nodes
+		std::pair< std::string, std::vector<std::string> > xgTrees{"XG-CBS # of Evalidated Nodes", xgNumEvalNodes};
+		// col 9: xg-cbs exp costs
+		std::pair< std::string, std::vector<std::string> > xgExps{"XG-CBS Cost", xgCosts};
+
+		// create dataset and return it
+		std::vector<std::pair<std::string, std::vector<std::string>>> results = {mapName, numAgents, size, times, trees, costs, xgTimes, xgTrees, xgExps};
+		return results;
 	}
 	else
 	{
-		xgComputationTimes.push_back("-");
-		xgNumEvalNodes.push_back("-");
-		xgCosts.push_back("-");
+		// cbs did not find a solution, return an empty result
+		std::vector<std::pair<std::string, std::vector<std::string>>> empty;
+		return empty;
 	}
-	
-	
-
-	// col 1: map name
-	std::pair< std::string, std::vector<std::string> > mapName{"Map", name};
-	// col 2: number of agents
-	std::pair< std::string, std::vector<std::string> > numAgents{"# of Agents", agents};
-	// col 3: grid size
-	std::pair< std::string, std::vector<std::string> > size{"Grid Size", grid};
-	// col 4: cbs comp time
-	std::pair< std::string, std::vector<std::string> > times{"CBS Time (s)", ComputationTimes};
-	// col 5: cbs evaluated nodes
-	std::pair< std::string, std::vector<std::string> > trees{"CBS # of Evalidated Nodes", NumEvalNodes};
-	// col 6: cbs exp costs
-	std::pair< std::string, std::vector<std::string> > costs{"CBS Cost", Costs};
-	// col 7: xg-cbs computation time
-	std::pair< std::string, std::vector<std::string> > xgTimes{"XG-CBS Time (s)", xgComputationTimes};
-	// col 8: xg-cbs evaluated nodes
-	std::pair< std::string, std::vector<std::string> > xgTrees{"XG-CBS # of Evalidated Nodes", xgNumEvalNodes};
-	// col 9: xg-cbs exp costs
-	std::pair< std::string, std::vector<std::string> > xgExps{"XG-CBS Cost", xgCosts};
-
-	// create dataset
-	std::vector<std::pair<std::string, std::vector<std::string>>> results = {mapName, numAgents, size, times, trees, costs, xgTimes, xgTrees, xgExps};
-
-	return results;
 }
 
 std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, const double maxCompTime)
@@ -176,12 +179,15 @@ std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmar
 		Environment *mapf = yaml2env(map.first);
 		mapf->setMapName(map.second);
     	std::vector<std::pair <std::string, std::vector<std::string>> > dat = singleMapBenchmark(mapf, maxCompTime);
-    	// save new information
-    	if (dataset.empty())
-    		dataset.insert(dataset.end(), dat.begin(), dat.end());
-    	else
-    		for (int c=0; c < dat.size(); c++)
-    			dataset[c].second.insert(dataset[c].second.end(), dat[c].second.begin(), dat[c].second.end());
+    	if (!dat.empty())
+    	{
+    		// save new information
+    		if (dataset.empty())
+    			dataset.insert(dataset.end(), dat.begin(), dat.end());
+    		else
+    			for (int c=0; c < dat.size(); c++)
+    				dataset[c].second.insert(dataset[c].second.end(), dat[c].second.begin(), dat[c].second.end());
+    	}
     	delete mapf;
     }	
 	return dataset;
