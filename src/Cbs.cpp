@@ -367,7 +367,10 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	conflictNode *rootNode;
 	
 	if (rootSol.size() != m_numAgents)
+	{
+		timeThread.join();
 		return false;
+	}
 	else
 		rootNode = new conflictNode(rootSol);
 
@@ -487,7 +490,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 			}
 		}
 	}
-	std::cout << "No solution" << std::endl;
+	printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
 	timeThread.join();
 	return false;
 }

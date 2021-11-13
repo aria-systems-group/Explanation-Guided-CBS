@@ -2,12 +2,15 @@
 
 
 // https://www.gormanalysis.com/blog/reading-and-writing-csv-files-with-cpp/
-void write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<std::string>>> dataset){
+void write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<std::string>>> dataset)
+{
     // Make a CSV file with one or more columns of integer values
     // Each column of data is represented by the pair <column name, column data>
     //   as std::pair<std::string, std::vector<int>>
     // The dataset is represented as a vector of these columns
     // Note that all columns should be the same size
+
+    std::cout << "Writing Results to file." << std::endl;
 
     // Create an output filestream object
     std::ofstream myFile(filename);
@@ -68,7 +71,6 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 		NumEvalNodes.push_back(std::to_string(cbs->closed_set_.size()+1));
 		// solution explanation cost and update bound
 		Costs.push_back(std::to_string(cbs->getSolutionNode()->getSegCost()));
-
 		// get beginning cost for xg-cbs
 		int expCost = cbs->getSolutionNode()->getSegCost() - 1;
 
@@ -76,32 +78,40 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 		cbs->clear();
 		delete cbs;
 
-		// plan using XG-CBS
-		XG_CBS *planner = new XG_CBS(env, expCost);
-		planner->setSolveTime(maxCompTime);
-		success = planner->plan(planner->getEnv()->getStarts(), solution, true, true);
-
-		// is successful, begin benchmarking loop
-		while (success)
+		if (expCost >= 1)
 		{
-			// computation time
-			xgComputationTimes.push_back(std::to_string(planner->getCompTime()));
-			// number of evaluated nodes is equal to number of expanded nodes + 1 (the solution)
-			xgNumEvalNodes.push_back(std::to_string(planner->closed_set_.size()+1));
-			// solution explanation cost and update bound
-			xgCosts.push_back(std::to_string(planner->getSolutionNode()->getSegCost()));
-			expCost = planner->getSolutionNode()->getSegCost() - 1;
-
-			// clear planner data
-			planner->clear();
-
-			// update planner
-			delete planner;
-			planner = new XG_CBS(env, expCost);
+			// plan using XG-CBS
+			XG_CBS *planner = new XG_CBS(env, expCost);
 			planner->setSolveTime(maxCompTime);
-
-			// plan again with lower cost
 			success = planner->plan(planner->getEnv()->getStarts(), solution, true, true);
+
+			// is successful, begin benchmarking loop
+			while (success)
+			{
+				// computation time
+				xgComputationTimes.push_back(std::to_string(planner->getCompTime()));
+				// number of evaluated nodes is equal to number of expanded nodes + 1 (the solution)
+				xgNumEvalNodes.push_back(std::to_string(planner->closed_set_.size()+1));
+				// solution explanation cost and update bound
+				xgCosts.push_back(std::to_string(planner->getSolutionNode()->getSegCost()));
+				expCost = planner->getSolutionNode()->getSegCost() - 1;
+
+				if (expCost >= 1)
+				{
+					// clear planner data
+					planner->clear();
+
+					// update planner
+					delete planner;
+					planner = new XG_CBS(env, expCost);
+					planner->setSolveTime(maxCompTime);
+
+					// plan again with lower cost
+					success = planner->plan(planner->getEnv()->getStarts(), solution, true, true);
+				}
+				else
+					success = false;
+			}
 		}
 		// make map data same length as planning data
 		if (xgComputationTimes.size() > 0)
