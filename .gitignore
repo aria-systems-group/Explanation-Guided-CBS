@@ -5,9 +5,11 @@
 /txt
 /AAAI
 /existingSolutions
+/benchmarks
 /.devcontainer
 Planner
 Makefile
+*.sh
 *.xlsx
 *.py
 *.csv
