@@ -57,4 +57,5 @@ public:
 	Environment* getEnv() {return m_env;};
 private:
 	Environment *m_env;  // saves the object
+	Node* m_soln;
 };

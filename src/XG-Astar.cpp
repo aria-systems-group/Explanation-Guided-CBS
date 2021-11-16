@@ -490,6 +490,17 @@ bool XG_Astar::plan(State *startState, std::vector<State*> &solution,
   					(duration.count() / 1000000.0) << " seconds" << std::endl;
 
 			}
+			// clear all data
+			open_heap.pop();
+          	open_list = std::unordered_set<State, std::hash<State>>();
+          	// clear the data
+          	while (!open_heap.empty())
+          	{
+          		Node* n = open_heap.top();
+          		delete n->state;
+          		open_heap.pop();
+          		delete n;
+          	}
 			// notify user that solution was found after 100 seconds
 			if (time > 1)
 				std::cout << "Found Solution" << std::endl;
@@ -543,5 +554,14 @@ bool XG_Astar::plan(State *startState, std::vector<State*> &solution,
 			}
 		}
 	}
+	// clear the data
+	open_list = std::unordered_set<State, std::hash<State>>();
+    while (!open_heap.empty())
+    {
+    	Node* n = open_heap.top();
+    	delete n->state;
+    	open_heap.pop();
+    	delete n;
+    }
 	return false;
 }

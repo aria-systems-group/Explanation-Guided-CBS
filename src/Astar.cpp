@@ -39,6 +39,16 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
           	  solution.insert(solution.begin(), solNode->state);
           	  solNode = solNode->parent;
           	}
+          	open_heap.pop();
+          	open_list = std::unordered_set<State, std::hash<State>>();
+          	// clear the data
+          	while (!open_heap.empty())
+          	{
+          		Node* n = open_heap.top();
+          		delete n->state;
+          		open_heap.pop();
+          		delete n;
+          	}
 			return true;
 		}
 
@@ -76,6 +86,15 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 				delete n;
 		}
 	}
-	std::cout << "No Solution Found using A* using current constraints." << std::endl;
+	// clear the data
+	open_list = std::unordered_set<State, std::hash<State>>();
+    while (!open_heap.empty())
+    {
+    	Node* n = open_heap.top();
+    	delete n->state;
+    	open_heap.pop();
+    	delete n;
+    }
+	std::cout << "No Solution Found using A*" << std::endl;
 	return false;
 }

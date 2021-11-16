@@ -512,7 +512,6 @@ int XG_Astar_H::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> ex
 bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution, 
 	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol, bool &done)
 {
-	std::string test;
 	int maxCost = getMaxCost(parentSol);
 	auto start = std::chrono::high_resolution_clock::now();
 	// clear all previous information
@@ -600,6 +599,17 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
   					(duration.count() / 1000000.0) << " seconds" << std::endl;
 
 			}
+			// clear all data
+			open_heap.pop();
+          	open_list = std::unordered_set<State, std::hash<State>>();
+          	// clear the data
+          	while (!open_heap.empty())
+          	{
+          		Node* n = open_heap.top();
+          		delete n->state;
+          		open_heap.pop();
+          		delete n;
+          	}
 			// notify user that solution was found after 100 seconds
 			if (time > 1)
 				std::cout << "Found Solution" << std::endl;
@@ -701,5 +711,16 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 			}
 		}
 	}
+	// clear all data
+	// open_heap.pop();
+    open_list = std::unordered_set<State, std::hash<State>>();
+    // clear the data
+    while (!open_heap.empty())
+    {
+    	Node* n = open_heap.top();
+    	delete n->state;
+    	open_heap.pop();
+    	delete n;
+    }
 	return false;
 }
