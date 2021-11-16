@@ -4,8 +4,13 @@
 #include "../includes/Conflict.h"
 // standard includes
 #include <unordered_set>
+#include <set>
+#include <map>
 #include <boost/functional/hash.hpp>
 #include <boost/program_options.hpp>
+
+typedef std::pair<const int, const int> vertex;
+typedef std::set<vertex> cell;
 
 
 // Lowest-level Datatype used by evnironment
@@ -61,101 +66,13 @@ class Environment {
 
         // find valid neighbors of a state
         void expandState(const State *st, std::vector<State*>& neighbors, 
-            std::vector<Constraint*> constraints, bool isNodeWaiting)
-        {
-            // clear previous data
-            neighbors.clear();
-
-            // init and check "up" state
-            State *up = new State(st->time + 1, st->x, st->y + 1);
-            // init and check "down" state
-            State *down = new State(st->time + 1, st->x, st->y - 1);
-            // init and check "right" state
-            State *right = new State(st->time + 1, st->x + 1, st->y);
-            // init and check "left" state
-            State *left = new State(st->time + 1, st->x - 1, st->y);
-            // init and add self state
-            if (isNodeWaiting)
-            {
-                State *stay = new State(st->time + 1, st->x, st->y);
-                neighbors.push_back(stay);
-            }
-
-            if (isStateValid(st, up, constraints))
-            {
-                neighbors.push_back(up);
-            }
-            if (isStateValid(st, down, constraints))
-            {
-                neighbors.push_back(down);
-            }
-            if (isStateValid(st, right, constraints))
-            {
-                neighbors.push_back(right);
-            }
-            if (isStateValid(st, left, constraints))
-            {
-                neighbors.push_back(left);
-            }
-        }
+            std::vector<Constraint*> constraints, bool isNodeWaiting);
 
         // Find if state is valid, given constraints
-        bool isStateValid(const State *curr, const State *nxt, const std::vector<Constraint*> constraints) const
-        {
-            // is in env bounds
-            if ( 0 > nxt->x || nxt->x > m_dimx || 0 > nxt->y || nxt->y > m_dimy)
-                return false;
-            // is in obstacles
-            for (Location *obs : m_obstacles)
-            {
-                if (nxt->x == obs->x && nxt->y == obs->y)
-                    return false;
-            }
+        bool isStateValid(const State *curr, const State *nxt, const std::vector<Constraint*> constraints) const;
 
-            if (useCollisionChecking)
-            {
-                // from exising solutions, get a list of states to check
-                std::vector<State*> needCheck;
-                for (std::vector<State*> sol: m_existingSol)
-                {
-                    if (nxt->time <= sol.back()->time)
-                        needCheck.push_back(sol[nxt->time]);
-                }
-                // next, check that needCheck and curr are not the same state
-                for (State *st: needCheck)
-                {
-                    if (st->isSameLocation(nxt))
-                        return false;
-                }
-            }
-            // need to also account for constraints
-            // iterate through constraints and see if state matches any, 
-            // if so, return false
-            for (Constraint *c: constraints)
-            {
-                // note that State == is overloaded and we already provide 
-                // agent relevant constraints
-                VertexConstraint *v = c->getVertexConstraint();
-                EdgeConstraint *e = c->getEdgeConstraint();
-                if (v != nullptr)
-                {
-                    if ( (v->x == nxt->x) && (v->y == nxt->y) && (v->time == nxt->time))
-                        return false;
-                }
-
-                if (e != nullptr)
-                {
-                    if ((e->x1 == curr->x) && (e->y1 == curr->y) && (e->time1 == curr->time))
-                    {
-                        if ((e->x2 == nxt->x) && (e->y2 == nxt->y) && (e->time2 == nxt->time))
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-            return true;
-        }
+        // abstract graph to (sz x sz) <= (m_dimx x m_dimy)
+        void abstractGraph(const int sz);
 
         // macros function -- if using only low-level planner, can include collision checks
         void includeCollisionChecks(const std::vector<std::vector<State*>> parentSol)
