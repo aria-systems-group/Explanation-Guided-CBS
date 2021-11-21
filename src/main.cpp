@@ -10,8 +10,9 @@ int main(int argc, char** argv) {
 	// To Plan: <executable> Plan <High-Level Algorithm> 
 	// 				<Low-Level Algorithm> <filename>.yaml 
 	// 				<computation time> <explanation cost (if applicable)>
+	//				<% explanation cost> (this is temporary)
 
-	// To Benchmark 1 file: <executable> Benchmark <filename>.yaml <computation time> <result>.csv
+	// To Benchmark 1 file: <executable> Benchmark <filename>.yaml <computation time> <result>.csv <% explanation cost> (this is temporary)
 	// To Benchmark Many Files: <executable> MultiBenchmark <filename>.yaml <computation time> <result>.csv
 
 	if (argc >= 4)
@@ -49,10 +50,12 @@ int main(int argc, char** argv) {
 				else
 					printf("Terminating prematurely due to invalid arguments.\n");
 			}
-			else if (cbsType == "XG-CBS" && argc == 7)
+			else if (cbsType == "XG-CBS" && argc == 8)
 			{
-				const int costBound = atoi(argv[6]);  // computation time
-				XG_CBS *planner = new XG_CBS(mapf, costBound);
+				const int costBound = atoi(argv[6]);  // cost bound
+				const double percent_Explanation = atof(argv[7]);
+
+				XG_CBS *planner = new XG_CBS(mapf, costBound, percent_Explanation);
 				planner->setSolveTime(planningTime);
 				// last two args are "useXG", and "useHeuristics"
 				if (aStarType == "A")
@@ -85,6 +88,7 @@ int main(int argc, char** argv) {
 			const std::string inputYaml(argv[2]);  // <path/fileName>.yaml
 			const double planningTime = atof(argv[3]);  // real number > 0
 			const std::string resultName(argv[4]);
+			const double percent_Explanation = atof(argv[5]);
 
 			// create environment from yaml file (assumed to be a file)
 			Environment *mapf = yaml2env(inputYaml);
@@ -95,7 +99,8 @@ int main(int argc, char** argv) {
 
 			mapf->setMapName(mapName);
 
-			std::vector<std::pair <std::string, std::vector<std::string>> > data = singleMapBenchmark(mapf, planningTime);
+			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+				singleMapBenchmark(mapf, planningTime, percent_Explanation);
 			write_csv(resultName, data);
 		}
 		else if (expType == "MultiBenchmark")
@@ -103,7 +108,9 @@ int main(int argc, char** argv) {
 			const std::string inputYaml(argv[2]);  // path/to/*.yaml
 			const double planningTime = atof(argv[3]);  // real number > 0
 			const std::string resultName(argv[4]);
-			std::vector<std::pair <std::string, std::vector<std::string>> > data = multiMapBenchmark(inputYaml, planningTime);
+			const double percent_Explanation = atof(argv[5]);
+			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+				multiMapBenchmark(inputYaml, planningTime, percent_Explanation);
 			write_csv(resultName, data);
 		}
 		else

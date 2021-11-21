@@ -27,7 +27,7 @@ class XG_CBS
 {
 public:
 	// constructor
-	XG_CBS(Environment *env, const int bound);
+	XG_CBS(Environment *env, const int bound, const double percent_exp);
 
 	// main plan function -- returns plan
 	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic);

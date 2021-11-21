@@ -40,7 +40,8 @@ void write_csv(std::string filename, std::vector<std::pair<std::string, std::vec
     myFile.close();
 }
 
-std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchmark(Environment* env, const double maxCompTime)
+std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchmark(Environment* env, 
+	const double maxCompTime, const double perc_exp)
 {
 	printf("%s: Preparing to benchmark %s.\n", "XG-CBS", env->getMapName().c_str());
 
@@ -81,7 +82,7 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 		if (expCost >= 1)
 		{
 			// plan using XG-CBS
-			XG_CBS *planner = new XG_CBS(env, expCost);
+			XG_CBS *planner = new XG_CBS(env, expCost, perc_exp);
 			planner->setSolveTime(maxCompTime);
 			success = planner->plan(planner->getEnv()->getStarts(), solution, true, true);
 
@@ -103,7 +104,7 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 
 					// update planner
 					delete planner;
-					planner = new XG_CBS(env, expCost);
+					planner = new XG_CBS(env, expCost, perc_exp);
 					planner->setSolveTime(maxCompTime);
 
 					// plan again with lower cost
@@ -165,7 +166,8 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 	}
 }
 
-std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, const double maxCompTime)
+std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, 
+	const double maxCompTime, const double perc_exp)
 {
 	// get vector of file names from directory (and sub-directories)
     std::vector<std::pair<const std::string, const std::string>> mapInfo;
@@ -188,7 +190,7 @@ std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmar
     	// create environment from yaml file (assumed to be a file)
 		Environment *mapf = yaml2env(map.first);
 		mapf->setMapName(map.second);
-    	std::vector<std::pair <std::string, std::vector<std::string>> > dat = singleMapBenchmark(mapf, maxCompTime);
+    	std::vector<std::pair <std::string, std::vector<std::string>> > dat = singleMapBenchmark(mapf, maxCompTime, perc_exp);
     	if (!dat.empty())
     	{
     		// save new information

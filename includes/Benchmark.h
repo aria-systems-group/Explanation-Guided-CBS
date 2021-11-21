@@ -17,7 +17,9 @@ namespace fs = std::filesystem;
 void write_csv(std::string filename, std::vector<std::pair<std::string, std::vector<std::string>>> dataset);
 
 // run a benchmark run until failure, return data
-std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchmark(Environment* env, const double maxCompTime);
+std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchmark(Environment* env, 
+	const double maxCompTime, const double perc_exp);
 
 // run a benchmark run until failure for multiple files
-std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, const double maxCompTime);
+std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, 
+	const double maxCompTime, const double perc_exp);

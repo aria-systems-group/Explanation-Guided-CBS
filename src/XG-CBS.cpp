@@ -5,10 +5,10 @@
 
 
 // Constructor
-XG_CBS::XG_CBS(Environment *env, const int bound): m_env(env), m_bound{bound}
+XG_CBS::XG_CBS(Environment *env, const int bound, const double percent_exp): m_env(env), m_bound{bound}
 {
 	m_planner_A = new A_star(m_env);
-	m_planner_H = new XG_Astar_H(m_env);
+	m_planner_H = new XG_Astar_H(m_env, percent_exp);
 	m_planner = new XG_Astar(m_env);
 	m_numAgents = m_env->getGoals().size();
 	Constraint m_constraint{Constraint()};

@@ -10,7 +10,7 @@ class XG_Astar_H
 {
 public:
     // constructor
-	XG_Astar_H(Environment *env, const bool useCBS = true);
+	XG_Astar_H(Environment *env, const double percent_exp, const bool useCBS = true);
 
 	// main planning function
     bool plan(State *startState, std::vector<State*> &solution, 
@@ -61,39 +61,44 @@ public:
     // check if path is in normal form
     bool checkPathValidity(Node *curr);
 
+    const double getPercExp() const {return m_perc_exp;};
+
 	// calculate the best next-node from open heap
 	class myComparator
 	{
 	public:
-    	int operator() (const Node *n1, const Node *n2)
+        myComparator(const double p_exp): m_p_exp(p_exp) {}
+    	
+        int operator() (const Node *n1, const Node *n2)
     	{
-            // const double a1 = 0.95;
-            // const double a2 = 1 - a1;
-            // double fScore1 = ( (a1) * (n1->gScore + n1->hScore) )
-            //      + (a2) * (n1->segCost);
-            // double fScore2 = ( (a1) * (n2->gScore + n2->hScore) )
-            //      + (a2) * (n2->segCost);
-            // if (fScore1 == fScore2)
-            //     return n1->segCost > n2->segCost;
-            // else
-            //     return fScore1 > fScore2;
-    		if (n1->segCost == n2->segCost)
-            {
-                // which is smaller cost
-                double fScore1 = n1->gScore + n1->hScore;
-                double fScore2 = n2->gScore + n2->hScore;
-                return fScore1 > fScore2;
-            }
-            else
-            {
-                // which index is smaller
+            double fScore1 = ( (1 - m_p_exp) * (n1->gScore + n1->hScore) )
+                 + (m_p_exp) * (n1->segCost);
+            double fScore2 = ( (1 - m_p_exp) * (n2->gScore + n2->hScore) )
+                 + (m_p_exp) * (n2->segCost);
+            if (fScore1 == fScore2)
                 return n1->segCost > n2->segCost;
-            }  
-    	}
+            else
+                return fScore1 > fScore2;
+    		// if (n1->segCost == n2->segCost)
+      //       {
+      //           // which is smaller cost
+      //           double fScore1 = n1->gScore + n1->hScore;
+      //           double fScore2 = n2->gScore + n2->hScore;
+      //           return fScore1 > fScore2;
+      //       }
+      //       else
+      //       {
+      //           // which index is smaller
+      //           return n1->segCost > n2->segCost;
+      //       }  
+        }
+    // protected:
+        const double m_p_exp;
 	};
     // get the environment object
 	Environment* getEnv() {return m_env;};
 private:
 	Environment *m_env;  // saves the object
     const bool useCBS;  // saves the answer of using CBS
+    const double m_perc_exp;
 };

@@ -6,7 +6,8 @@
 #include "../includes/XG-Astar-H.h"
 #include <chrono>
 
-XG_Astar_H::XG_Astar_H(Environment *env, const bool useCBS): m_env(env), useCBS{useCBS} {};
+XG_Astar_H::XG_Astar_H(Environment *env, const double percent_exp, const bool useCBS): 
+	m_env(env), useCBS{useCBS}, m_perc_exp{percent_exp} {};
 
 bool XG_Astar_H::is_disjoint(const std::vector<State*> v1, 
 	const std::vector<State*> v2) const
@@ -526,7 +527,8 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 	const int longTime = getLongestPath(parentSol);
 
 	// init open min-heap
-	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap;
+	myComparator cmp(m_perc_exp);
+	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap(cmp);
 	// used for seeing if a node is in the heap
 	std::unordered_set<State, std::hash<State>> open_list;
 
