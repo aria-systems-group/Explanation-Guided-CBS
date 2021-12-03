@@ -12,12 +12,15 @@ int main(int argc, char** argv) {
 	// 				<computation time> <explanation cost (if applicable)>
 	//				<% explanation cost> (this is temporary)
 
-	// To Benchmark 1 file: <executable> Benchmark <filename>.yaml <computation time> <result>.csv <% explanation cost> (this is temporary)
-	// To Benchmark Many Files: <executable> MultiBenchmark <filename>.yaml <computation time> <result>.csv
+	// To Benchmark 1 file: <executable> Benchmark <filename>.yaml <computation time> <result>.csv <% explanation cost>
+	// To Benchmark Many Files: <executable> MultiBenchmark <directory> <computation time> <result>.csv <% explanation cost>
+
+	// To Cost Match 1 file: <executable> Match <filename>.yaml <computation time> <result>.csv <% explanation cost>
+	// To Cost Match Many Files: <executable> MultiMatch <directory> <computation time> <result>.csv <% explanation cost>
 
 	if (argc >= 4)
 	{
-		const std::string expType(argv[1]);  // {Plan, Benchmark, Multi-Benchmark}
+		const std::string expType(argv[1]);  // {Plan, Benchmark, Multi-Benchmark, Match}
 		
 		if (expType == "Plan")
 		{
@@ -111,6 +114,36 @@ int main(int argc, char** argv) {
 			const double percent_Explanation = atof(argv[5]);
 			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
 				multiMapBenchmark(inputYaml, planningTime, percent_Explanation);
+			write_csv(resultName, data);
+		}
+		else if (expType == "Match")
+		{
+			const std::string inputYaml(argv[2]);  // <path/fileName>.yaml
+			const double planningTime = atof(argv[3]);  // real number > 0
+			const std::string resultName(argv[4]);
+			const double percent_Explanation = atof(argv[5]);
+
+			// create environment from yaml file (assumed to be a file)
+			Environment *mapf = yaml2env(inputYaml);
+
+			std::string dir2file = inputYaml.substr(inputYaml.rfind("/")+1);
+			const std::string::size_type end = dir2file.find(".yaml");
+			const std::string mapName = dir2file.erase(end, dir2file.length());
+
+			mapf->setMapName(mapName);
+
+			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+				singleCostMatch(mapf, planningTime, percent_Explanation);
+			write_csv(resultName, data);
+		}
+		else if (expType == "MultiMatch")
+		{
+			const std::string inputYaml(argv[2]);  // path/to/*.yaml
+			const double planningTime = atof(argv[3]);  // real number > 0
+			const std::string resultName(argv[4]);
+			const double percent_Explanation = atof(argv[5]);
+			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+				multiCostMatch(inputYaml, planningTime, percent_Explanation);
 			write_csv(resultName, data);
 		}
 		else

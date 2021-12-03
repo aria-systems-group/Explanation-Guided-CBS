@@ -72,9 +72,9 @@ public:
         int operator() (const Node *n1, const Node *n2)
     	{
             double fScore1 = ( (1 - m_p_exp) * (n1->gScore + n1->hScore) )
-                 + (m_p_exp) * (n1->segCost);
+                 + ((m_p_exp) * (n1->segCost));
             double fScore2 = ( (1 - m_p_exp) * (n2->gScore + n2->hScore) )
-                 + (m_p_exp) * (n2->segCost);
+                 + ((m_p_exp) * (n2->segCost));
             if (fScore1 == fScore2)
                 return n1->segCost > n2->segCost;
             else

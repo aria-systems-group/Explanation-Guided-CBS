@@ -23,3 +23,11 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 // run a benchmark run until failure for multiple files
 std::vector<std::pair <std::string, std::vector<std::string>> > multiMapBenchmark(const std::string files, 
 	const double maxCompTime, const double perc_exp);
+
+// run CBS and have XG-CBS match cost
+std::vector<std::pair <std::string, std::vector<std::string>> > singleCostMatch(Environment* env, 
+	const double maxCompTime, const double perc_exp);
+
+// run CBS and have XG-CBS match cost for multiple files
+std::vector<std::pair <std::string, std::vector<std::string>> > multiCostMatch(const std::string files, 
+	const double maxCompTime, const double perc_exp);
