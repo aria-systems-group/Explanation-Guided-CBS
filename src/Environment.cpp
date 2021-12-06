@@ -69,7 +69,7 @@ bool Environment::isStateValid(const State *curr, const State *nxt,
             // need to check obs
             if ((nxt->x == time_obs.x) && (nxt->y == time_obs.y))
             {
-                printf("State is in timed obs! \n");
+                // printf("State is in timed obs! \n");
                 return false;
             }
         }
