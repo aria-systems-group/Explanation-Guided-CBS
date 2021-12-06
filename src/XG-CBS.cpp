@@ -156,7 +156,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 	// we have a list of constraints for entire CBS branch
 	if (useEG && !useHeuristic)
 	{
-		// use EG-A* object in m_planner
+		// use XG-A* object in m_planner
 		// make sure we reset the agent index for good book keeping
 		while (m_planner->getEnv()->getAgent() != 0)
 		{
@@ -172,8 +172,8 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		{
 			// at root node
 			// plan for initial agent first
-			bool success = m_planner->plan(startStates[0], singleSol, 
-				agentRelevantCs, parent, isDone);
+			bool success = m_planner_A->plan(startStates[0], singleSol, 
+				agentRelevantCs, isDone);
 
 			if (success)
 			{
@@ -310,7 +310,7 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 	}
 	else if (useEG && useHeuristic)
 	{
-		// use EG-A*-H object in m_planner_H
+		// use XG-A*-H object in m_planner_H
 		while (m_planner_H->getEnv()->getAgent() != 0)
 		{
 			m_planner_H->getEnv()->updateAgent();
@@ -325,8 +325,8 @@ Solution XG_CBS::lowLevelSearch(const std::vector<State*>& startStates,
 		{
 			// at root node
 			// plan for initial agent first
-			bool success = m_planner_H->plan(startStates[0], singleSol, 
-				agentRelevantCs, parent, isDone);
+			bool success = m_planner_A->plan(startStates[0], singleSol, 
+				agentRelevantCs, isDone);
 
 			if (success)
 			{

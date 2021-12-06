@@ -42,16 +42,37 @@ void Environment::expandState(const State *st, std::vector<State*>& neighbors,
 }
 
 // Find if state is valid, given constraints
-bool Environment::isStateValid(const State *curr, const State *nxt, const std::vector<Constraint*> constraints) const
+bool Environment::isStateValid(const State *curr, const State *nxt, 
+    const std::vector<Constraint*> constraints) const
 {
     // is in env bounds
     if ( 0 > nxt->x || nxt->x > m_dimx || 0 > nxt->y || nxt->y > m_dimy)
         return false;
-    // is in obstacles
+    // is in true obstacles
     for (Location *obs : m_obstacles)
     {
         if (nxt->x == obs->x && nxt->y == obs->y)
             return false;
+    }
+    // is in tmp obs.
+    for (Location *tobs : m_tmp_obs)
+    {
+        if (nxt->x == tobs->x && nxt->y == tobs->y)
+            return false;
+    }
+
+    // is in timed obs
+    for (auto time_obs: m_timed_obs)
+    {
+        if ((nxt->time >= time_obs.t_min) && (nxt->time <= time_obs.t_max))
+        {
+            // need to check obs
+            if ((nxt->x == time_obs.x) && (nxt->y == time_obs.y))
+            {
+                printf("State is in timed obs! \n");
+                return false;
+            }
+        }
     }
 
     if (useCollisionChecking)

@@ -20,8 +20,16 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 	// init start node
 	Node *startNode = new Node(startState, m_env->heuristicFunc(startState), 0);
 	
-	open_heap.emplace(startNode);
-	open_list.insert(*startState);
+	if (m_env->isStateValid(startState, startState, relevantConstraints))
+	{
+		open_heap.emplace(startNode);
+		open_list.insert(*startState);
+	}
+	else
+	{
+		printf("Initial State is not Valid! \n");
+		std::cout << *startState << std::endl;
+	}
 
 	// init neighbors
 	std::vector<State*> neighbors;
