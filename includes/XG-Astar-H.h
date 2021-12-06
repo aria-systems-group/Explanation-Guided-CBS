@@ -69,7 +69,7 @@ public:
 
     int segmentSolution(const std::vector<State*> path, const std::vector<std::vector<State*>>& otherSols);
 
-    const std::vector<timedObstacle> plan2obs(std::vector<std::vector<State*>>& existingPlan);
+    const std::vector<timedObstacle> plan2obs(const State* start, std::vector<std::vector<State*>>& existingPlan);
 
 	// calculate the best next-node from open heap
 	class myComparator

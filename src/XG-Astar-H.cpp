@@ -700,7 +700,7 @@ int XG_Astar_H::segmentSolution(const std::vector<State*> path, const std::vecto
 }
 
 
-const std::vector<timedObstacle> XG_Astar_H::plan2obs(
+const std::vector<timedObstacle> XG_Astar_H::plan2obs(const State* start,
 	std::vector<std::vector<State*>>& existingPlan)
 {
 	// init empty vector
@@ -769,7 +769,11 @@ const std::vector<timedObstacle> XG_Astar_H::plan2obs(
 								{
 									existingPlan[a][t]->cost = currCost;
 									// add obstacle here!!
-									if (existingPlan[a][t]->time > 0)
+									if ((existingPlan[a][t]->x == start->x) && (existingPlan[a][t]->y == start->y))
+									{
+										continue;
+									}
+									else
 									{
 										timedObstacle tO(existingPlan[a][t]->x, 
 											existingPlan[a][t]->y, lastSegmentTime, currTime-1);
@@ -803,7 +807,11 @@ const std::vector<timedObstacle> XG_Astar_H::plan2obs(
 			if (t < existingPlan[a].size())
 			{
 				existingPlan[a][t]->cost = currCost;
-				if (existingPlan[a][t]->time > 0)
+				if ((existingPlan[a][t]->x == start->x) && (existingPlan[a][t]->y == start->y))
+				{
+					continue;
+				}
+				else
 				{
 					timedObstacle tO(existingPlan[a][t]->x, 
 						existingPlan[a][t]->y, lastSegmentTime, longTime);
@@ -1008,7 +1016,7 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 	// }
 
 	// EXPERIMENTAL
-	const std::vector<timedObstacle> timedObs = plan2obs(parentSol);
+	const std::vector<timedObstacle> timedObs = plan2obs(startState, parentSol);
 	m_env->addTimedObs(timedObs);
 
 
