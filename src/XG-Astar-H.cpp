@@ -1033,7 +1033,7 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 	}
 	else
 	{
-		printf("A* Failed \n");
+		// printf("A* Failed \n");
 		m_env->clearTmpObs();
 		m_env->clearTimedObs();
 		return false;

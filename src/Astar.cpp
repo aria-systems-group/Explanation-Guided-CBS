@@ -25,11 +25,11 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
 		open_heap.emplace(startNode);
 		open_list.insert(*startState);
 	}
-	else
-	{
-		printf("Initial State is not Valid! \n");
-		std::cout << *startState << std::endl;
-	}
+	// else
+	// {
+		// printf("Initial State is not Valid! \n");
+		// std::cout << *startState << std::endl;
+	// }
 
 	// init neighbors
 	std::vector<State*> neighbors;
@@ -103,6 +103,6 @@ bool A_star::plan(State *startState, std::vector<State*> &solution,
     	open_heap.pop();
     	delete n;
     }
-	std::cout << "No Solution Found using A*" << std::endl;
+	// std::cout << "No Solution Found using A*" << std::endl;
 	return false;
 }
