@@ -353,9 +353,10 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	std::cout << "Planning with CBS... " << std::endl;
 	bool isOverTime = false;
 	bool isSolved = false;
+	bool isEmpty = false;
 	const auto start = std::chrono::high_resolution_clock::now();
 
-	std::thread timeThread (Timer(), start, solveTime_, std::ref(isOverTime), std::ref(isSolved));
+	std::thread timeThread (Timer(), start, solveTime_, std::ref(isOverTime), std::ref(isSolved), std::ref(isEmpty));
 
 	solution.clear();
 	
@@ -490,6 +491,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 			}
 		}
 	}
+	isEmpty = true;
 	printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
 	timeThread.join();
 	return false;

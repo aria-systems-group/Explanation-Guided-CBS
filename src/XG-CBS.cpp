@@ -858,11 +858,12 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 {
 	bool isOverTime = false;
 	bool isSolved = false;
+	bool isEmpty = false;
 	std::cout << "Now Planning with ExpCBS" << std::endl;
 	
 	// set timer
 	const std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
-	std::thread timeThread (Timer(), start, solveTime_, std::ref(isOverTime), std::ref(isSolved));
+	std::thread timeThread (Timer(), start, solveTime_, std::ref(isOverTime), std::ref(isSolved), std::ref(isEmpty));
 	
 	// flags to store debug data
 	double timeAstar = 0;
@@ -1156,7 +1157,10 @@ bool XG_CBS::plan(const std::vector<State*>& startStates, Solution& solution, bo
 		}
 	}
 	if (!isSolved)
+	{
+		isEmpty = true;
 		printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
+	}
 	timeThread.join();
 	return isSolved;
 }

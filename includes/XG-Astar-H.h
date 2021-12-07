@@ -187,12 +187,13 @@ public:
                     m_env->addTmpObs(loc);
                 }
             }
+            bool isEmpty = false;
             auto start1 = std::chrono::high_resolution_clock::now();
-            std::thread timeThread1 (Timer(), start1, 0.1, std::ref(isAstarOverTime1), std::ref(isAstarSolved1));
+            std::thread timeThread1 (Timer(), start1, 0.1, std::ref(isAstarOverTime1), std::ref(isAstarSolved1), std::ref(isEmpty));
             bool success1 = m_Astar.plan(n1->state, solution1, m_cosntraints, isAstarOverTime1);
             
             auto start2 = std::chrono::high_resolution_clock::now();
-            std::thread timeThread2 (Timer(), start2, 0.1, std::ref(isAstarOverTime2), std::ref(isAstarSolved2));
+            std::thread timeThread2 (Timer(), start2, 0.1, std::ref(isAstarOverTime2), std::ref(isAstarSolved2), std::ref(isEmpty));
             bool success2 = m_Astar.plan(n2->state, solution2, m_cosntraints, isAstarOverTime2);
 
             m_env->clearTmpObs();

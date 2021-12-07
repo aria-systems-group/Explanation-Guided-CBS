@@ -1027,11 +1027,15 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 	{
 		// segment solution
 		int cost = segmentSolution(solution, parentSol);
+		m_env->clearTmpObs();
+		m_env->clearTimedObs();
 		return true;
 	}
 	else
 	{
 		printf("A* Failed \n");
+		m_env->clearTmpObs();
+		m_env->clearTimedObs();
 		return false;
 	}
 	
