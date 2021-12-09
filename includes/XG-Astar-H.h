@@ -71,26 +71,36 @@ public:
     	
         int operator() (const Node *n1, const Node *n2)
     	{
-            double fScore1 = ( (1 - m_p_exp) * (n1->gScore + n1->hScore) )
+            if (m_p_exp < 1.0)
+            {
+                // weight between XG-A-H and A*
+                // tie-break is segmentation cost
+                double fScore1 = ( (1 - m_p_exp) * (n1->gScore + n1->hScore) )
                  + ((m_p_exp) * (n1->segCost));
-            double fScore2 = ( (1 - m_p_exp) * (n2->gScore + n2->hScore) )
-                 + ((m_p_exp) * (n2->segCost));
-            if (fScore1 == fScore2)
-                return n1->segCost > n2->segCost;
+                double fScore2 = ( (1 - m_p_exp) * (n2->gScore + n2->hScore) )
+                     + ((m_p_exp) * (n2->segCost));
+                if (fScore1 == fScore2)
+                    return n1->segCost > n2->segCost;
+                else
+                    return fScore1 > fScore2;
+            }
             else
-                return fScore1 > fScore2;
-    		// if (n1->segCost == n2->segCost)
-      //       {
-      //           // which is smaller cost
-      //           double fScore1 = n1->gScore + n1->hScore;
-      //           double fScore2 = n2->gScore + n2->hScore;
-      //           return fScore1 > fScore2;
-      //       }
-      //       else
-      //       {
-      //           // which index is smaller
-      //           return n1->segCost > n2->segCost;
-      //       }  
+            {
+                // pure XG-A-H
+                // A* F-score
+                if (n1->segCost == n2->segCost)
+                {
+                    // which is smaller cost
+                    double fScore1 = n1->gScore + n1->hScore;
+                    double fScore2 = n2->gScore + n2->hScore;
+                    return fScore1 > fScore2;
+                }
+                else
+                {
+                    // which index is smaller
+                    return n1->segCost > n2->segCost;
+                }
+            }
         }
     // protected:
         const double m_p_exp;
