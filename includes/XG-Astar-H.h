@@ -57,7 +57,7 @@ public:
     // check for self loops and paths greater than B
     bool crossCheck(const Node *n, const int longTime) const;
     // Calc. index of a path segment from s_i to n
-    int SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols, const int max);
+    int SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols);
     // check if two path segments are disjoint
     bool is_disjoint(const std::vector<State*> v1, 
         const std::vector<State*> v2) const;

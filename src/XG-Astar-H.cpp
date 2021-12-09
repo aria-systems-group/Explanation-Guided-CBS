@@ -35,8 +35,7 @@ bool XG_Astar_H::is_disjoint(const std::vector<State*> v1,
     return true;
 }
 
-int XG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols, 
-	const int maxCost)
+int XG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSols)
 {
 	if (otherSols.size() == 0)
 		return 1;
@@ -202,10 +201,7 @@ int XG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSol
 				}
 			}
 		}
-		if (currCost < maxCost)
-			return maxCost;
-		else
-			return currCost;
+		return currCost;
 	}
 	else
 	{
@@ -356,10 +352,7 @@ int XG_Astar_H::SegHeuristic(Node *n, std::vector<std::vector<State*>>& otherSol
 				}
 			}
 		}
-		if (currCost < maxCost)
-			return maxCost;
-		else
-			return currCost;
+		return currCost;
 	}
 }
 
@@ -593,7 +586,7 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 		{
 			Node *solNode = current;
 
-			solNode->segCost = SegHeuristic(solNode, parentSol, maxCost);
+			solNode->segCost = SegHeuristic(solNode, parentSol);
 			int expCost = solNode->segCost;
 
           	while (solNode != nullptr)
@@ -662,7 +655,7 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 			}
 			else
 			{
-				n->segCost = SegHeuristic(n, parentSol, maxCost);  // updates all state costs
+				n->segCost = SegHeuristic(n, parentSol);  // updates all state costs
 			}
 			// we have updated segmentation information 
 			// now time to update node waiting status
