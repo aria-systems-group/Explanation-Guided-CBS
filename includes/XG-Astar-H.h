@@ -81,12 +81,12 @@ public:
     	{
             if (m_p_exp < 1.0)
             {
-                // we use weighting scheme for A* and XG-A*
+                // weight between XG-A-H and A*
+                // tie-break is segmentation cost
                 double fScore1 = ( (1 - m_p_exp) * (n1->gScore + n1->hScore) )
                  + ((m_p_exp) * (n1->segCost));
                 double fScore2 = ( (1 - m_p_exp) * (n2->gScore + n2->hScore) )
                      + ((m_p_exp) * (n2->segCost));
-                // when weighting, use which has lower segment as tie breaker
                 if (fScore1 == fScore2)
                     return n1->segCost > n2->segCost;
                 else
