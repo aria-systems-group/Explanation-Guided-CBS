@@ -76,6 +76,9 @@ void XG_CBS::clear()
     }
     closed_set_.erase(closed_set_.begin(), closed_set_.end());
     // clear other saved data
+    delete m_planner_A;
+	delete m_planner_H;
+	delete m_planner_S;
 }
 
 int XG_CBS::segmentSolution(Solution sol)
