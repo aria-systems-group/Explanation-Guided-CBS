@@ -157,7 +157,7 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 		else
 		{
 			// failed to get solution, make xg-cbs data same length as map data
-			xgComputationTimes.push_back("-");
+			xgComputationTimes.push_back(std::to_string(maxCompTime));
 			xgNumEvalNodes.push_back("-");
 			xgCosts.push_back("-");
 			xgPathLength.push_back("-");
@@ -289,7 +289,7 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 		}
 		else
 		{
-			xgComputationTimes.push_back(std::to_string(planner->getCompTime()));
+			xgComputationTimes.push_back(std::to_string(maxCompTime));
 			xgNumEvalNodes.push_back("-");
 			xgCosts.push_back("-");
 			xgPathLength.push_back("-");
@@ -319,15 +319,6 @@ std::vector<std::pair <std::string, std::vector<std::string>> > singleMapBenchma
 
 		// create dataset and return it
 		std::vector<std::pair<std::string, std::vector<std::string>>> results = {mapName, numAgents, size, times, trees, costs, SoC, xgTimes, xgTrees, xgExps, xgSoC};
-		
-		for (auto elem: results)
-		{
-			printf("Size: %lu \n", elem.second.size());
-		}
-		// exit(1);
-
-
-
 		return results;
 	}
 }
