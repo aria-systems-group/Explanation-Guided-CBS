@@ -309,27 +309,25 @@ const std::vector<timedObstacle> S_Astar::plan2obs(const State* start,
 	return obst;
 }
 
-
 // main planning function
-bool plan(State *startState, std::vector<State*> &solution, 
+bool S_Astar::plan(State *startState, std::vector<State*> &solution, 
     const std::vector<Constraint*> relevantConstraints, 
     std::vector<std::vector<State*>>& parentSol, bool &done)
 {
-	// const std::vector<timedObstacle> timedObs = plan2obs(startState, parentSol);
-	// m_env->addTimedObs(timedObs);
+	const std::vector<timedObstacle> timedObs = plan2obs(startState, parentSol);
+	m_env->addTimedObs(timedObs);
 
-	// // plan using A*
-	// bool success = m_Astar.plan(startState, solution, relevantConstraints, done);
-	// m_env->clearTmpObs();
-	// m_env->clearTimedObs();
-	// if (success)
-	// {
-	// 	// segment solution
-	// 	int cost = segmentSolution(solution, parentSol);
-	// 	return true;
-	// }
-	// else
-	// 	return false;
-	return false;
+	// plan using A*
+	bool success = m_Astar.plan(startState, solution, relevantConstraints, done);
+	m_env->clearTmpObs();
+	m_env->clearTimedObs();
+	if (success)
+	{
+		// segment solution
+		int cost = segmentSolution(solution, parentSol);
+		return true;
+	}
+	else
+		return false;
 }
 

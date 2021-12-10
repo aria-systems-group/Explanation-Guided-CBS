@@ -3,6 +3,7 @@
 #include "Environment.h"
 #include "../includes/XG-Astar-H.h"
 #include "../includes/XG-Astar.h"
+#include "../includes/S-Astar.h"
 #include "../includes/Astar.h"
 #include "../includes/Conflict.h"
 #include "../includes/Timer.h"
@@ -30,7 +31,8 @@ public:
 	XG_CBS(Environment *env, const int bound, const double percent_exp);
 
 	// main plan function -- returns plan
-	bool plan(const std::vector<State*>& startStates, Solution& solution, const bool useEG, const bool useHeuristic);
+	bool plan(const std::vector<State*>& startStates, Solution& solution, 
+		const bool use_XG_A, const bool use_XG_A_H, const bool use_S_A);
 
 	// clear as much data as possible
 	void clear();
@@ -198,7 +200,8 @@ public:
 
 	// main low-level graph search function
 	Solution lowLevelSearch(const std::vector<State*>& startStates, 
-		std::vector<Constraint*> constriants, Solution& parent, const bool useEG, const bool useHeuristic, bool &isDone);
+		std::vector<Constraint*> constriants, Solution& parent, 
+		const bool use_XG_A, const bool use_XG_A_H, const bool use_S_A, bool &isDone);
 
 	// evaluate a conflict node for conflicts
 	std::vector<Conflict*> validateSolution(conflictNode *n);
@@ -243,6 +246,7 @@ protected:
 	conflictNode* m_solution = nullptr;  // saves the solution node
 	conflictNode* m_root = nullptr;  // saves the root node
 	XG_Astar_H *m_planner_H{nullptr};  // saves the XG-A^* planner w/ heuristics
+	S_Astar *m_planner_S{nullptr};
 	XG_Astar *m_planner{nullptr};  // saves the XG-A^* planner w/o heuristics
 	A_star *m_planner_A{nullptr};  // saves the A^* planner
 	double solveTime_{std::numeric_limits<double>::infinity()};  // total solving time
