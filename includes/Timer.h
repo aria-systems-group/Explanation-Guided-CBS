@@ -8,7 +8,8 @@ class Timer
 public:
 	// Timer(const double solveT, const std::chrono::time_point<std::chrono::high_resolution_clock> strt): solveTime_{solveT}, start_{strt}{};
 
-	void operator()(const std::chrono::time_point<std::chrono::high_resolution_clock> strt,const double solveT, bool& done, bool& solved)
+	void operator()(const std::chrono::time_point<std::chrono::high_resolution_clock> strt, 
+		const double solveT, bool& done, bool& solved)
 	{
 		while (!done && !solved)
 		{
@@ -20,6 +21,6 @@ public:
 			else
 				done = true;
 		}
-		// std::cout << "Time is up!" <<std::endl;
+
 	}
 };

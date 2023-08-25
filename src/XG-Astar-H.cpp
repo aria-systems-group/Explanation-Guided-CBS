@@ -32,7 +32,6 @@ bool XG_Astar_H::is_disjoint(const std::vector<State*> v1,
     	}
         it1++;
     }
-
     return true;
 }
 
@@ -511,10 +510,9 @@ int XG_Astar_H::noIntersectCheck(Node* curr, std::vector<std::vector<State*>> ex
 }
 
 bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution, 
-	std::vector<Constraint*> relevantConstraints, std::vector<std::vector<State*>>& parentSol, bool &done)
+	const std::vector<Constraint*> relevantConstraints, 
+	std::vector<std::vector<State*>>& parentSol, bool &done)
 {
-	int maxCost = getMaxCost(parentSol);
-	auto start = std::chrono::high_resolution_clock::now();
 	// clear all previous information
 	solution.clear();
 
@@ -524,10 +522,13 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 		m_env->includeCollisionChecks(parentSol);
 	}
 	
+	auto start = std::chrono::high_resolution_clock::now();
 	const int longTime = getLongestPath(parentSol);
+	const int maxCost = getMaxCost(parentSol);
 
-	// init open min-heap
+	// init comparator object with existing segmentation
 	myComparator cmp(m_perc_exp);
+	// init open min-heap
 	std::priority_queue <Node*, std::vector<Node*>, myComparator > open_heap(cmp);
 	// used for seeing if a node is in the heap
 	std::unordered_set<State, std::hash<State>> open_list;
@@ -535,12 +536,13 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 	// init start node
 	Node *startNode = new Node(startState, m_env->heuristicFunc(startState), 0);
 
-	if (m_env->isStateValid(startState, startState, relevantConstraints) && checkPathValidity(startNode))
+	if (m_env->isStateValid(startState, startState, relevantConstraints) && 
+		checkPathValidity(startNode))
 	{
 		open_heap.emplace(startNode);
 		open_list.insert(*startState);
 	}
-	
+
 	// init neighbors
 	std::vector<State*> neighbors;
 	int total  = 1;
@@ -548,35 +550,37 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 	int missing = 0;
 	while (!open_heap.empty() && !done)
 	{
+		// if (open_heap.size() > 1)
+		// 	exit(1);
 		Node *current = open_heap.top();
-		auto currStop = std::chrono::high_resolution_clock::now();
-		auto currDuration = std::chrono::duration_cast<std::chrono::microseconds>(currStop - start);
-		if ((currDuration.count() / 1000000.0) > (100 * time))
-		{
-			missing = 0;
-			std::cout << "Planning in A* for greater than " << 
-				(100 * time) << " seconds." << std::endl;
-			time++;
-			Node *currCopy = current;
-			while (currCopy != nullptr)
-			{
-				std::cout << *currCopy << std::endl;
-				currCopy = currCopy->parent;
-			}
-			// check for a full existing solution
-			for (std::vector<State*> a: parentSol)
-			{
-				if (a.size() == 0)
-				{
-					missing++;
+		// auto currStop = std::chrono::high_resolution_clock::now();
+		// auto currDuration = std::chrono::duration_cast<std::chrono::microseconds>(currStop - start);
+		// if ((currDuration.count() / 1000000.0) > (100 * time))
+		// {
+		// 	missing = 0;
+		// 	std::cout << "Planning in A* for greater than " << 
+		// 		(100 * time) << " seconds." << std::endl;
+		// 	time++;
+		// 	Node *currCopy = current;
+		// 	while (currCopy != nullptr)
+		// 	{
+		// 		std::cout << *currCopy << std::endl;
+		// 		currCopy = currCopy->parent;
+		// 	}
+		// 	// check for a full existing solution
+		// 	for (std::vector<State*> a: parentSol)
+		// 	{
+		// 		if (a.size() == 0)
+		// 		{
+		// 			missing++;
 					
-				}
-			}
-			if (missing > 1)
-				std::cout << "not a full parent" << std::endl;
-			else
-				std::cout << "full parent" << std::endl;
-		}
+		// 		}
+		// 	}
+		// 	if (missing > 1)
+		// 		std::cout << "not a full parent" << std::endl;
+		// 	else
+		// 		std::cout << "full parent" << std::endl;
+		// }
 		
 		if (m_env->isStateGoal(current->state))
 		{
@@ -599,7 +603,6 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 				std::cout << "Solution Explanation cost: " << expCost << std::endl;
 				std::cout << "Duration: " << duration.count() << " microseconds" << " or approx. " << 
   					(duration.count() / 1000000.0) << " seconds" << std::endl;
-
 			}
 			// clear all data
 			open_heap.pop();
@@ -612,9 +615,11 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
           		open_heap.pop();
           		delete n;
           	}
-			// notify user that solution was found after 100 seconds
-			if (time > 1)
-				std::cout << "Found Solution" << std::endl;
+			// // notify user that solution was found after 100 seconds
+			// if (time > 1)
+			// 	std::cout << "Found Solution" << std::endl;
+			// printf("Found Goal!");
+			// exit(1);
 			return true;
 		}
 
@@ -625,7 +630,9 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 		// with this list of constraints, we provide it to expandNode()
 		// which consquentially uses it for isStateValide()
 		// see Environment.h for details
+		// printf("Expanding state \n");
 		m_env->expandState(current->state, neighbors, relevantConstraints, current->isWaiting);
+		// printf("Done Expanding state \n");
 
 		// for all neighbors...
 		for (State *st: neighbors)
@@ -634,8 +641,7 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 			Node *n = new Node(st, m_env->heuristicFunc(st));
 			n->parent = current;
 
-			// // testing section
-
+			// testing section
 			if (n->parent->state->cost == maxCost)
 			{
 				// do some different seg check
@@ -714,7 +720,6 @@ bool XG_Astar_H::plan(State *startState, std::vector<State*> &solution,
 		}
 	}
 	// clear all data
-	// open_heap.pop();
     open_list = std::unordered_set<State, std::hash<State>>();
     // clear the data
     while (!open_heap.empty())

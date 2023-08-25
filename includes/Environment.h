@@ -29,6 +29,26 @@ struct Location
   }
 };
 
+// a timed obstacles is used by XG-A*-H for new heuristic
+// A timed obsacle is one that exists at (x, y) for all t in [t_min, t_max]
+struct timedObstacle
+{
+    timedObstacle(int x, int y, int t_min, int t_max):
+        x(x), y(y), t_min(t_min), t_max(t_max) {}
+
+    const int x; 
+    const int y;
+    const int t_min;
+    const int t_max;
+
+    bool operator==(const timedObstacle other) const 
+    {
+        return ((x == other.x) && (y == other.y) && 
+            (t_min == other.t_min) && (t_max == other.t_max));
+    }
+
+};
+
 // default hash constructor
 namespace std {
 template <>
@@ -40,16 +60,33 @@ struct hash<Location> {
     return seed;
   }
 };
+template <>
+struct hash<timedObstacle> 
+{
+  size_t operator()(const timedObstacle tObs) const 
+  {
+    size_t seed = 0;
+    boost::hash_combine(seed, tObs.x);
+    boost::hash_combine(seed, tObs.y);
+    boost::hash_combine(seed, tObs.t_min);
+    boost::hash_combine(seed, tObs.t_max);
+    return seed;
+  }
+};
 }  // namespace std
 
 // Main Env class -- contains useful info regarding the graph
 class Environment {
     public:
-        Environment(const int dimx, const int dimy, std::unordered_set<Location*> obstacles,
-                std::vector<State*> starts, std::vector<Location*> goals, std::vector<std::string> names):
+        Environment(const int dimx, const int dimy, 
+            std::unordered_set<Location*> obstacles,
+            std::vector<State*> starts, std::vector<Location*> goals, 
+            std::vector<std::string> names):
             m_dimx(dimx),
             m_dimy(dimy),
             m_obstacles(std::move(obstacles)),
+            m_tmp_obs({}),
+            m_timed_obs({}),
             m_starts(std::move(starts)),
             m_goals(std::move(goals)),
             m_agentIdx(0),
@@ -107,6 +144,19 @@ class Environment {
         const int getYdim() {return m_dimy;};
         // get agent names
         const std::vector<std::string> getAgentNames() {return m_agentNames;};
+        void clearTmpObs() {m_tmp_obs.clear();};
+        void addTmpObs(Location* l) {m_tmp_obs.insert(l);};
+        const std::unordered_set<Location*> getTmpObs() const {return m_tmp_obs;};
+
+
+        void clearTimedObs() {m_timed_obs.clear();};
+        void addTimedObs(const std::vector<timedObstacle> tObs) 
+        {
+            for (auto to: tObs)
+                m_timed_obs.insert(to);
+        };
+        const std::unordered_set<timedObstacle> getTimedObs() const {return m_timed_obs;};
+
 
         void setMapName(const std::string str) {m_mapName = str;};
         const std::string getMapName() {return m_mapName;};
@@ -116,6 +166,8 @@ class Environment {
         const int m_dimx;  // saves x-value of space
         const int m_dimy;  // saves y-value of space
         const std::unordered_set<Location*> m_obstacles;  // saves list of obstacles
+        std::unordered_set<Location*> m_tmp_obs;  // saves list of tmp obstacles
+        std::unordered_set<timedObstacle> m_timed_obs;  // saves list of timed obstacles
         const std::vector<State*> m_starts;  // saves list of goals
         const std::vector<Location*> m_goals;  // saves list of goals
         std::vector<std::vector<State*>> m_existingSol;  // saves the parent solution

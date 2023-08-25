@@ -7,16 +7,28 @@
 
 int main(int argc, char** argv) { 
 	
-	// To Plan: <executable> Plan <High-Level Algorithm> 
-	// 				<Low-Level Algorithm> <filename>.yaml 
-	// 				<computation time> <explanation cost (if applicable)>
-	//				<% explanation cost> (this is temporary)
+	/*
+	Tool Options:
+		<executable> == Planner
+		<High-Level Algorithm> = {CBS, XG-CBS}
+		<Low-Level Algorithm> = {A, XG-A, XG-A-H, S-A}
+		<explanation cost> = decimal in range of [0, 1]
+			Note: only required when using XG-A-H
 
-	// To Benchmark 1 file: <executable> Benchmark <filename>.yaml <computation time> <result>.csv <% explanation cost>
-	// To Benchmark Many Files: <executable> MultiBenchmark <directory> <computation time> <result>.csv <% explanation cost>
+	To Plan: <executable> Plan <High-Level Algorithm> 
+ 		<Low-Level Algorithm> <filename>.yaml 
+ 		<computation time> <explanation cost (only for XG-CBS)>
+ 		<weight on exp. cost (only for XG-A-H)>
 
-	// To Cost Match 1 file: <executable> Match <filename>.yaml <computation time> <result>.csv <% explanation cost>
-	// To Cost Match Many Files: <executable> MultiMatch <directory> <computation time> <result>.csv <% explanation cost>
+	To Benchmark 1 file: <executable> Benchmark 
+		<Low-Level Algorithm> <filename>.yaml 
+		<computation time> <result>.csv <weight on exp. cost (only for XG-A-H)>
+
+	To Benchmark Many Files: <executable> MultiBenchmark 
+		<Low-Level Algorithm> <directory> 
+		<computation time> <result>.csv <weight on exp. cost (only for XG-A-H)>
+
+	*/
 
 	if (argc >= 4)
 	{
@@ -53,23 +65,42 @@ int main(int argc, char** argv) {
 				else
 					printf("Terminating prematurely due to invalid arguments.\n");
 			}
-			else if (cbsType == "XG-CBS" && argc == 8)
+			else if (cbsType == "XG-CBS")
 			{
 				const int costBound = atoi(argv[6]);  // cost bound
-				const double percent_Explanation = atof(argv[7]);
+				double percent_Explanation = 0.0;
 
-				XG_CBS *planner = new XG_CBS(mapf, costBound, percent_Explanation);
-				planner->setSolveTime(planningTime);
-				// last two args are "useXG", and "useHeuristics"
-				if (aStarType == "A")
-					success = planner->plan(mapf->getStarts(), solution, false, false);
-				else if (aStarType == "XG-A")
-					success = planner->plan(mapf->getStarts(), solution, true, false);
-				else if (aStarType == "XG-A-H")
-					success = planner->plan(mapf->getStarts(), solution, true, true);
+				if (aStarType == "A" && argc == 7)
+				{
+					XG_CBS *planner = new XG_CBS(mapf, costBound, percent_Explanation);
+					planner->setSolveTime(planningTime);
+					success = planner->plan(mapf->getStarts(), solution, false, false, false);
+				}
+				else if (aStarType == "XG-A" && argc == 7)
+				{
+					XG_CBS *planner = new XG_CBS(mapf, costBound, percent_Explanation);
+					planner->setSolveTime(planningTime);
+					success = planner->plan(mapf->getStarts(), solution, true, false, false);
+				}
+				else if (aStarType == "XG-A-H" && argc == 8)
+				{
+					percent_Explanation = atof(argv[7]);
+					XG_CBS *planner = new XG_CBS(mapf, costBound, percent_Explanation);
+					planner->setSolveTime(planningTime);
+					success = planner->plan(mapf->getStarts(), solution, false, true, false);
+				}
+				else if (aStarType == "S-A")
+				{
+					XG_CBS *planner = new XG_CBS(mapf, costBound, percent_Explanation);
+					planner->setSolveTime(planningTime);
+					success = planner->plan(mapf->getStarts(), solution, false, false, true);
+				}	
 				else
-					printf("Terminating prematurely due to invalid arguments.\n");
+					printf("Terminating prematurely due to invalid low-level planner.\n");
 			}
+			else
+				printf("Terminating prematurely due to invalid high-level planner.\n");
+			
 			// we have planned, now output solution to file if applicable
 			if (success)
 			{
@@ -88,68 +119,84 @@ int main(int argc, char** argv) {
 		}
 		else if (expType == "Benchmark")
 		{
-			const std::string inputYaml(argv[2]);  // <path/fileName>.yaml
-			const double planningTime = atof(argv[3]);  // real number > 0
-			const std::string resultName(argv[4]);
-			const double percent_Explanation = atof(argv[5]);
+			if (argc >= 6)
+			{
+				const std::string aStarType(argv[2]);
+				const std::string inputYaml(argv[3]);  // <path/fileName>.yaml
+				const double planningTime = atof(argv[4]);  // real number > 0
+				const std::string resultName(argv[5]);
+				double percent_Explanation = 0.0;
+				if (aStarType == "XG-A-H")
+					percent_Explanation = atof(argv[6]);
+				// create environment from yaml file (assumed to be a file)
+				Environment *mapf = yaml2env(inputYaml);
 
-			// create environment from yaml file (assumed to be a file)
-			Environment *mapf = yaml2env(inputYaml);
+				std::string dir2file = inputYaml.substr(inputYaml.rfind("/")+1);
+				const std::string::size_type end = dir2file.find(".yaml");
+				const std::string mapName = dir2file.erase(end, dir2file.length());
 
-			std::string dir2file = inputYaml.substr(inputYaml.rfind("/")+1);
-			const std::string::size_type end = dir2file.find(".yaml");
-			const std::string mapName = dir2file.erase(end, dir2file.length());
+				mapf->setMapName(mapName);
 
-			mapf->setMapName(mapName);
-
-			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
-				singleMapBenchmark(mapf, planningTime, percent_Explanation);
-			write_csv(resultName, data);
+				std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+					singleMapBenchmark(mapf, planningTime, aStarType, percent_Explanation);
+				write_csv(resultName, data);
+			}
+			else
+				printf("Terminating prematurely due to invalid arguments for bemchmarking.\n");
 		}
 		else if (expType == "MultiBenchmark")
 		{
-			const std::string inputYaml(argv[2]);  // path/to/*.yaml
-			const double planningTime = atof(argv[3]);  // real number > 0
-			const std::string resultName(argv[4]);
-			const double percent_Explanation = atof(argv[5]);
-			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
-				multiMapBenchmark(inputYaml, planningTime, percent_Explanation);
-			write_csv(resultName, data);
+			if (argc >= 6)
+			{
+				const std::string aStarType(argv[2]);
+				const std::string inputYaml(argv[3]);  // path/to/*.yaml
+				const double planningTime = atof(argv[4]);  // real number > 0
+				const std::string resultName(argv[5]);
+				double percent_Explanation = 0.0;
+				if (aStarType == "XG-A-H")
+					percent_Explanation = atof(argv[6]);
+
+				std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+					multiMapBenchmark(inputYaml, planningTime, aStarType, percent_Explanation);
+				write_csv(resultName, data);
+			}
+			else
+				printf("Terminating prematurely due to invalid arguments for multi-bemchmarking.\n");
 		}
-		else if (expType == "Match")
-		{
-			const std::string inputYaml(argv[2]);  // <path/fileName>.yaml
-			const double planningTime = atof(argv[3]);  // real number > 0
-			const std::string resultName(argv[4]);
-			const double percent_Explanation = atof(argv[5]);
+		// else if (expType == "Match")
+		// {
+		// 	const std::string inputYaml(argv[2]);  // <path/fileName>.yaml
+		// 	const double planningTime = atof(argv[3]);  // real number > 0
+		// 	const std::string resultName(argv[4]);
+		// 	const double percent_Explanation = atof(argv[5]);
 
-			// create environment from yaml file (assumed to be a file)
-			Environment *mapf = yaml2env(inputYaml);
+		// 	// create environment from yaml file (assumed to be a file)
+		// 	Environment *mapf = yaml2env(inputYaml);
 
-			std::string dir2file = inputYaml.substr(inputYaml.rfind("/")+1);
-			const std::string::size_type end = dir2file.find(".yaml");
-			const std::string mapName = dir2file.erase(end, dir2file.length());
+		// 	std::string dir2file = inputYaml.substr(inputYaml.rfind("/")+1);
+		// 	const std::string::size_type end = dir2file.find(".yaml");
+		// 	const std::string mapName = dir2file.erase(end, dir2file.length());
 
-			mapf->setMapName(mapName);
+		// 	mapf->setMapName(mapName);
 
-			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
-				singleCostMatch(mapf, planningTime, percent_Explanation);
-			write_csv(resultName, data);
-		}
-		else if (expType == "MultiMatch")
-		{
-			const std::string inputYaml(argv[2]);  // path/to/*.yaml
-			const double planningTime = atof(argv[3]);  // real number > 0
-			const std::string resultName(argv[4]);
-			const double percent_Explanation = atof(argv[5]);
-			std::vector<std::pair <std::string, std::vector<std::string>> > data = 
-				multiCostMatch(inputYaml, planningTime, percent_Explanation);
-			write_csv(resultName, data);
-		}
+		// 	std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+		// 		singleCostMatch(mapf, planningTime, percent_Explanation);
+		// 	write_csv(resultName, data);
+		// }
+		// else if (expType == "MultiMatch")
+		// {
+		// 	const std::string inputYaml(argv[2]);  // path/to/*.yaml
+		// 	const double planningTime = atof(argv[3]);  // real number > 0
+		// 	const std::string resultName(argv[4]);
+		// 	const double percent_Explanation = atof(argv[5]);
+		// 	std::vector<std::pair <std::string, std::vector<std::string>> > data = 
+		// 		multiCostMatch(inputYaml, planningTime, percent_Explanation);
+		// 	write_csv(resultName, data);
+		// }
 		else
-			printf("Terminating prematurely due to invalid arguments.\n");
+			printf("Terminating prematurely due to invalid experiment type.\n");
 	}
 	else
-		printf("Terminating prematurely due to invalid arguments.\n");
+		printf("Please provide inputs to tool as described in the instructions.\n");
     return 0;
 }

@@ -1,11 +1,14 @@
-
 #pragma once
 #include <vector>
 #include <queue>
 #include <unordered_set>
+#include <thread>
+#include "../includes/Timer.h"
 #include "../includes/Conflict.h"
+// #include "../includes/Astar.h"
 
-// EG - A* with heuristics
+
+// XG - A* with heuristics
 class XG_Astar_H
 {
 public:
@@ -14,7 +17,7 @@ public:
 
 	// main planning function
     bool plan(State *startState, std::vector<State*> &solution, 
-        std::vector<Constraint*> relevantConstraints, 
+        const std::vector<Constraint*> relevantConstraints, 
         std::vector<std::vector<State*>>& parent, bool &done);
 
 	// a node in planner saves relevent information in a nice object
@@ -63,11 +66,16 @@ public:
 
     const double getPercExp() const {return m_perc_exp;};
 
+    int segmentSolution(const std::vector<State*> path, const std::vector<std::vector<State*>>& otherSols);
+
+    const std::vector<timedObstacle> plan2obs(const State* start, std::vector<std::vector<State*>>& existingPlan);
+
 	// calculate the best next-node from open heap
 	class myComparator
 	{
 	public:
-        myComparator(const double p_exp): m_p_exp(p_exp) {}
+        myComparator(const double p_exp): 
+        m_p_exp(p_exp) {}
     	
         int operator() (const Node *n1, const Node *n2)
     	{
@@ -86,8 +94,8 @@ public:
             }
             else
             {
-                // pure XG-A-H
-                // A* F-score
+                // pure XG-A*
+                // tie breaker is A* F-score
                 if (n1->segCost == n2->segCost)
                 {
                     // which is smaller cost
@@ -102,7 +110,7 @@ public:
                 }
             }
         }
-    // protected:
+    private:
         const double m_p_exp;
 	};
     // get the environment object
@@ -111,4 +119,5 @@ private:
 	Environment *m_env;  // saves the object
     const bool useCBS;  // saves the answer of using CBS
     const double m_perc_exp;
+    // A_star m_Astar;  // A* for heuristic planning
 };
