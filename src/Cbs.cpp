@@ -493,7 +493,7 @@ bool CBS::plan(const std::vector<State*>& startStates, Solution& solution)
 	auto stop = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
 	updateCompTime((duration.count() / 1000000.0));
-	printf("%s: No solution found in %0.1f seconds.\n", "XG-CBS", solveTime_);
+	printf("%s: No solution found in %0.1f seconds.\n", "CBS", solveTime_);
 	timeThread.join();
 	return false;
 }

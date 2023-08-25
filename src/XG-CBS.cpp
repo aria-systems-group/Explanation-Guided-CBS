@@ -812,7 +812,6 @@ std::vector<Conflict*> XG_CBS::validateSolution(conflictNode *n)
 					{
 						// fist, vertex conflicts
 						// get both states at same time step
-
 						State *a1Curr = n->m_solution[a1][t];
 						State *a2Curr = n->m_solution[a2][t];
 
@@ -826,8 +825,7 @@ std::vector<Conflict*> XG_CBS::validateSolution(conflictNode *n)
 							cnf.push_back(c);
 							return cnf;
 						}
-
-						if ((t + 1) < t1)
+                        if ((t + 1) < t1)
 						{
 							// check for edge constraint with next time step
 							State *a1Nxt = n->m_solution[a1][t + 1];
@@ -931,10 +929,12 @@ std::vector<Conflict*> XG_CBS::validateSolution(conflictNode *n)
 				// add current time to visited
 				for (int a = 0; a < getAgents(); a++)
 				{
-					if (n->m_solution[a].back()->time >= t)
+					if (n->m_solution[a].back()->time > t)
 					{
 						agentVisited[a].push_back(n->m_solution[a][t]);
 					}
+                    else
+                        agentVisited[a].push_back(n->m_solution[a].back());
 				}
 				// somewhere in agentVisited, a state is repeated
 				// find it using a double for loop
@@ -980,8 +980,10 @@ std::vector<Conflict*> XG_CBS::validateSolution(conflictNode *n)
 				// add states to visited
 				for (int a = 0; a < getAgents(); a++)
 				{
-					if (n->m_solution[a].back()->time >= t)
+					if (n->m_solution[a].back()->time > t)
 						agentVisited[a].push_back(n->m_solution[a][t]);
+                    else
+                        agentVisited[a].push_back(n->m_solution[a].back());
 				}
 			}
 		}
