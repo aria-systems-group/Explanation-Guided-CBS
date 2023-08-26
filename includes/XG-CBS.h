@@ -51,18 +51,16 @@ public:
 		{
 			m_cost = calcCost();
 		};
-
-		// Calculates the SoC value of a conflict Node
-		int calcCost()
-		{
-			int cost = 0;
-			for (std::vector<State*> sol: m_solution)
-			{
-				cost = cost + sol.size();
-			}
-			return cost;
-		};
-
+		// Calculates the Makespan value of a conflict Node
+        int calcCost()
+        {
+            // Get the maximum length of all vectors
+            int cost = 0;
+            for (const auto& vec : m_solution) {
+                cost = std::max(cost, (int)vec.size());
+            }
+            return cost;
+        };
 		// Calculates the Segmentation Cost of a conflict Node
 		int getSegCost() const
 		{

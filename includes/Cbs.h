@@ -40,15 +40,14 @@ public:
 			// constructor
 			m_cost = calcCost();
 		};
-
-		// Calculates the SoC value of a conflict Node
+		// Calculates the Makespan value of a conflict Node
 		int calcCost()
 		{
-			int cost  = 0;
-			for (std::vector<State*> sol: m_solution)
-			{
-				cost = cost + sol.size();
-			}
+			// Get the maximum length of all vectors
+            int cost = 0;
+            for (const auto& vec : m_solution) {
+                cost = std::max(cost, (int)vec.size());
+            }
 			return cost;
 		};
 		// save/get exp-cost
@@ -100,7 +99,6 @@ public:
 
 	// get solution node
 	conflictNode* getSolutionNode() {return m_solution;};
-
 	// open min-heap (must be public)
 	std::priority_queue < conflictNode*, std::vector<conflictNode*>, myconflictComparator > open_heap_;
 	// closed set
